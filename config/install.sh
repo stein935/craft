@@ -563,25 +563,30 @@ if [[ "${#group_chmods[@]}" -gt 0 ]]
 then
   ohai "The following existing directories will be made group writable:"
   printf "%s\n" "${group_chmods[@]}"
+  echo "\${group_chmods[@]}: ${group_chmods[@]}"
 fi
 if [[ "${#user_chmods[@]}" -gt 0 ]]
 then
   ohai "The following existing directories will be made writable by user only:"
+  echo "\${#user_chmods[@]}: ${#user_chmods[@]}"
   printf "%s\n" "${user_chmods[@]}"
 fi
 if [[ "${#chowns[@]}" -gt 0 ]]
 then
   ohai "The following existing directories will have their owner set to ${tty_underline}${USER}${tty_reset}:"
+  echo "\${#chowns[@]}: ${#chowns[@]}"
   printf "%s\n" "${chowns[@]}"
 fi
 if [[ "${#chgrps[@]}" -gt 0 ]]
 then
   ohai "The following existing directories will have their group set to ${tty_underline}${GROUP}${tty_reset}:"
+  echo "\${#chgrps[@]} ${#chgrps[@]}"
   printf "%s\n" "${chgrps[@]}"
 fi
 if [[ "${#mkdirs[@]}" -gt 0 ]]
 then
   ohai "The following new directories will be created:"
+  echo "\${#mkdirs[@]}: ${#mkdirs[@]}"
   printf "%s\n" "${mkdirs[@]}"
 fi
 
