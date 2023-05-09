@@ -775,7 +775,7 @@ ohai "Downloading and installing Craft..."
   then
     if [[ "${CRAFT_REPOSITORY}" == "${CRAFT_PREFIX}/craft" ]]
     then
-      execute "ln" "-sf" "../craft/bin/craft" "${CRAFT_PREFIX}/bin/craft"
+      execute "ln" "-sf" "../craft/craft" "${CRAFT_PREFIX}/bin/craft"
     else
       abort "The Craft repository should be placed in the Craft prefix directory."
     fi
