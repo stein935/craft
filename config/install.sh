@@ -500,7 +500,7 @@ directories=(share/zsh share/zsh/site-functions)
 zsh_dirs=()
 for dir in "${directories[@]}"
 do
-  zsh_dirs+=("$should_install_command_line_tools/${dir}")
+  zsh_dirs+=("${CRAFT_PREFIX}/${dir}")
 done
 
 directories=(
