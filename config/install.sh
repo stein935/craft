@@ -477,13 +477,7 @@ echo "${CRAFT_PREFIX}/etc/bash_completion.d/craft"
 echo "${CRAFT_REPOSITORY}"
 
 directories=(
-  bin etc include lib sbin share opt var
-  Frameworks
-  etc/bash_completion.d lib/pkgconfig
-  share/aclocal share/doc share/info share/locale share/man
-  share/man/man1 share/man/man2 share/man/man3 share/man/man4
-  share/man/man5 share/man/man6 share/man/man7 share/man/man8
-  var/log var/craft var/craft/linked
+  bin 
   bin/craft
 )
 group_chmods=()
@@ -492,8 +486,6 @@ do
   if exists_but_not_writable "${CRAFT_PREFIX}/${dir}"
   then
     group_chmods+=("${CRAFT_PREFIX}/${dir}")
-    echo "dir added: ${dir}"
-    echo "all group_chmods: ${group_chmods}"
   fi
 done
 

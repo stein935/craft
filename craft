@@ -1,4 +1,4 @@
 #!/bin/bash
 set -u
 
-echo "$1"
+cat /usr/local/craft/logo.txt
