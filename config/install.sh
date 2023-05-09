@@ -602,8 +602,8 @@ fi
 
 if [[ -n "${CRAFT_NO_INSTALL_FROM_API-}" ]]
 then
-  ohai "HOMEBREW_NO_INSTALL_FROM_API is set."
-  echo "Craftwill be tapped during this ${tty_bold}install${tty_reset} run."
+  ohai "CRAFT_NO_INSTALL_FROM_API is set."
+  echo "Craft will be tapped during this ${tty_bold}install${tty_reset} run."
 fi
 
 if [[ -z "${NONINTERACTIVE-}" ]]
@@ -775,7 +775,7 @@ ohai "Downloading and installing Craft..."
   then
     if [[ "${CRAFT_REPOSITORY}" == "${CRAFT_PREFIX}/craft" ]]
     then
-      execute "ln" "-sf" "../craft/bin/brew" "${CRAFT_PREFIX}/bin/craft"
+      execute "ln" "-sf" "../craft/bin/craft" "${CRAFT_PREFIX}/bin/craft"
     else
       abort "The Craft repository should be placed in the Craft prefix directory."
     fi
