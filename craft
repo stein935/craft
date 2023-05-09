@@ -1,4 +1,4 @@
 #!/bin/bash
 set -u
 
-cat /usr/local/craft/logo.txt
+cat /usr/local/craft/config/logo.txt
