@@ -159,7 +159,9 @@ MACOS_NEWEST_UNSUPPORTED="14.0"
 # TODO: bump version when new macOS is released
 MACOS_OLDEST_SUPPORTED="11.0"
 
-
+# For Craft on Linux
+REQUIRED_RUBY_VERSION=2.6    # https://github.com/Homebrew/brew/pull/6556
+REQUIRED_GLIBC_VERSION=2.13  # https://docs.brew.sh/Homebrew-on-Linux#requirements
 REQUIRED_CURL_VERSION=7.41.0 # CRAFT_MINIMUM_CURL_VERSION in craft.sh in craft/craft
 REQUIRED_GIT_VERSION=2.7.0   # CRAFT_MINIMUM_GIT_VERSION in craft.sh in craft/craft
 
@@ -784,7 +786,7 @@ ohai "Downloading and installing Craft..."
   fi
 
 
-  execute "${CRAFT_PREFIX}/bin/craft" "update" "--force" "--quiet"
+  # execute "${CRAFT_PREFIX}/bin/craft" "update" "--force" "--quiet"
 ) || exit 1
 
 if [[ ":${PATH}:" != *":${CRAFT_PREFIX}/bin:"* ]]
