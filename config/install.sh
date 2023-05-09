@@ -154,6 +154,11 @@ then
 fi
 export STEIN935_CRAFT_GIT_REMOTE
 
+# TODO: bump version when new macOS is released or announced
+MACOS_NEWEST_UNSUPPORTED="14.0"
+# TODO: bump version when new macOS is released
+MACOS_OLDEST_SUPPORTED="11.0"
+
 
 REQUIRED_CURL_VERSION=7.41.0 # HOMEBREW_MINIMUM_CURL_VERSION in brew.sh in Homebrew/brew
 REQUIRED_GIT_VERSION=2.7.0   # HOMEBREW_MINIMUM_GIT_VERSION in brew.sh in Homebrew/brew
