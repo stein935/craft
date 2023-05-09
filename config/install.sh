@@ -159,10 +159,6 @@ MACOS_NEWEST_UNSUPPORTED="14.0"
 # TODO: bump version when new macOS is released
 MACOS_OLDEST_SUPPORTED="11.0"
 
-# For Craft on Linux
-REQUIRED_RUBY_VERSION=2.6    # https://github.com/Homebrew/brew/pull/6556
-REQUIRED_GLIBC_VERSION=2.13  # https://docs.brew.sh/Homebrew-on-Linux#requirements
-REQUIRED_CURL_VERSION=7.41.0 # CRAFT_MINIMUM_CURL_VERSION in craft.sh in craft/craft
 REQUIRED_GIT_VERSION=2.7.0   # CRAFT_MINIMUM_GIT_VERSION in craft.sh in craft/craft
 
 unset HAVE_SUDO_ACCESS # unset this from the environment
@@ -318,19 +314,6 @@ file_not_grpowned() {
   [[ " $(id -G "${USER}") " != *" $(get_group "$1") "* ]]
 }
 
-
-test_curl() {
-  if [[ ! -x "$1" ]]
-  then
-    return 1
-  fi
-
-  local curl_version_output curl_name_and_version
-  curl_version_output="$("$1" --version 2>/dev/null)"
-  curl_name_and_version="${curl_version_output%% (*}"
-  version_ge "$(major_minor "${curl_name_and_version##* }")" "$(major_minor "${REQUIRED_CURL_VERSION}")"
-}
-
 test_git() {
   if [[ ! -x "$1" ]]
   then
@@ -470,10 +453,6 @@ fi
 
 ohai "This script will install:"
 echo "${CRAFT_PREFIX}/bin/craft"
-echo "${CRAFT_PREFIX}/share/doc/craft"
-echo "${CRAFT_PREFIX}/share/man/man1/craft.1"
-echo "${CRAFT_PREFIX}/share/zsh/site-functions/_craft"
-echo "${CRAFT_PREFIX}/etc/bash_completion.d/craft"
 echo "${CRAFT_REPOSITORY}"
 
 directories=(
@@ -489,19 +468,8 @@ do
   fi
 done
 
-# zsh refuses to read from these directories if group writable
-directories=(share/zsh share/zsh/site-functions)
-zsh_dirs=()
-for dir in "${directories[@]}"
-do
-  zsh_dirs+=("${CRAFT_PREFIX}/${dir}")
-done
-
 directories=(
-  bin etc include lib sbin share var opt
-  share/zsh share/zsh/site-functions
-  var/craft var/craft/linked
-  Cellar Caskroom Frameworks
+  bin 
 )
 mkdirs=()
 for dir in "${directories[@]}"

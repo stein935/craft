@@ -1,4 +1,11 @@
 #!/bin/bash
 set -u
 
-cat /usr/local/craft/config/logo.txt
+case $1 in 
+  help)
+    cat /usr/local/craft/config/logo.txt
+    ;;
+  *) 
+    echo "Unrecognized command: \"$1\""
+    ;;
+esac
