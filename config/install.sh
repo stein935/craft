@@ -160,8 +160,8 @@ MACOS_NEWEST_UNSUPPORTED="14.0"
 MACOS_OLDEST_SUPPORTED="11.0"
 
 
-REQUIRED_CURL_VERSION=7.41.0 # HOMEBREW_MINIMUM_CURL_VERSION in brew.sh in Homebrew/brew
-REQUIRED_GIT_VERSION=2.7.0   # HOMEBREW_MINIMUM_GIT_VERSION in brew.sh in Homebrew/brew
+REQUIRED_CURL_VERSION=7.41.0 # CRAFT_MINIMUM_CURL_VERSION in craft.sh in craft/craft
+REQUIRED_GIT_VERSION=2.7.0   # CRAFT_MINIMUM_GIT_VERSION in craft.sh in craft/craft
 
 unset HAVE_SUDO_ACCESS # unset this from the environment
 
@@ -410,7 +410,7 @@ if [[ -d "${CRAFT_PREFIX}" && ! -x "${CRAFT_PREFIX}" ]]
 then
   abort "$(
     cat <<EOABORT
-The Craft prefix ${tty_underline}${HOMEBREW_PREFIX}${tty_reset} exists but is not searchable.
+The Craft prefix ${tty_underline}${CRAFT_PREFIX}${tty_reset} exists but is not searchable.
 If this is not intentional, please restore the default permissions and
 try running the installer again:
     sudo chmod 775 ${CRAFT_PREFIX}
@@ -490,6 +490,8 @@ do
   if exists_but_not_writable "${CRAFT_PREFIX}/${dir}"
   then
     group_chmods+=("${CRAFT_PREFIX}/${dir}")
+    echo "dir added: ${dir}"
+    echo "all group_chmods: ${group_chmods}"
   fi
 done
 
@@ -498,7 +500,7 @@ directories=(share/zsh share/zsh/site-functions)
 zsh_dirs=()
 for dir in "${directories[@]}"
 do
-  zsh_dirs+=("${CRAFT_PREFIX}/${dir}")
+  zsh_dirs+=("$should_install_command_line_tools/${dir}")
 done
 
 directories=(
@@ -563,30 +565,25 @@ if [[ "${#group_chmods[@]}" -gt 0 ]]
 then
   ohai "The following existing directories will be made group writable:"
   printf "%s\n" "${group_chmods[@]}"
-  echo "\${group_chmods[@]}: ${group_chmods[@]}"
 fi
 if [[ "${#user_chmods[@]}" -gt 0 ]]
 then
   ohai "The following existing directories will be made writable by user only:"
-  echo "\${#user_chmods[@]}: ${#user_chmods[@]}"
   printf "%s\n" "${user_chmods[@]}"
 fi
 if [[ "${#chowns[@]}" -gt 0 ]]
 then
   ohai "The following existing directories will have their owner set to ${tty_underline}${USER}${tty_reset}:"
-  echo "\${#chowns[@]}: ${#chowns[@]}"
   printf "%s\n" "${chowns[@]}"
 fi
 if [[ "${#chgrps[@]}" -gt 0 ]]
 then
   ohai "The following existing directories will have their group set to ${tty_underline}${GROUP}${tty_reset}:"
-  echo "\${#chgrps[@]} ${#chgrps[@]}"
   printf "%s\n" "${chgrps[@]}"
 fi
 if [[ "${#mkdirs[@]}" -gt 0 ]]
 then
   ohai "The following new directories will be created:"
-  echo "\${#mkdirs[@]}: ${#mkdirs[@]}"
   printf "%s\n" "${mkdirs[@]}"
 fi
 
@@ -601,7 +598,7 @@ if [[ "${STEIN935_CRAFT_DEFAULT_GIT_REMOTE}" != "${STEIN935_CRAFT_GIT_REMOTE}" ]
 then
   ohai "STEIN935_CRAFT_GIT_REMOTE is set to a non-default URL:"
   echo "${tty_underline}${STEIN935_CRAFT_GIT_REMOTE}${tty_reset} will be used as the craft Git remote."
-  non_default_repos="stein935/brew"
+  non_default_repos="stein935/craft"
   additional_shellenv_commands+=("export STEIN935_CRAFT_GIT_REMOTE=\"${STEIN935_CRAFT_GIT_REMOTE}\"")
 fi
 
@@ -640,7 +637,7 @@ then
     execute_sudo "${CHGRP[@]}" "${GROUP}" "${chgrps[@]}"
   fi
 else
-  execute_sudo "${INSTALL[@]}" "${HOMEBREW_PREFIX}"
+  execute_sudo "${INSTALL[@]}" "${CRAFT_PREFIX}"
 fi
 
 if [[ "${#mkdirs[@]}" -gt 0 ]]
