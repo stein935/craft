@@ -480,30 +480,10 @@ do
   fi
 done
 
-user_chmods=()
-mkdirs_user_only=()
-if [[ "${#zsh_dirs[@]}" -gt 0 ]]
-then
-  for dir in "${zsh_dirs[@]}"
-  do
-    if [[ ! -d "${dir}" ]]
-    then
-      mkdirs_user_only+=("${dir}")
-    elif user_only_chmod "${dir}"
-    then
-      user_chmods+=("${dir}")
-    fi
-  done
-fi
-
 chmods=()
 if [[ "${#group_chmods[@]}" -gt 0 ]]
 then
   chmods+=("${group_chmods[@]}")
-fi
-if [[ "${#user_chmods[@]}" -gt 0 ]]
-then
-  chmods+=("${user_chmods[@]}")
 fi
 
 chowns=()
@@ -527,11 +507,6 @@ if [[ "${#group_chmods[@]}" -gt 0 ]]
 then
   ohai "The following existing directories will be made group writable:"
   printf "%s\n" "${group_chmods[@]}"
-fi
-if [[ "${#user_chmods[@]}" -gt 0 ]]
-then
-  ohai "The following existing directories will be made writable by user only:"
-  printf "%s\n" "${user_chmods[@]}"
 fi
 if [[ "${#chowns[@]}" -gt 0 ]]
 then
@@ -564,12 +539,6 @@ then
   additional_shellenv_commands+=("export STEIN935_CRAFT_GIT_REMOTE=\"${STEIN935_CRAFT_GIT_REMOTE}\"")
 fi
 
-if [[ -n "${CRAFT_NO_INSTALL_FROM_API-}" ]]
-then
-  ohai "CRAFT_NO_INSTALL_FROM_API is set."
-  echo "Craft will be tapped during this ${tty_bold}install${tty_reset} run."
-fi
-
 if [[ -z "${NONINTERACTIVE-}" ]]
 then
   ring_bell
@@ -585,10 +554,6 @@ then
   if [[ "${#group_chmods[@]}" -gt 0 ]]
   then
     execute_sudo "${CHMOD[@]}" "g+rwx" "${group_chmods[@]}"
-  fi
-  if [[ "${#user_chmods[@]}" -gt 0 ]]
-  then
-    execute_sudo "${CHMOD[@]}" "go-w" "${user_chmods[@]}"
   fi
   if [[ "${#chowns[@]}" -gt 0 ]]
   then
@@ -606,10 +571,6 @@ if [[ "${#mkdirs[@]}" -gt 0 ]]
 then
   execute_sudo "${MKDIR[@]}" "${mkdirs[@]}"
   execute_sudo "${CHMOD[@]}" "ug=rwx" "${mkdirs[@]}"
-  if [[ "${#mkdirs_user_only[@]}" -gt 0 ]]
-  then
-    execute_sudo "${CHMOD[@]}" "go-w" "${mkdirs_user_only[@]}"
-  fi
   execute_sudo "${CHOWN[@]}" "${USER}" "${mkdirs[@]}"
   execute_sudo "${CHGRP[@]}" "${GROUP}" "${mkdirs[@]}"
 fi
@@ -808,8 +769,6 @@ then
   printf "    echo '%s' >> ${shell_profile}\n" "${additional_shellenv_commands[@]}"
   printf "    %s\n" "${additional_shellenv_commands[@]}"
 fi
-
-
 
 cat <<EOS
 - Run ${tty_bold}craft help${tty_reset} to get started
