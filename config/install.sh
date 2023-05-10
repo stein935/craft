@@ -459,6 +459,10 @@ directories=(
   bin 
   bin/craft
 )
+servers_dirs=(
+  ${HOME}
+  ${HOME}/Craft
+)
 group_chmods=()
 for dir in "${directories[@]}"
 do
@@ -467,9 +471,20 @@ do
     group_chmods+=("${CRAFT_PREFIX}/${dir}")
   fi
 done
+for dir in "${servers_dirs[@]}"
+do
+  if exists_but_not_writable "${dir}"
+  then
+    group_chmods+=("${dir}")
+  fi
+done
+echo "group_chmods: ${group_chmods}"
 
 directories=(
   bin 
+)
+servers_dirs=(
+  ${HOME}/Craft
 )
 mkdirs=()
 for dir in "${directories[@]}"
@@ -479,6 +494,15 @@ do
     mkdirs+=("${CRAFT_PREFIX}/${dir}")
   fi
 done
+for dir in "${servers_dirs[@]}"
+do
+  if ! [[ -d "${dir}" ]]
+  then
+    mkdirs+=("${dir}")
+  fi
+done
+
+echo "mkdirs: ${mkdirs}"
 
 chmods=()
 if [[ "${#group_chmods[@]}" -gt 0 ]]

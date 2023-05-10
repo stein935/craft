@@ -1,24 +1,27 @@
 #!/bin/bash
-set -u
 
-export PARENT_PATH=$(cd "$(dirname "$0")"; pwd)
-source=""
+if [[ "$1" != "" ]]; then
+  export PARENT_PATH=$(cd "$(dirname $1)" && pwd)
 
-for arg in "$@"
-do
-  if [[ "${arg}" == "-help" || "${arg}" == "-h" || "${arg}" == "-usage" || "${arg}" == "-?" ]]
-  then
-    
-    break
-  fi
-done
+  for arg in "$@"
+  do
+    if [[ "${arg}" == "-help" || "${arg}" == "-h" || "${arg}" == "-usage" || "${arg}" == "-?" ]]
+    then
+      
+      break
+    fi
+  done
 
-case $1 in 
-  create)
-    shift
-    source="$PARENT_PATH/lib/create.sh"
-    create_server_dir $@
-  *) 
-    echo "Unrecognized command: \"$1\""
-    ;;
-esac
+  case $1 in 
+    create)
+      shift
+      source $PARENT_PATH/lib/create.sh
+      create_server $@
+      ;;
+    *) 
+      echo "Unrecognized command: \"$1\""
+      ;;
+  esac
+else 
+  echo "craft requires an argument"
+fi
