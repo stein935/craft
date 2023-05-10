@@ -1,10 +1,23 @@
 #!/bin/bash
 set -u
 
+export PARENT_PATH=$(cd "$(dirname "$0")"; pwd)
+source=""
+
+for arg in "$@"
+do
+  if [[ "${arg}" == "-help" || "${arg}" == "-h" || "${arg}" == "-usage" || "${arg}" == "-?" ]]
+  then
+    
+    break
+  fi
+done
+
 case $1 in 
-  help)
-    cat /usr/local/craft/config/logo.txt
-    ;;
+  create)
+    shift
+    source="$PARENT_PATH/lib/create.sh"
+    create_server_dir $@
   *) 
     echo "Unrecognized command: \"$1\""
     ;;
