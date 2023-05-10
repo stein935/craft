@@ -478,7 +478,7 @@ do
     group_chmods+=("${dir}")
   fi
 done
-echo "group_chmods: ${group_chmods}"
+echo "group_chmods: ${group_chmods[*]}"
 
 directories=(
   bin 
@@ -502,7 +502,7 @@ do
   fi
 done
 
-echo "mkdirs: ${mkdirs}"
+echo "mkdirs: ${mkdirs[*]}"
 
 chmods=()
 if [[ "${#group_chmods[@]}" -gt 0 ]]
