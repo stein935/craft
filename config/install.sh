@@ -454,6 +454,7 @@ fi
 ohai "This script will install:"
 echo "${CRAFT_PREFIX}/bin/craft"
 echo "${CRAFT_REPOSITORY}"
+echo "${HOME}/Craft"
 
 directories=(
   bin 

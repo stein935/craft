@@ -1,27 +1,46 @@
 #!/bin/bash
 
-if [[ "$1" != "" ]]; then
-  export PARENT_PATH=$(cd "$(dirname $1)" && pwd)
+# Variables
+craft_server_dir="$HOME/Craft" 
+craft_home_dir="/usr/local/craft"
+command="craft"
 
-  for arg in "$@"
-  do
-    if [[ "${arg}" == "-help" || "${arg}" == "-h" || "${arg}" == "-usage" || "${arg}" == "-?" ]]
-    then
-      
-      break
-    fi
-  done
+# Load common functions 
+. "${craft_home_dir}/lib/common.sh"
 
-  case $1 in 
-    create)
-      shift
-      source $PARENT_PATH/lib/create.sh
-      create_server $@
-      ;;
-    *) 
-      echo "Unrecognized command: \"$1\""
-      ;;
-  esac
-else 
-  echo "craft requires an argument"
-fi
+# Look for command
+[ ! -n "$1" ] && command_help 
+
+case $1 in 
+  create)
+    shift
+    . /usr/local/craft/lib/create.sh
+    create_command "$@"
+    ;;
+  start) 
+    shift
+    . /usr/local/craft/lib/start.sh
+    start_command "$@"
+    ;;
+  stop)
+    shift
+    . /usr/local/craft/lib/stop.sh
+    stop_command "$@"
+    ;;
+  command)
+    shift
+    . /usr/local/craft/lib/command.sh
+    command_command "$@"
+    ;;
+  test)
+    shift
+    . /usr/local/craft/lib/test.sh
+    test_command "$@"
+    ;;
+  -h | -help)
+    command_help "$command" "OK"
+    ;;
+  *) 
+    invalid_command "$command" $1
+    ;;
+esac

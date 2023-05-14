@@ -1,52 +1,69 @@
 #!/bin/bash
 
-server=$1;
+command="start"
+sever_init_mem="512"
+server_max_mem="8"
 
-#write out current crontab
-crontab -l > $server
-echo "" > $server
-crontab $server
+. "${craft_home_dir}/lib/common.sh"
 
-screen -dmS "$server"
-while ! screen -ls "$server" | grep -q tached; do sleep 0.1; done
+start_server () {
 
-screen -S "$server" -X -p 0 stuff "cd ~/MinecraftServers/$server
-"
+  ohai "Starting ${server_name} Minecraft server"
 
-
-jar=$(ls -l /Users/AaronWilliamsAudio/MinecraftServers/$server/*jar | awk '{print $9}')
-
-if test =f "~/MinecraftServers/$server/logo.txt"; then
-  cat ~/MinecraftServers/logo.txt
-fi
-
-echo -e "⠀⠀⠀⠀⠀⠀⠀
-  ==============================================================
-
-     $(date) 
-
-     Starting $server
-
-  ==============================================================
-"
-screen -S "$server" -X -p 0 stuff "java -jar -Xmx8192M $jar nogui
-"
-
-while [ 1 ]
-do
-  PID=$(lsof -i -P | grep ':25565 (LISTEN)' | awk '{print $2}')
-  if [ "$PID" = "" ]
-  then
-    echo -en "\r\033[KStarting $server..."
-  else
-    echo -en "\r\033[K$server running on PID: $PID\n"
-    # #echo new cron into cron file
-    # echo "* * * * * source /Users/AaronWilliamsAudio/MinecraftServers/scripts/server-monitor.sh $server" > $server
-    # #install new cron file
-    # crontab $server
-    # rm $server
-    return
+  if [[ -f "${craft_server_dir}/${server_name}/logo.txt" ]]; then 
+    cat "${craft_server_dir}/${server_name}/logo.txt"
   fi
-  sleep 1
-done
+    
+  cd "${craft_server_dir}/${server_name}"
 
+  java -Xms${server_init_mem}M -Xmx${server_max_mem}G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1HeapRegionSize=8M -XX:G1ReservePercent=20 -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 -Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true fabric-server-launch.jar nogui
+
+  # screen -AmdS "$server_name" java -jar -Xmx${server_max_mem}G fabric-server-launch.jar nogui
+
+  while [ 1 ]
+  do
+    PID=$(netstat -vanp tcp | grep 25565 | awk '{print $9}')
+    if [ "$PID" != "" ]; then
+      ohai "${server_name} Minecraft server running on PID: $PID"
+      return
+    fi
+    sleep 1
+  done
+
+}
+
+start_command () {
+
+  [ ! -n "$1" ] && command_help "$command"
+
+  while getopts ":n:m:h" opt; do
+    case $opt in 
+      n)
+        server_name="$OPTARG"
+        ;;
+      m)
+        server_mem="$OPTARG"
+        ;;
+      h)
+        command_help "$command"
+        exit 0
+        ;;
+      :)
+        missing_argument "$command" "$OPTARG"
+        exit 1
+        ;;
+      *)
+        invalid_option "$command" "$OPTARG"
+        exit 1
+        ;;
+    esac
+  done
+
+  if [[ "${server_name}" == false ]] ; then
+    missing_required_option "$command" "-n"
+    exit 1
+  fi
+
+  start_server
+
+}

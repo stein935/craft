@@ -1,0 +1,76 @@
+Command: create
+
+Usage: 
+  craft create -name <server_name> [options]
+
+Required:
+  -name <server_name>                Sets name of new server       
+
+Install options
+  -mcversion <minecraft_version>          Sets Minecraft game version
+  -loader <fabric_loader_version>         Sets Fabric loader version       
+  -snapshot                               Enables snapshot Minecraft versions
+
+Server options:
+  -initmem <sever_init_mem>               Sets Minecraft server mem cap 
+  -maxmem <sever_max_mem>                 Sets Minecraft server mem cap 
+                                          Defaults to 8192M (8G)
+Server properties:
+See https://minecraft.fandom.com/wiki/Server.properties for more info
+
+  -allow-flight                           Default: false
+  -allow-nether                           Default: true
+  -broadcast-console-to-ops               Default: true
+  -broadcast-rcon-to-ops                  Default: true
+  -difficulty                             Default: easy
+  -enable-command-block                   Default: false
+  -enable-jmx-monitoring                  Default: false
+  -enable-query                           Default: false
+  -enable-rcon                            Default: false
+  -enable-status                          Default: true
+  -enforce-secure-profile                 Default: true
+  -enforce-whitelist                      Default: false
+  -entity-broadcast-range-percentage      Default: 100
+  -force-gamemode                         Default: false
+  -function-permission-level              Default: 2
+  -gamemode                               Default: survival
+  -generate-structures                    Default: true
+  -generator-settings                     Default: {}
+  -hardcore                               Default: false
+  -hide-online-players                    Default: false
+  -level-name                             Default: world
+  -level-seed                              
+  -level-type                             Default: minecraft:normal
+  -max-chained-neighbor-updates           Default: 1000000
+  -max-players                            Default: 20
+  -max-tick-time                          Default: 60000
+  -max-world-size                         Default: 29999984
+  -motd                                   Default: AMinecraftServer
+  -network-compression-threshold          Default: 256
+  -online-mode                            Default: true
+  -op-permission-level                    Default: 4
+  -player-idle-timeout                    Default: 0
+  -prevent-proxy-connections              Default: false
+  -previews-chat                          Default: false
+  -pvp                                    Default: true
+  -query.port                             Default: 25565
+  -rate-limit                             Default: 0
+  -rcon.password                           
+  -rcon.port                              Default: 25575
+  -require-resource-pack                  Default: false
+  -resource-pack                           
+  -resource-pack-prompt                    
+  -resource-pack-sha1                      
+  -server-ip                               
+  -server-port                            Default: 25565
+  -simulation-distance                    Default: 10
+  -spawn-animals                          Default: true
+  -spawn-monsters                         Default: true
+  -spawn-npcs                             Default: true
+  -spawn-protection                       Default: 16
+  -sync-chunk-writes                      Default: true
+  -text-filtering-config                   
+  -use-native-transport                   Default: true
+  -view-distance                          Default: 10
+  -white-list                             Default: false
+  -help | -h                              usage 
