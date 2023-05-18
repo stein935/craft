@@ -4,7 +4,6 @@ Usage:
   craft <command> [ options ]     Usage details: Run '$ craft <command> -h'
 
 Commands
-  -h                              Useage
   -ls                             List all existing servers
   create                          Creates a new Minecraft server
   delete                          Delete an existing server 

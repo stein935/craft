@@ -17,6 +17,26 @@ case $1 in
     . /usr/local/craft/lib/create.sh
     create_command "$@"
     ;;
+  delete)
+    shift
+    . /usr/local/craft/lib/delete.sh
+    delete_command "$@"
+    ;;
+  config)
+    shift
+    . /usr/local/craft/lib/config.sh
+    config_command "$@"
+    ;;
+  status)
+    shift
+    . /usr/local/craft/lib/status.sh
+    status_command "$@"
+    ;;
+  server)
+    shift
+    . /usr/local/craft/lib/server.sh
+    server_command "$@"
+    ;;
   start) 
     shift
     . /usr/local/craft/lib/start.sh
@@ -27,15 +47,19 @@ case $1 in
     . /usr/local/craft/lib/stop.sh
     stop_command "$@"
     ;;
+  restart)
+    shift
+    . /usr/local/craft/lib/restart.sh
+    restart_command "$@"
+    ;;
   command)
     shift
     . /usr/local/craft/lib/command.sh
     command_command "$@"
     ;;
-  test)
-    shift
-    . /usr/local/craft/lib/test.sh
-    test_command "$@"
+  -ls)
+    ohai "Existing servers:"
+    ls $craft_server_dir
     ;;
   -h | -help)
     command_help "$command" "OK"

@@ -7,20 +7,25 @@ server_name=false
 
 stop_server () {
 
-  ohai "Stopping ${server_name} Minecraft server"
+  get_properties 
 
-screen -S "$server_name" -p 0 -X stuff "/stop
-"
+  PID=$(netstat -vanp tcp | grep $server_port | awk '{print $9}')
 
-  while [ 1 ]
-  do
-    PID=$(netstat -vanp tcp | grep 25565 | awk '{print $9}')
-    if [ "$PID" == "" ]; then
-      ohai "${server_name} Minecraft server stopped"
-      return
-    fi
-    sleep 1
-  done
+  if [ "$PID" == "" ]; then
+    warn "No server running on port: ${server_port}"
+    ohai "Force stopping all related processes ... just in case"
+  else 
+    ohai "Stopping ${server_name} Minecraft server"
+  fi
+
+screen -S $server_name -p 0 -X stuff "/stop
+" &> /dev/null
+
+  screen -S $server_name -X quit &> /dev/null
+  kill -9 "$PID" &> /dev/null
+
+  ohai "${server_name} Minecraft server stopped"
+
 }
 
 stop_command () {
@@ -47,10 +52,12 @@ stop_command () {
     esac
   done
 
-  if [[ "${server_name}" == false ]] ; then
+  if [ "${server_name}" == false ] ; then
     missing_required_option "$command" "-n"
     exit 1
   fi
+
+  find_server ${server_name}
 
   stop_server
 

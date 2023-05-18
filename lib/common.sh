@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # string formatters
-if [[ -t 1 ]]
+if [ -t 1 ]
 then
   tty_escape() { printf "\033[%sm" "$1"; }
 else
@@ -40,7 +40,7 @@ warn() {
 # Errors and help
 command_help () {
   cat ${craft_home_dir}/config/help/${1}_help.txt
-  if [[ "$2" != "" ]]; then
+  if [ "$2" != "" ]; then
     exit 0
   else
     exit 1
@@ -69,4 +69,29 @@ missing_required_option () {
   warn "
 Missing option: $1 requires \"$2\""
   command_help $1
+}
+
+list_properties () {
+  count=0
+  while IFS="" read -r line || [ -n "$line" ]; do
+    if [[ $count -gt 1 ]]; then
+      prop=$(echo "${line%=*}" | tr .- _)
+      set=$(printf '%s\n' "${line##*=}")
+
+      export $prop="$set"
+    fi
+    (( count++ ))
+  done < ${1}
+}
+
+get_properties () {
+  list_properties ${craft_server_dir}/${server_name}/server.properties
+  list_properties ${craft_server_dir}/${server_name}/fabric-server-launcher.properties
+}
+
+find_server () {
+  if ! [[ -d ${craft_server_dir}/"${1}" ]]; then
+    warn "No server named ${1} in ${craft_server_dir}"
+    exit 1
+  fi
 }
