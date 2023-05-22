@@ -9,7 +9,7 @@ command="craft"
 . "${craft_home_dir}/lib/common.sh"
 
 # Look for command
-[ ! -n "$1" ] && command_help 
+[ ! -n "$1" ] && command_help "$command" "OK"
 
 case $1 in 
   create)
@@ -56,6 +56,11 @@ case $1 in
     shift
     . /usr/local/craft/lib/command.sh
     command_command "$@"
+    ;;
+  mod)
+    shift
+    . /usr/local/craft/lib/mod.sh
+    mod_command "$@"
     ;;
   -ls)
     ohai "Existing servers:"

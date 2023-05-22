@@ -45,7 +45,7 @@ config_server () {
   echo "#$(date)" >> ${server_properties}.tmp
 
   # Read server.properties
-  read_properties ${server_properties}
+  # read_properties ${server_properties}
 
 
   ### Launcher Properties
@@ -58,7 +58,33 @@ config_server () {
   echo "#$(date)" >> ${launcher_properties}.tmp
 
   # Read fabric-server-launcher.properties
-  read_properties ${launcher_properties}
+  # read_properties ${launcher_properties}
+
+  while true; do
+
+    ohai "Do you want to add a text art logo to ${server_name}?"
+    read -p "(y/n) : " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+
+      read -p "Path to file : " input
+      input=$(echo $input | tr -d '~')
+      cp "${HOME}${input}" $craft_server_dir/$server_name/logo.txt
+      break
+
+    elif [[ $REPLY =~ ^[Nn]$ ]]; then
+
+      break
+
+    else
+
+      echo "Please enter y or n"
+
+    fi
+
+  done
+
+  ohai "Configuration complete"
 
 }
 

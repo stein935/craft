@@ -18,11 +18,24 @@ stop_server () {
     ohai "Stopping ${server_name} Minecraft server"
   fi
 
+  #write out current crontab
+  crontab -l > $craft_server_dir/.crontab
+  #echo new cron into cron file
+  sed -i ".bak" "/${server_name}/d" $craft_server_dir/.crontab
+  #install new cron file
+  crontab $craft_server_dir/.crontab && rm $craft_server_dir/.crontab
+
 screen -S $server_name -p 0 -X stuff "/stop
 " &> /dev/null
 
   screen -S $server_name -X quit &> /dev/null
-  kill -9 "$PID" &> /dev/null
+
+  for pid in $PID; do
+
+    kill -9 "$pid" 
+    # &> /dev/null
+
+  done
 
   ohai "${server_name} Minecraft server stopped"
 

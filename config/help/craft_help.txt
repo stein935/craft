@@ -12,4 +12,4 @@ Commands
   stop                            Stop an existing server
   status                          Get status of an existing server 
   server                          Enter shell for a server that is running
-  restart                         If running, stop then restart an existing server 
+  restart                         If running, stop then restart an existing server

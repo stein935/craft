@@ -9,13 +9,8 @@ restart_server () {
 
   get_properties
   
-  PID=$(netstat -vanp tcp | grep $server_port | awk '{print $9}')
-  if [ "$PID" != "" ]; then
-    craft stop -n $server_name
-    craft start -n $server_name -m
-  else
-    warn "${server_name} is not running"
-  fi
+  craft stop -n $server_name
+  craft start -n $server_name -m
 
 }
 

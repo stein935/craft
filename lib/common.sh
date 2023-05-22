@@ -39,7 +39,10 @@ warn() {
 
 # Errors and help
 command_help () {
+  echo ""
   cat ${craft_home_dir}/config/help/${1}_help.txt
+  echo "
+  "
   if [ "$2" != "" ]; then
     exit 0
   else

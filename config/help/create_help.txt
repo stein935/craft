@@ -73,4 +73,4 @@ See https://minecraft.fandom.com/wiki/Server.properties for more info
   -use-native-transport                   Default: true
   -view-distance                          Default: 10
   -white-list                             Default: false
-  -help | -h                              usage 
+  -help | -h                              usage

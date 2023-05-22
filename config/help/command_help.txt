@@ -8,4 +8,4 @@ Required:
   -c <command [ options ]>        Minecraft server command 
 
 Minecraft commands:
-See https://minecraft.fandom.com/wiki/Commands for more info 
+See https://minecraft.fandom.com/wiki/Commands for more info

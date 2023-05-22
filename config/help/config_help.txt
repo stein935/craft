@@ -69,4 +69,4 @@ See https://minecraft.fandom.com/wiki/Server.properties for more info
 Launcher properties:
   -serverJar                              Jar file in server dir to use when launching
   -server_init_mem                        Memory limit when starting the server. Default: 512M
-  -server_max_mem                         Memory limit when running the server. Default: 8G 
+  -server_max_mem                         Memory limit when running the server. Default: 8G

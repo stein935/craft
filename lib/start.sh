@@ -25,6 +25,7 @@ start_server () {
 
   if [ -f "${craft_server_dir}/${server_name}/logo.txt" ]; then 
     cat "${craft_server_dir}/${server_name}/logo.txt"
+    echo
   fi
 
   cd ${craft_server_dir}/${server_name}
@@ -38,7 +39,12 @@ start_server () {
       ohai "${server_name} Minecraft server running on port: ${server_port} PID: ${PID}"
 
       if [[ "$monitor" == true ]]; then
-        ohai "Monitor"
+        #write out current crontab
+        crontab -l > $craft_server_dir/.crontab
+        #echo new cron into cron file
+        echo "*/15 * * * * /usr/local/craft/lib/monitor.sh $server_name" >> $craft_server_dir/.crontab
+        #install new cron file
+        crontab $craft_server_dir/.crontab && rm $craft_server_dir/.crontab
       fi 
       return
     fi
