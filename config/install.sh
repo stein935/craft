@@ -160,6 +160,7 @@ MACOS_NEWEST_UNSUPPORTED="14.0"
 MACOS_OLDEST_SUPPORTED="11.0"
 
 REQUIRED_GIT_VERSION=2.7.0   # CRAFT_MINIMUM_GIT_VERSION in craft.sh in craft/craft
+REQUIRED_JAVA_VERSION=17.0.0
 
 unset HAVE_SUDO_ACCESS # unset this from the environment
 
@@ -327,6 +328,22 @@ test_git() {
     version_ge "$(major_minor "${BASH_REMATCH[1]}")" "$(major_minor "${REQUIRED_GIT_VERSION}")"
   else
     abort "Unexpected Git version: '${git_version_output}'!"
+  fi
+}
+
+test_java() {
+  if [[ ! -x "$1" ]]
+  then
+    return 1
+  fi
+
+  local java_version_output
+  java_version_output="$("$1" --version 2>/dev/null)"
+  if [[ "${java_version_output}" =~ "java version "([^ ]*).* ]]
+  then
+    version_ge "$(major_minor "${BASH_REMATCH[1]}")" "$(major_minor "${REQUIRED_JAVA_VERSION}")"
+  else
+    abort "Unexpected Java version: '${git_version_output}'!"
   fi
 }
 
