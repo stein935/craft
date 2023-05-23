@@ -339,6 +339,7 @@ test_java() {
 
   local java_version_output
   java_version_output="$("$1" --version 2>/dev/null)"
+  echo "Java verstion: $(major_minor "${BASH_REMATCH[1]}")" 
   if [[ "${java_version_output}" =~ "java version "([^ ]*).* ]]
   then
     version_ge "$(major_minor "${BASH_REMATCH[1]}")" "$(major_minor "${REQUIRED_JAVA_VERSION}")"
