@@ -156,11 +156,11 @@ if [ "$uninstall" == true ]; then
   servers=$(craft -ls)
   for server in $servers
   do
-    execute "craft stop -n $server &> /dev/null"
+    execute "craft" "stop" "-n" "$server" "&>" "/dev/null"
   done
   ohai "Deleting Craft CLI files"
-  execute_sudo "rm -r /usr/local/craft"
-  execute_sudo "rm -r /usr/local/bin/craft"
+  execute_sudo "rm" "-r" "/usr/local/craft"
+  execute_sudo "rm" "-r" "/usr/local/bin/craft"
   echo "Deleted: /usr/local/craft"
   echo "Deleted: /usr/local/bin/craft"
 fi
@@ -174,7 +174,7 @@ if [ "$delete_servers" == true ]; then
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
 
-      execute_sudo "rm -r $HOME/Craft"
+      execute_sudo "rm" "-r" "$HOME/Craft"
       echo "Deleted: $HOME/Craft"
       messages+="servers deleted"
 
