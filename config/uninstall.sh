@@ -103,7 +103,6 @@ if [ "$uninstall" == true ]; then
   rm -r /usr/local/bin/craft
   echo "Deleted: /usr/local/craft"
   echo "Deleted: /usr/local/bin/craft"
-  done
 fi
 
 if [ "$delete_servers" == true ]; then
