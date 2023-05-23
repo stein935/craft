@@ -702,16 +702,16 @@ then
   abort "$(
     cat <<EOABORT
 You must install Git before installing Craft. See:
-  ${tty_underline}https://docs.brew.sh/Installation${tty_reset}
 EOABORT
   )"
 fi
 
-if ! command -v curl >/dev/null
+USABLE_JAVA="$(find_tool java)"
+if [[ -z "${USABLE_JAVA}" ]]
 then
   abort "$(
     cat <<EOABORT
-You must install cURL before installing Craft.
+You must install Jaa before installing Craft. See:
 EOABORT
   )"
 fi
