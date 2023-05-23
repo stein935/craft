@@ -707,7 +707,7 @@ if [[ -z "${USABLE_JAVA}" ]]
 then
   abort "$(
     cat <<EOABORT
-You must install Jaa before installing Craft. See:
+You must install Java 17+ before installing Craft. See:
 EOABORT
   )"
 fi
