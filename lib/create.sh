@@ -173,7 +173,7 @@ create_command () {
 	while getopts ":n:v:l:i:m:sh" opt; do
     case $opt in 
       n)
-        server_name="$OPTARG"
+        server_name="${OPTARG[@]}"
         ;;
       v)
         minecraft_version="$OPTARG"

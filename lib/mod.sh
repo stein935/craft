@@ -33,7 +33,7 @@ mod_command () {
   while getopts ":n:p:r:lh" opt; do
     case $opt in 
       n)
-        server_name="$OPTARG"
+        server_name="${OPTARG[@]}"
         ;;
       p)
         path="$OPTARG"

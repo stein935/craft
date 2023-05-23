@@ -34,7 +34,7 @@ command_command () {
   while getopts ":n:c:h" opt; do
     case $opt in 
       n)
-        server_name="$OPTARG"
+        server_name="${OPTARG[@]}"
         ;;
       c)
         server_command="$OPTARG"
