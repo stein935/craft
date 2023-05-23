@@ -98,6 +98,7 @@ directories=(
 if [ "$uninstall" == true ]; then 
   ohai "Stopping all servers"
   servers=$(craft -ls)
+  echo "$servers"
   for server in $servers
   do
     craft stop -n $server
