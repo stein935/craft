@@ -62,6 +62,10 @@ case $1 in
     . /usr/local/craft/lib/mod.sh
     mod_command "$@"
     ;;
+  shellenv)
+    . /usr/local/craft/lib/shellenv.sh
+    shellenv-command "$@"
+    ;;
   -ls)
     ls $craft_server_dir
     ;;
