@@ -107,7 +107,7 @@ if [ "$uninstall" == true ]; then
   do
     rm -r $dir
     echo "Deleted: $dir"
-    message+="CLI deleted"
+    messages+="CLI deleted"
   done
 fi
 
@@ -122,7 +122,7 @@ if [ "$delete_servers" == true ]; then
 
     rm -r $HOME/Craft
     echo "Deleted: $HOME/Craft"
-    message+="servers deleted"
+    messages+="servers deleted"
 
     break
 
