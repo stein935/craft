@@ -98,12 +98,13 @@ execute_sudo() {
   fi
 }
 
+ohai 'Checking for `sudo` access (which may request your password)...'
 
 have_sudo_access
 
 while true; do
 
-  ohai "Uninstall Craft CLI?"
+  warn "Uninstall Craft CLI?"
   read -p "(y/n) : " -n 1 -r
   echo
   if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -128,7 +129,7 @@ done
 
 while true; do
 
-  ohai "Delete all servers in ${HOME}/Craft?"
+  warn "Delete all servers in ${HOME}/Craft?"
   read -p "(y/n) : " -n 1 -r
   echo
   if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -167,14 +168,17 @@ if [ "$delete_servers" == true ]; then
 
   while true; do
 
-    ohai "Permanently delete all Minecraft servers and worlds in ${HOME}/Craft?"
+    warn "Permanently delete all Minecraft servers and worlds in ${HOME}/Craft?"
     read -p "(y/n) : " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
 
       execute_sudo "rm" "-r" "$HOME/Craft"
-      echo "Deleted: $HOME/Craft"
-      echo "  ${servers[@]}"
+
+      for server in $servers
+      do
+        echo "Deleted: $server"
+      done
 
       break
 
