@@ -15,7 +15,7 @@ stop_server () {
     warn "No server running on port: ${server_port}"
     ohai "Force stopping all related processes ... just in case"
   else 
-    ohai "Stopping ${server_name} Minecraf t server"
+    ohai "Stopping ${server_name} Minecraft server"
   fi
 
   #write out current crontab

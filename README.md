@@ -59,10 +59,10 @@
  *Command*: **config**
 
  *Usage*: 
-   craft config -name <server_name>        Usage details: Run '$ craft config -h'
+   craft config -n <server_name>           Usage details: Run '$ craft config -h'
 
  *Required*:
-   -name <server_name>                     Name of server to configure
+   -n <server_name>                        Name of server to configure
 
  *Server properties*:
  See https://minecraft.fandom.com/wiki/Server.properties for more info
@@ -140,10 +140,10 @@
  *Command*: **create**
 
  *Usage*: 
-   craft create -name <server_name> [ options ]       Usage details: Run '$ craft create -h'
+   craft create -n <server_name> [ options ]       Usage details: Run '$ craft create -h'
 
  *Required*:
-   -name <server_name>                     Sets name of new server 
+   -n <server_name>                        Sets name of new server 
 
  *Install options*:
    -mcversion <minecraft_version>          Sets Minecraft game version
@@ -168,7 +168,7 @@
  *Command*: **delete**
 
  *Usage*: 
-   craft delete -n <server_name>     Usage details: Run '$ craft delete -h' 
+   craft delete -n <server_name>      Usage details: Run '$ craft delete -h' 
 
  *Required*:
    -n <server_name>                   Name of server to delete
@@ -260,7 +260,7 @@
    craft status -n <server_name>     Usage details: Run '$ craft status -h' 
 
  *Required*:
-   -n <server_name>                   Name of server
+   -n <server_name>                  Name of server
 ```
 
 ### Stop

@@ -13,3 +13,5 @@ Commands
   status                          Get status of an existing server 
   server                          Enter shell for a server that is running
   restart                         If running, stop then restart an existing server
+  command                         Send a command to a running server
+  config                          Configure a server

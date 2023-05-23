@@ -1,10 +1,10 @@
 Command: create
 
 Usage: 
-  craft create -name <server_name> [options]       Usage details: Run '$ craft create -h'
+  craft create -n <server_name> [options]       Usage details: Run '$ craft create -h'
 
 Required:
-  -name <server_name>                     Sets name of new server 
+  -n <server_name>                        Sets name of new server 
 
 Install options:
   -mcversion <minecraft_version>          Sets Minecraft game version
