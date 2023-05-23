@@ -156,7 +156,7 @@ if [ "$uninstall" == true ]; then
   servers=$(craft -ls)
   for server in $servers
   do
-    execute "craft" "stop" "-n" "$server" &>/dev/null
+    craft stop -n $server &>/dev/null
   done
   ohai "Deleting Craft CLI files"
   execute_sudo "rm" "-r" "/usr/local/craft"
