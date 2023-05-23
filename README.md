@@ -1,11 +1,19 @@
 # Minecraft Server Manager 
+
 ## Install
-`/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/stein935/craft/main/config/install.sh)"`
+
+```
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/stein935/craft/main/config/install.sh)"
+```
 
 ## Uninstall
-`/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/stein935/craft/main/config/uninstall.sh)"`
+
+```
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/stein935/craft/main/config/uninstall.sh)"
+```
 
 ## Environment Requirements 
+
 1. MacOS 
 2. [Java 17+](https://www.oracle.com/java/technologies/downloads/)
 3. [Git 2.7.0+ ](https://git-scm.com/download/mac)
@@ -14,16 +22,19 @@
 ## Commands 
 
 ### -h
-```craft -h```
-*Craft cli help*
+
+`craft -h` *Craft cli help*
 
 ### -ls 
-```craft -ls```
-*List all existing servers*
+
+`craft -ls` *List all existing servers*
 
 ### Command 
+
 *Send a server command to a running server*
-```craft command -n <server_name> -c <minectaft_server_command```
+
+`craft command -n <server_name> -c <minectaft_server_command`
+
 ```
  *Command*: **command**
 
@@ -39,8 +50,11 @@
 ```
 
 ### Config
+
 *Configure an existing server. This includes the server properties and launcher properties*
-```craft config -n <new _server_name>```
+
+`craft config -n <new _server_name>`
+
 ```
  *Command*: **config**
 
@@ -116,9 +130,12 @@
    -server_max_mem                         Memory limit when running the server. Default: 8G
 ```
 
-### Create 
+### Create
+
 *Create a new minecraft server. Specify name, versions, configure server options and accept terms*
-```craft create -n <new _server_name>```
+
+`craft create -n <new _server_name>`
+
 ```
  *Command*: **create**
 
@@ -142,8 +159,11 @@
 ```
 
 ### Delete 
+
 *Perminantly delete an existing server. This removes all files*
-```craft delete -n <server_name>```
+
+`craft delete -n <server_name>`
+
 ```
  *Command*: **delete**
 
@@ -155,8 +175,11 @@
 ```
 
 ### Mod
-Add, remove or list mods for an existing server*
-```craft mod -n <server_name> -p <local_path_to_new_mod>```
+
+*Add, remove or list mods for an existing server*
+
+`craft mod -n <server_name> -p <local_path_to_new_mod>`
+
 ```
  *Command*: **mod**
 
@@ -174,8 +197,11 @@ Add, remove or list mods for an existing server*
 ```
 
 ### Restart
+
 *Safely stop (if running) then restart a server*
-```craft restart -n <server_name>```
+
+`craft restart -n <server_name>`
+
 ```
  *Command*: **restart**
 
@@ -187,8 +213,11 @@ Add, remove or list mods for an existing server*
 ```
 
 ### Server
+
 *View window where a server is running* 
-```craft server -n <server_name>```
+
+`craft server -n <server_name>`
+
 ```
  *Command*: **server**
 
@@ -200,8 +229,11 @@ Add, remove or list mods for an existing server*
 ```
 
 ### Start
+
 *Start an existing server. Option -m is used to periodically monitor server status and restart if down.*
-```craft start -n <server_name>```
+
+`craft start -n <server_name>`
+
 ```
  *Command*: **start**
 
@@ -216,8 +248,11 @@ Add, remove or list mods for an existing server*
 ```
 
 ### Status
+
 *Chech the status of an existing server*
-```craft status -n <server_name>```
+
+`craft status -n <server_name>`
+
 ```
  *Command*: **status**
 
@@ -229,8 +264,11 @@ Add, remove or list mods for an existing server*
 ```
 
 ### Stop
+
 *Safely stop a running server*
-```craft stop -n <server_name>```
+
+`craft stop -n <server_name>`
+  
 ```
  *Command*: **stop**
 
