@@ -10,13 +10,17 @@
 2. [Java 17+](https://www.oracle.com/java/technologies/downloads/)
 3. [Git 2.7.0+ ](https://git-scm.com/download/mac)
 
+
 ## Commands 
+
 ### -h
 ```craft -h```
 *Craft cli help*
+
 ### -ls 
 ```craft -ls```
 *List all existing servers*
+
 ### Command 
 *Send a server command to a running server*
 ```craft command -n <server_name> -c <minectaft_server_command```
@@ -33,6 +37,7 @@
  *Minecraft commands*:
  See https://minecraft.fandom.com/wiki/Commands for more info
 ```
+
 ### Config
 *Configure an existing server. This includes the server properties and launcher properties*
 ```craft config -n <new _server_name>```
@@ -110,6 +115,7 @@
    -server_init_mem                        Memory limit when starting the server. Default: 512M
    -server_max_mem                         Memory limit when running the server. Default: 8G
 ```
+
 ### Create 
 *Create a new minecraft server. Specify name, versions, configure server options and accept terms*
 ```craft create -n <new _server_name>```
@@ -134,6 +140,7 @@
  *Server properties*:
  See https://minecraft.fandom.com/wiki/Server.properties for more info
 ```
+
 ### Delete 
 *Perminantly delete an existing server. This removes all files*
 ```craft delete -n <server_name>```
@@ -146,6 +153,7 @@
  *Required*:
    -n <server_name>                   Name of server to delete
 ```
+
 ### Mod
 Add, remove or list mods for an existing server*
 ```craft mod -n <server_name> -p <local_path_to_new_mod>```
@@ -164,6 +172,7 @@ Add, remove or list mods for an existing server*
    -r                   Name of mod file you would like to remove
                         Use -l to find exact file name
 ```
+
 ### Restart
 *Safely stop (if running) then restart a server*
 ```craft restart -n <server_name>```
@@ -176,6 +185,7 @@ Add, remove or list mods for an existing server*
  *Required*:
    -n <server_name>                   Name of server to restart
 ```
+
 ### Server
 *View window where a server is running* 
 ```craft server -n <server_name>```
@@ -188,6 +198,7 @@ Add, remove or list mods for an existing server*
  *Required*:
    -n <server_name>                    Name of server to view
 ```
+
 ### Start
 *Start an existing server. Option -m is used to periodically monitor server status and restart if down.*
 ```craft start -n <server_name>```
@@ -203,6 +214,7 @@ Add, remove or list mods for an existing server*
  *Options*
    -m                   Automatically restart server when it fails
 ```
+
 ### Status
 *Chech the status of an existing server*
 ```craft status -n <server_name>```
@@ -215,6 +227,7 @@ Add, remove or list mods for an existing server*
  *Required*:
    -n <server_name>                   Name of server
 ```
+
 ### Stop
 *Safely stop a running server*
 ```craft stop -n <server_name>```
