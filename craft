@@ -63,7 +63,6 @@ case $1 in
     mod_command "$@"
     ;;
   -ls)
-    ohai "Existing servers:"
     ls $craft_server_dir
     ;;
   -h | -help)
