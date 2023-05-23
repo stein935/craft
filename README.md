@@ -2,6 +2,9 @@
 ## Install
 `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/stein935/craft/main/config/install.sh)"`
 
+## Uninstall
+`/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/stein935/craft/main/config/uninstall.sh)"`
+
 ## Environment Requirements 
 1. MacOS 
 2. [Java 17+](https://www.oracle.com/java/technologies/downloads/)
