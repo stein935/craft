@@ -1,4 +1,4 @@
-# Craft - Minecraft Server Manager 
+# Craft CLI - Minecraft Server Manager 
 
 ## Install
 
