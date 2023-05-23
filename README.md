@@ -1,14 +1,14 @@
-# Minecraft Server Manager 
+# Craft - Minecraft Server Manager 
 
 ## Install
 
-```
+```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/stein935/craft/main/config/install.sh)"
 ```
 
 ## Uninstall
 
-```
+```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/stein935/craft/main/config/uninstall.sh)"
 ```
 
@@ -268,7 +268,7 @@
 *Safely stop a running server*
 
 `craft stop -n <server_name>`
-  
+
 ```
  *Command*: **stop**
 
