@@ -2,7 +2,7 @@
 
 uninstall=false
 delete_servers=false
-messages=()
+servers=()
 
 # string formatters
 if [[ -t 1 ]]
@@ -161,8 +161,6 @@ if [ "$uninstall" == true ]; then
   ohai "Deleting Craft CLI files"
   execute_sudo "rm" "-r" "/usr/local/craft"
   execute_sudo "rm" "-r" "/usr/local/bin/craft"
-  echo "Deleted: /usr/local/craft"
-  echo "Deleted: /usr/local/bin/craft"
 fi
 
 if [ "$delete_servers" == true ]; then
@@ -176,7 +174,7 @@ if [ "$delete_servers" == true ]; then
 
       execute_sudo "rm" "-r" "$HOME/Craft"
       echo "Deleted: $HOME/Craft"
-      messages+="servers deleted"
+      echo "  ${servers[@]}"
 
       break
 
