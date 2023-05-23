@@ -60,7 +60,7 @@ start_command () {
   while getopts ":n:mh" opt; do
     case $opt in 
       n)
-        server_name="${OPTARG[@]}"
+        server_name="$OPTARG"
         ;;
       m)
         monitor=true

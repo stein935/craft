@@ -21,7 +21,7 @@ restart_server () {
   while getopts ":n:h" opt; do
     case $opt in 
       n)
-        server_name="${OPTARG[@]}"
+        server_name="$OPTARG"
         ;;
       h)
         command_help "$command"
