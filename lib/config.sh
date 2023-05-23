@@ -44,7 +44,7 @@ config_server () {
   echo "#Minecraft server properties" >> ${server_properties}.tmp
   echo "#$(date)" >> ${server_properties}.tmp
 
-  Read server.properties
+  # Read server.properties
   read_properties ${server_properties}
 
 
@@ -57,7 +57,7 @@ config_server () {
   echo "#Fabric launcher properties" >> ${launcher_properties}.tmp
   echo "#$(date)" >> ${launcher_properties}.tmp
 
-  Read fabric-server-launcher.properties
+  # Read fabric-server-launcher.properties
   read_properties ${launcher_properties}
 
   while true; do
