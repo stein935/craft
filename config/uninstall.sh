@@ -91,10 +91,6 @@ while true; do
 
 done
 
-directories=(
-  /usr/local/bin/craft
-  /usr/local/craft
-)
 if [ "$uninstall" == true ]; then 
   ohai "Stopping all servers"
   servers=$(craft -ls)
@@ -103,44 +99,42 @@ if [ "$uninstall" == true ]; then
     craft stop -n $server &> /dev/null
   done
   ohai "Deleting Craft CLI files"
-  for dir in $directories
-  do
-    rm -r $dir
-    echo "Deleted: $dir"
-    messages+="CLI deleted"
+  rm -r /usr/local/craft
+  rm -r /usr/local/bin/craft
+  echo "Deleted: /usr/local/craft"
+  echo "Deleted: /usr/local/bin/craft"
   done
 fi
 
 if [ "$delete_servers" == true ]; then
 
-   while true; do
+  while true; do
 
-  ohai "Permanently delete all Minecraft servers and worlds in ${HOME}/Craft?"
-  read -p "(y/n) : " -n 1 -r
-  echo
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    ohai "Permanently delete all Minecraft servers and worlds in ${HOME}/Craft?"
+    read -p "(y/n) : " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
 
-    rm -r $HOME/Craft
-    echo "Deleted: $HOME/Craft"
-    messages+="servers deleted"
+      rm -r $HOME/Craft
+      echo "Deleted: $HOME/Craft"
+      messages+="servers deleted"
 
-    break
+      break
 
-  elif [[ $REPLY =~ ^[Nn]$ ]]; then
+    elif [[ $REPLY =~ ^[Nn]$ ]]; then
 
-    warn "Leaving servers alone" 
+      warn "Leaving servers alone" 
 
-    break
+      break
 
-  else
+    else
 
-    echo "Please enter y or n"
+      echo "Please enter y or n"
 
-  fi
+    fi
 
-done
+  done
 
-for message in $messages
-do
-  ohai "$message"
-done
+fi
+
+ohai "Done!"
