@@ -12,7 +12,8 @@ mod_server () {
 
   if [ "$rm" != false ]; then
     rm -f $craft_server_dir/$server_name/mods/$rm
-    ohai "${path} removed from ${server_name} Minecraft server"
+    ohai "${rm} removed from ${server_name} Minecraft server"
+    echo "$(date) : Mod: Removed ${rm} from ${server_name}" >> $craft_server_dir/$server_name/logs/monitor/$(date '+%Y-%m').log
   fi
 
   if [ "$ls" == true ]; then
@@ -22,6 +23,7 @@ mod_server () {
   if [ "$path" != false ]; then
     cp $path $craft_server_dir/$server_name/mods
     ohai "${path} installed on ${server_name} Minecraft server"
+    echo "$(date) : Mod: Added ${path} to ${server_name}" >> $craft_server_dir/$server_name/logs/monitor/$(date '+%Y-%m').log
   fi
 
 }

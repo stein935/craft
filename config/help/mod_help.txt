@@ -8,6 +8,6 @@ Required:
 
 Options
   -l                   List mods in mods directory
-  -p                   Local path to mod file you would like to instal
-  -r                   Name of mod file you would like to remove
+  -p <path>            Local path to mod file you would like to instal
+  -r <file_name>       Name of mod file you would like to remove
                        Use -l to find exact file name

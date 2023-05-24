@@ -12,6 +12,7 @@ view_server () {
   PID=$(netstat -vanp tcp | grep $server_port | awk '{print $9}')
   if [ "$PID" != "" ]; then
     screen -r ${server_name}
+    echo "$(date) : Server: ${server_name} was viewed." >> $craft_server_dir/$server_name/logs/monitor/$(date '+%Y-%m').log
   else
     warn "${server_name} is not running"
   fi

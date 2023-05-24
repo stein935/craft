@@ -267,6 +267,7 @@
 
   Options*
    -m                   Automatically restart server when it fails
+   -v                   Verbose mode (see the java server starting in current vindow)
 ```
 
 ### Status

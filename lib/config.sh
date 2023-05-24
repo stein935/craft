@@ -18,6 +18,7 @@ read_properties () {
       if [ "$input" != "" ]; then
         input=$(printf '%s\n' "${input}")
         echo "${line%=*}=${input}" >> ${properties}.tmp
+        echo "$(date) : Config: ${server_name} setting ${line%=*} changed from \"${set}\" to \"${input}\"" >> $craft_server_dir/$server_name/logs/monitor/$(date '+%Y-%m').log
       else 
         echo "${line}" >> ${properties}.tmp
       fi

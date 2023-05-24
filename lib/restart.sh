@@ -11,6 +11,8 @@ restart_server () {
   
   craft stop -n $server_name
   craft start -n $server_name -m
+  echo "$(date) : Restart: ${server_name} was restarted." >> $craft_server_dir/$server_name/logs/monitor/$(date '+%Y-%m').log
+
 
 }
 

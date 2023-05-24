@@ -40,9 +40,13 @@ sign_eula () {
   done
 
   ohai "${server_name} has been installed!"
+  echo
   echo "  Location ${craft_server_dir}/${server_name}"
   echo "  To start the server - Run:
     > craft start -n ${server_name}"
+  echo
+  mkdir $craft_server_dir/$server_name/logs/monitor
+  echo "$(date) : Create: ${server_name} created!" >> $craft_server_dir/$server_name/logs/monitor/$(date '+%Y-%m').log
 
 }
 

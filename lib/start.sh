@@ -12,17 +12,19 @@ frequency="15"
 
 start_server () {
 
+  # Load server properties
   get_properties
 
+  # Check if a server is already running on the port
   PID=$(netstat -vanp tcp | grep $server_port | awk '{print $9}')
 
-  # Check if a server is already running on the port
   if [ "$PID" != "" ]; then
     warn "A server is already running on port: ${server_port}. PID: ${PID}
     Run $ craft stop -n ${server_name} or $ craft restart -n ${server_name}"
     exit 1
   fi
 
+  # Message that the server is starting
   ohai "Starting ${server_name} Minecraft server"
 
   if [ -f "${craft_server_dir}/${server_name}/logo.txt" ]; then 
@@ -30,6 +32,18 @@ start_server () {
     echo
   fi
 
+  # Kill screens or processes that might be duplicates
+  for session in $(screen -ls | grep -o "[0-9]*\.${server_name}")
+  do 
+    screen -S "${session}" -X quit 
+  done
+  for pid in $PID; do
+    kill -9 "$pid" 
+    # &> /dev/null
+  done
+
+
+  # Start the server
   cd ${craft_server_dir}/${server_name}
 
   if [ "$quiet" == true ]; then
@@ -38,6 +52,7 @@ start_server () {
     java -jar -Xms$server_init_mem -Xmx$server_max_mem fabric-server-launch.jar --nogui
   fi
 
+  # Wait for server to start
   while [ 1 ]
   do
     SCREEN=$(screen -ls $server_name)
@@ -45,19 +60,25 @@ start_server () {
 
     if [[ "$SCREEN" != "" && "$quiet" == true && "$PID" != "" ]]; then
 
+      # Do this if the server is running
       ohai "${server_name} Minecraft server running on port: ${server_port} PID: ${PID}"
+      echo "$(date) : Start: ${server_name} running on port: ${server_port} PID: ${PID}" >> $craft_server_dir/$server_name/logs/monitor/$(date '+%Y-%m').log
+
       if [[ "$monitor" == true ]]; then
-        #write out current crontab
+        
+        # Set server minitor cron job 
         crontab -l > $craft_server_dir/.crontab
-        #echo new cron into cron file
         echo "*/${frequency} * * * * /usr/local/craft/lib/monitor.sh $server_name" >> $craft_server_dir/.crontab
-        #install new cron file
         crontab $craft_server_dir/.crontab && rm $craft_server_dir/.crontab
+
       fi 
       return
 
     elif [[ "$SCREEN" == "" && "$quiet" == true ]]; then
+
+      # Sever failed to start
       warn "Failed to start ${server_name}"
+      echo "To see server logs run: cat -n ${craft_server_dir}/${server_name}/logs/latest.log"
       exit 1
     fi
     sleep 1

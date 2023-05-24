@@ -9,16 +9,10 @@ server_name=$1
 
 get_properties
 
-if ! [[ -d "$craft_server_dir/$server_name/logs/monitor" ]]; then
-  mkdir $craft_server_dir/$server_name/logs/monitor
-fi
-
 PID=$(netstat -vanp tcp | grep $server_port | awk '{print $9}')
 
-if [ "$PID" != "" ]; then
-  echo "$(date) : ${server_name} running on port: ${server_port} PID: ${PID}" >> $craft_server_dir/$server_name/logs/monitor/$(date '+%Y-%m').log
-else
+if [ "$PID" == "" ]; then
   craft restart -n $server_name
-  echo "$(date) : ${server_name} restarted." >> $craft_server_dir/$server_name/logs/monitor/$(date '+%Y-%m').log
+  echo "$(date) : Monitor: ${server_name} was restarted automatically when a crash was detected. Port: ${server_port} PID: ${PID}" >> $craft_server_dir/$server_name/logs/monitor/$(date '+%Y-%m').log
   discord_message "Auto Restart" "${server_name} was restarted automatically when a crash was detected" "12745742" "Server Monitor"
 fi

@@ -30,7 +30,7 @@ chomp() {
 }
 
 ohai() {
-  printf "${tty_blue}==>${tty_bold} %s${tty_reset}\n" "$(shell_join "$@")"
+  printf "${tty_blue}~~>${tty_bold} %s${tty_reset}\n" "$(shell_join "$@")"
 }
 
 warn() {

@@ -12,13 +12,15 @@ server_status () {
   PID=$(netstat -vanp tcp | grep $server_port | awk '{print $9}')
   if [ "$PID" != "" ]; then
     ohai "${server_name} Minecraft server running on port: ${server_port} PID: ${PID}"
+    echo "$(date) : Status: ${server_name} is running on port: ${server_port} PID: ${PID}." >> $craft_server_dir/$server_name/logs/monitor/$(date '+%Y-%m').log
   else
     warn "${server_name} is not running"
+    echo "$(date) : Status: ${server_name} is not running." >> $craft_server_dir/$server_name/logs/monitor/$(date '+%Y-%m').log
   fi
 
 }
 
-  status_command () {
+status_command () {
 
   [ ! -n "$1" ] && command_help "$command"
 

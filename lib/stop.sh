@@ -28,16 +28,8 @@ stop_server () {
 screen -S $server_name -p 0 -X stuff "/stop
 " &> /dev/null
 
-  screen -S $server_name -X quit &> /dev/null
-
-  for pid in $PID; do
-
-    kill -9 "$pid" 
-    # &> /dev/null
-
-  done
-
   ohai "${server_name} Minecraft server stopped"
+  echo "$(date) : Stop: ${server_name} stopped" >> $craft_server_dir/$server_name/logs/monitor/$(date '+%Y-%m').log
 
 }
 

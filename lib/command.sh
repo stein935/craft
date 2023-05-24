@@ -15,6 +15,8 @@ command_server () {
 
     ohai "Sending ${server_command} to ${server_name} Minecraft server"
 
+    cat ${craft_server_dir}/${server_name}/logs/latest.log > ${craft_server_dir}/${server_name}/logs/latest.log.tmp
+
 screen -S "$server_name" -p 0 -X stuff "${server_command}
 "
 
@@ -22,8 +24,25 @@ screen -S "$server_name" -p 0 -X stuff "${server_command}
     warn "${server_name} is not running"
   fi
 
-  echo "${tty_bold}Server logs${tty_reset}:"
-  tail ${craft_server_dir}/${server_name}/screenlog.0
+  while [ 1 ]
+  do
+
+    compare=$(comm -23 ${craft_server_dir}/${server_name}/logs/latest.log ${craft_server_dir}/${server_name}/logs/latest.log.tmp)
+    if [ "$compare" != "" ]; then
+
+      echo "${tty_bold}Server logs${tty_reset}:"
+      echo "$compare"
+
+      echo "$(date) : Command: ${server_command} sent to ${server_name}. Server log: ${compare}" >> $craft_server_dir/$server_name/logs/monitor/$(date '+%Y-%m').log
+
+      rm ${craft_server_dir}/${server_name}/logs/latest.log.tmp
+
+      return
+
+    fi
+    sleep 1
+
+  done
 
 }
 
