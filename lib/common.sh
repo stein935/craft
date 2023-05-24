@@ -98,3 +98,27 @@ find_server () {
     exit 1
   fi
 }
+
+discord_message () {
+
+  message () {
+    cat <<EOF
+{
+  "embeds":[{
+    "title": "${1}",
+    "description":"${2}",
+    "timestamp":"$(date +'%Y-%m-%dT%H:%M:%S%z')",
+    "color":"${3}",
+    "author":{
+      "name":"Craft CLI - ${4}",
+      "url":"https://github.com/stein935/craft"
+    }
+  }]
+}
+EOF
+  }
+
+  # POST request to Discord Webhook
+  curl -H "Content-Type: application/json" -X POST -d "$(message "$1" "$2" "$3" "$4")" $discord_webhook
+
+}

@@ -16,6 +16,7 @@ read_properties () {
       set="${line##*=}"
       read -p "${line%=*} (Set to: \"${set}\"): " input </dev/tty
       if [ "$input" != "" ]; then
+        input=$(printf '%s\n' "${input}")
         echo "${line%=*}=${input}" >> ${properties}.tmp
       else 
         echo "${line}" >> ${properties}.tmp

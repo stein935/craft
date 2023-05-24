@@ -52,6 +52,7 @@ ask_config_server () {
   echo -e "#Fabric launcher properties\n$(cat ${craft_server_dir}/${server_name}/fabric-server-launcher.properties)" > ${craft_server_dir}/${server_name}/fabric-server-launcher.properties
   echo "server_init_mem=512M" >> "${craft_server_dir}/${server_name}/fabric-server-launcher.properties"
   echo "server_max_mem=8G" >> "${craft_server_dir}/${server_name}/fabric-server-launcher.properties"
+  echo "discord_webhook=" >> "${craft_server_dir}/${server_name}/fabric-server-launcher.properties"
 
   # Ask about custom config
   while true; do

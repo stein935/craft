@@ -5,13 +5,13 @@ Usage:
 
 Commands
   -ls                             List all existing servers
+  command                         Send a command to a running server
+  config                          Configure a server
   create                          Creates a new Minecraft server
   delete                          Delete an existing server 
   mod                             Add mods to an existing server
-  start                           Start an existing server
-  stop                            Stop an existing server
-  status                          Get status of an existing server 
-  server                          Enter shell for a server that is running
   restart                         If running, stop then restart an existing server
-  command                         Send a command to a running server
-  config                          Configure a server
+  server                          Enter shell for a server that is running
+  start                           Start an existing server
+  status                          Get status of an existing server
+  stop                            Stop an existing server

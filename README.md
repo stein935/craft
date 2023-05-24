@@ -18,6 +18,28 @@
 2. [Java 17+](https://www.oracle.com/java/technologies/downloads/)
 3. [Git 2.7.0+ ](https://git-scm.com/download/mac)
 
+## Usage 
+
+```
+  Command: craft
+
+  Usage: 
+    craft <command> [ options ]     Usage details: Run '$ craft <command> -h'
+
+  Commands
+    -ls                             List all existing servers
+    command                         Send a command to a running server
+    config                          Configure a server
+    create                          Creates a new Minecraft server
+    delete                          Delete an existing server 
+    mod                             Add mods to an existing server
+    restart                         If running, stop then restart an existing server
+    server                          Enter shell for a server that is running
+    start                           Start an existing server
+    status                          Get status of an existing server
+    stop                            Stop an existing server
+```
+
 
 ## Commands 
 
@@ -36,17 +58,17 @@
 `craft command -n <server_name> -c <minectaft_server_command`
 
 ```
- *Command*: **command**
+  Command: command
 
- *Usage*: 
+  Usage: 
    craft command -n <server_name> -c <command [ options ]>   Usage details: Run '$ craft command -h'
 
- *Required*:
+  Required:
    -n <server_name>                Name of server to command      
    -c <command [ options ]>        Minecraft server command 
 
- *Minecraft commands*:
- See https://minecraft.fandom.com/wiki/Commands for more info
+  Minecraft commands:
+  See https://minecraft.fandom.com/wiki/Commands for more info
 ```
 
 ### Config
@@ -56,16 +78,16 @@
 `craft config -n <new _server_name>`
 
 ```
- *Command*: **config**
+  Command: config
 
- *Usage*: 
+  Usage: 
    craft config -n <server_name>           Usage details: Run '$ craft config -h'
 
- *Required*:
+  Required:
    -n <server_name>                        Name of server to configure
 
- *Server properties*:
- See https://minecraft.fandom.com/wiki/Server.properties for more info
+  Server properties:
+  See https://minecraft.fandom.com/wiki/Server.properties for more info
 
    -allow-flight                           Default: false
    -allow-nether                           Default: true
@@ -124,7 +146,7 @@
    -white-list                             Default: false
    -help | -h                              usage 
 
- *Launcher properties*:
+  Launcher properties:
    -serverJar                              Jar file in server dir to use when launching
    -server_init_mem                        Memory limit when starting the server. Default: 512M
    -server_max_mem                         Memory limit when running the server. Default: 8G
@@ -137,25 +159,25 @@
 `craft create -n <new _server_name>`
 
 ```
- *Command*: **create**
+  Command: create
 
- *Usage*: 
+  Usage: 
    craft create -n <server_name> [ options ]       Usage details: Run '$ craft create -h'
 
- *Required*:
+  Required:
    -n <server_name>                        Sets name of new server 
 
- *Install options*:
+  Install options:
    -mcversion <minecraft_version>          Sets Minecraft game version
    -loader <fabric_loader_version>         Sets Fabric loader version       
    -snapshot                               Enables snapshot Minecraft versions
 
- *Server options*:
+  Server options:
    -initmem <sever_init_mem>               Sets Minecraft server mem cap 
    -maxmem <sever_max_mem>                 Sets Minecraft server mem cap 
                                            Defaults to 8192M (8G)
- *Server properties*:
- See https://minecraft.fandom.com/wiki/Server.properties for more info
+  Server properties:
+  See https://minecraft.fandom.com/wiki/Server.properties for more info
 ```
 
 ### Delete 
@@ -165,12 +187,12 @@
 `craft delete -n <server_name>`
 
 ```
- *Command*: **delete**
+  Command: delete
 
- *Usage*: 
+  Usage: 
    craft delete -n <server_name>      Usage details: Run '$ craft delete -h' 
 
- *Required*:
+  Required:
    -n <server_name>                   Name of server to delete
 ```
 
@@ -181,15 +203,15 @@
 `craft mod -n <server_name> -p <local_path_to_new_mod>`
 
 ```
- *Command*: **mod**
+  Command: mod
 
- *Usage*: 
+  Usage: 
    craft mod -n <server_name> [ options ]     Usage details: Run '$ craft mod -h'
 
- *Required*:
+  Required:
    -n <server_name>     Name of server to start       
 
- *Options*
+  Options*
    -l                   List mods in mods directory
    -p                   Local path to mod file you would like to instal
    -r                   Name of mod file you would like to remove
@@ -203,12 +225,12 @@
 `craft restart -n <server_name>`
 
 ```
- *Command*: **restart**
+  Command: restart
 
- *Usage*: 
+  Usage: 
    craft restart -n <server_name>     Usage details: Run '$ craft restart -h'
 
- *Required*:
+  Required:
    -n <server_name>                   Name of server to restart
 ```
 
@@ -219,12 +241,12 @@
 `craft server -n <server_name>`
 
 ```
- *Command*: **server**
+  Command: server
 
- *Usage*: 
+  Usage: 
    craft server -n <server_name>       Usage details: Run '$ craft server -h'
 
- *Required*:
+  Required:
    -n <server_name>                    Name of server to view
 ```
 
@@ -235,15 +257,15 @@
 `craft start -n <server_name>`
 
 ```
- *Command*: **start**
+  Command: start
 
- *Usage*: 
+  Usage: 
    craft start -n <server_name> [ options ]     Usage details: Run '$ craft start -h'
 
- *Required*:
+  Required:
    -n <server_name>     Name of server to start       
 
- *Options*
+  Options*
    -m                   Automatically restart server when it fails
 ```
 
@@ -254,12 +276,12 @@
 `craft status -n <server_name>`
 
 ```
- *Command*: **status**
+  Command: status
 
- *Usage*: 
+  Usage: 
    craft status -n <server_name>     Usage details: Run '$ craft status -h' 
 
- *Required*:
+  Required:
    -n <server_name>                  Name of server
 ```
 
@@ -270,10 +292,10 @@
 `craft stop -n <server_name>`
   
 ```
- *Command*: **stop**
+  Command: stop
 
- *Usage*: 
+  Usage: 
    craft stop -n <server_name>     Usage details: Run '$ craft stop -h'
 
- *Required*:
+  Required:
    -n <server_name>                Name of server to stop

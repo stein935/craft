@@ -5,6 +5,8 @@ server_name=false
 monitor=false
 server_init_mem="512"
 server_max_mem="8"
+quiet=true
+frequency="15"
 
 . "${craft_home_dir}/lib/common.sh"
 
@@ -30,23 +32,33 @@ start_server () {
 
   cd ${craft_server_dir}/${server_name}
 
-  screen -AmdLS "$server_name" java -jar -Xms$server_init_mem -Xmx$server_max_mem fabric-server-launch.jar --nogui
+  if [ "$quiet" == true ]; then
+    screen -AmdLS "$server_name" java -jar -Xms$server_init_mem -Xmx$server_max_mem fabric-server-launch.jar --nogui
+  else
+    java -jar -Xms$server_init_mem -Xmx$server_max_mem fabric-server-launch.jar --nogui
+  fi
 
   while [ 1 ]
   do
+    SCREEN=$(screen -ls $server_name)
     PID=$(netstat -vanp tcp | grep $server_port | awk '{print $9}')
-    if [ "$PID" != "" ]; then
-      ohai "${server_name} Minecraft server running on port: ${server_port} PID: ${PID}"
 
+    if [[ "$SCREEN" != "" && "$quiet" == true && "$PID" != "" ]]; then
+
+      ohai "${server_name} Minecraft server running on port: ${server_port} PID: ${PID}"
       if [[ "$monitor" == true ]]; then
         #write out current crontab
         crontab -l > $craft_server_dir/.crontab
         #echo new cron into cron file
-        echo "*/15 * * * * /usr/local/craft/lib/monitor.sh $server_name" >> $craft_server_dir/.crontab
+        echo "*/${frequency} * * * * /usr/local/craft/lib/monitor.sh $server_name" >> $craft_server_dir/.crontab
         #install new cron file
         crontab $craft_server_dir/.crontab && rm $craft_server_dir/.crontab
       fi 
       return
+
+    elif [[ "$SCREEN" == "" && "$quiet" == true ]]; then
+      warn "Failed to start ${server_name}"
+      exit 1
     fi
     sleep 1
   done
@@ -57,13 +69,24 @@ start_command () {
 
   [ ! -n "$1" ] && command_help "$command"
 
-  while getopts ":n:mh" opt; do
+  while getopts ":n:mvh" opt; do
     case $opt in 
       n)
         server_name="$OPTARG"
         ;;
       m)
         monitor=true
+        eval nextopt=\${$OPTIND}
+        if [[ -n $nextopt && $nextopt != -* ]] ; then
+          frequency=$nextopt
+        fi
+        if [[ -n $frequency && ! $frequency =~ ^[0-9]+$ ]]; then
+          echo "Frequency parameter passed to -m must be an integer (minutes)."
+          exit
+        fi
+        ;;
+      v)
+        quiet=false
         ;;
       h)
         command_help "$command"

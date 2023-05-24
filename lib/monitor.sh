@@ -4,6 +4,7 @@ PATH=/usr/local/bin:/usr/local/sbin:~/bin:/usr/bin:/bin:/usr/sbin:/sbin
 craft_server_dir="$HOME/Craft" 
 craft_home_dir="/usr/local/craft"
 server_name=$1
+
 . "${craft_home_dir}/lib/common.sh"
 
 get_properties
@@ -15,15 +16,9 @@ fi
 PID=$(netstat -vanp tcp | grep $server_port | awk '{print $9}')
 
 if [ "$PID" != "" ]; then
-	status="running on ${PID}"
-
-  echo "$(date) : ${server_name} running" >> $craft_server_dir/$server_name/logs/monitor/$(date '+%Y-%m').log
+  echo "$(date) : ${server_name} running on port: ${server_port} PID: ${PID}" >> $craft_server_dir/$server_name/logs/monitor/$(date '+%Y-%m').log
 else
-  status="restarting"  
-
-  echo "$(date) : ${server_name} restarted" >> $craft_server_dir/$server_name/logs/monitor/$(date '+%Y-%m').log
   craft restart -n $server_name
+  echo "$(date) : ${server_name} restarted." >> $craft_server_dir/$server_name/logs/monitor/$(date '+%Y-%m').log
+  discord_message "Auto Restart" "${server_name} was restarted automatically when a crash was detected" "12745742" "Server Monitor"
 fi
-
-# message=$(printf 'tell Application "Finder" to say "%s is %s"' "$server_name" "$status")
-# osascript -l AppleScript -e "$message"
