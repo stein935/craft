@@ -6,7 +6,7 @@ path=false
 ls=false
 rm=false
 
-. "${craft_home_dir}/lib/common.sh"
+. "${craft_lib}/common.sh"
 
 mod_server () {
 

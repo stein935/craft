@@ -7,7 +7,7 @@ loader=false
 snapshot=false
 install_command="java -jar ${craft_home_dir}/config/fabric-installer.jar server -downloadMinecraft -dir"
 
-. "${craft_home_dir}/lib/common.sh"
+. "${craft_lib}/common.sh"
 
 sign_eula () {
 

@@ -5,7 +5,7 @@ craft_server_dir="$HOME/Craft"
 craft_home_dir="/usr/local/craft"
 server_name=$1
 
-. "${craft_home_dir}/lib/common.sh"
+. "${craft_lib}/common.sh"
 
 get_properties
 

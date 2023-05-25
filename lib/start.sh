@@ -8,7 +8,7 @@ server_max_mem="8"
 quiet=true
 frequency="1"
 
-. "${craft_home_dir}/lib/common.sh"
+. "${craft_lib}/common.sh"
 
 start_server () {
 

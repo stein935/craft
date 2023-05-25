@@ -1,69 +1,80 @@
 #!/bin/bash
 
+quiet_cd() {
+  cd "$@" &>/dev/null || return
+}
+
 # Variables
+CRAFT_FILE_DIRECTORY="$(quiet_cd "${0%/*}/" && pwd -P)"
+CRAFT_FILE="${CRAFT_FILE_DIRECTORY%/}/${0##*/}"
+CRAFT_PREFIX="${CRAFT_FILE%/*/*}"
+craft_home_dir="${CRAFT_PREFIX}/craft"
+craft_lib="${craft_home_dir}/lib"
 craft_server_dir="$HOME/Craft" 
-craft_home_dir="/usr/local/craft"
 command="craft"
 
 # Load common functions 
-. "${craft_home_dir}/lib/common.sh"
-
+. "${craft_lib}/common.sh"
 # Look for command
 [ ! -n "$1" ] && command_help "$command" "OK"
 
 case $1 in 
   create)
     shift
-    . /usr/local/craft/lib/create.sh
+    . ${craft_lib}/create.sh
     create_command "$@"
     ;;
   delete)
     shift
-    . /usr/local/craft/lib/delete.sh
+    . ${craft_lib}/delete.sh
     delete_command "$@"
     ;;
   config)
     shift
-    . /usr/local/craft/lib/config.sh
+    . ${craft_lib}/config.sh
     config_command "$@"
     ;;
   status)
     shift
-    . /usr/local/craft/lib/status.sh
+    . ${craft_lib}/status.sh
     status_command "$@"
     ;;
   server)
     shift
-    . /usr/local/craft/lib/server.sh
+    . ${craft_lib}/server.sh
     server_command "$@"
     ;;
   start) 
     shift
-    . /usr/local/craft/lib/start.sh
+    . ${craft_lib}/start.sh
     start_command "$@"
     ;;
   stop)
     shift
-    . /usr/local/craft/lib/stop.sh
+    . ${craft_lib}/stop.sh
     stop_command "$@"
     ;;
   restart)
     shift
-    . /usr/local/craft/lib/restart.sh
+    . ${craft_lib}/restart.sh
     restart_command "$@"
     ;;
   command)
     shift
-    . /usr/local/craft/lib/command.sh
+    . ${craft_lib}/command.sh
     command_command "$@"
     ;;
   mod)
     shift
-    . /usr/local/craft/lib/mod.sh
+    . ${craft_lib}/mod.sh
     mod_command "$@"
     ;;
+  shellenv)
+    . ${craft_lib}/shellenv.sh
+    shellenv-command
+    ;;
   -ls)
-    ls $craft_server_dir
+    ls ${craft_server_dir}
     ;;
   -h | -help)
     command_help "$command" "OK"

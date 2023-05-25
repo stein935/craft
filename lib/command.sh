@@ -4,7 +4,7 @@ command="command"
 server_command=false
 server_name=false
 
-. "${craft_home_dir}/lib/common.sh"
+. "${craft_lib}/common.sh"
 
 command_server () {
 

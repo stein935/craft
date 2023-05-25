@@ -3,7 +3,7 @@
 command="stop"
 server_name=false
 
-. "${craft_home_dir}/lib/common.sh"
+. "${craft_lib}/common.sh"
 
 stop_server () {
 

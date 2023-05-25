@@ -3,7 +3,7 @@
 command="server"
 server_name=false
 
-. "${craft_home_dir}/lib/common.sh"
+. "${craft_lib}/common.sh"
 
 restart_server () {
 
