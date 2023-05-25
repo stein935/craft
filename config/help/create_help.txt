@@ -11,10 +11,6 @@ Install options:
   -loader <fabric_loader_version>         Sets Fabric loader version       
   -snapshot                               Enables snapshot Minecraft versions
 
-Server options:
-  -initmem <sever_init_mem>               Sets Minecraft server mem cap 
-  -maxmem <sever_max_mem>                 Sets Minecraft server mem cap 
-                                          Defaults to 8192M (8G)
 Server properties:
 See https://minecraft.fandom.com/wiki/Server.properties for more info
 

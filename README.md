@@ -11,6 +11,22 @@
 ```
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/stein935/craft_install/main/uninstall.sh)"
 ```
+## Introduction
+
+Craft CLI is a headless management tool for Fabric servers running on MacOS. Use Craft CLI to create and configure new servers. Run and monitor servers. Auto restart servers when they crash.
+
+## Features
+
+- Create - Name you server. Choose your Minecraft and Fabric loader versions.
+- Delete - Delete a server.
+- Configure - Configure the server properties and launch parameters.
+- Mod - Add fabric mods to your server.
+- Start - Run a server.
+- Stop - Safely stop a server.
+- Restart - Safely stop then restart a server.
+- Monitor - Set a watchdog on you running server that restarts it if it fails. Send a message to a Discord channel. 
+- Status - Check to see if a serer is running.
+- Server - View the server process shell.
 
 ## Environment Requirements 
 
@@ -172,10 +188,6 @@
    -loader <fabric_loader_version>         Sets Fabric loader version       
    -snapshot                               Enables snapshot Minecraft versions
 
-  Server options:
-   -initmem <sever_init_mem>               Sets Minecraft server mem cap 
-   -maxmem <sever_max_mem>                 Sets Minecraft server mem cap 
-                                           Defaults to 8192M (8G)
   Server properties:
   See https://minecraft.fandom.com/wiki/Server.properties for more info
 ```
