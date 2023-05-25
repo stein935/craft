@@ -19,7 +19,7 @@ view_server () {
 
 }
 
-  server_command () {
+server_command () {
 
   [ ! -n "$1" ] && command_help "$command"
 

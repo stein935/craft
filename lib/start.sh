@@ -6,7 +6,7 @@ monitor=false
 server_init_mem="512"
 server_max_mem="8"
 quiet=true
-frequency="15"
+frequency="1"
 
 . "${craft_home_dir}/lib/common.sh"
 
