@@ -12,7 +12,6 @@ PID=$(netstat -vanp tcp | grep $server_port | awk '{print $9}')
 if $0 status -n $server_name; then
   exit 0
 else
-  say "Restarting ${server_name}" &
   $0 restart -n $server_name
   echo "$(date) : Monitor: ${server_name} was restarted automatically when a crash was detected. Port: ${server_port} PID: ${PID}" >> $CRAFT_SERVER_DIR/$server_name/logs/monitor/$(date '+%Y-%m').log
   if [ -n "$discord_webhook" ]; then
