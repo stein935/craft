@@ -1,85 +1,36 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 quiet_cd() {
   cd "$@" &>/dev/null || return
 }
 
-# Variables
+# Env variables
 CRAFT_FILE_DIRECTORY="$(quiet_cd "${0%/*}/" && pwd -P)"
 CRAFT_FILE="${CRAFT_FILE_DIRECTORY%/}/${0##*/}"
 CRAFT_PREFIX="${CRAFT_FILE%/*/*}"
-craft_home_dir="${CRAFT_PREFIX}/craft"
-craft_lib="${craft_home_dir}/lib"
-craft_server_dir="$HOME/Craft" 
-command="craft"
+CRAFT_HOME_DIR="${CRAFT_PREFIX}/craft"
+CRAFT_LIB="${CRAFT_HOME_DIR}/lib"
+CRAFT_SERVER_DIR="$HOME/Craft" 
 
 # Load common functions 
-. "${craft_lib}/common.sh"
-# Look for command
-[ ! -n "$1" ] && command_help "$command" "OK"
+. "${CRAFT_LIB}/common.sh"
 
-case $1 in 
-  create)
-    shift
-    . ${craft_lib}/create.sh
-    create_command "$@"
-    ;;
-  delete)
-    shift
-    . ${craft_lib}/delete.sh
-    delete_command "$@"
-    ;;
-  config)
-    shift
-    . ${craft_lib}/config.sh
-    config_command "$@"
-    ;;
-  status)
-    shift
-    . ${craft_lib}/status.sh
-    status_command "$@"
-    ;;
-  server)
-    shift
-    . ${craft_lib}/server.sh
-    server_command "$@"
-    ;;
-  start) 
-    shift
-    . ${craft_lib}/start.sh
-    start_command "$@"
-    ;;
-  stop)
-    shift
-    . ${craft_lib}/stop.sh
-    stop_command "$@"
-    ;;
-  restart)
-    shift
-    . ${craft_lib}/restart.sh
-    restart_command "$@"
-    ;;
-  command)
-    shift
-    . ${craft_lib}/command.sh
-    command_command "$@"
-    ;;
-  mod)
-    shift
-    . ${craft_lib}/mod.sh
-    mod_command "$@"
-    ;;
-  shellenv)
-    . ${craft_lib}/shellenv.sh
-    shellenv-command
-    ;;
-  -ls)
-    ls ${craft_server_dir}
-    ;;
-  -h | -help)
-    command_help "$command" "OK"
-    ;;
-  *) 
-    invalid_command "$command" $1
-    ;;
-esac
+# Command variable
+command="craft"
+op="${1}"
+
+# Look for command
+[ -z "$1" ] && command_help "$command" "OK"
+
+# Check for aliases
+match_command "${op}" "-ls" "-l --list"
+match_command "${op}" "-h" "--help"
+
+# Execute command
+shift
+if [ -f "${CRAFT_LIB}/$op.sh" ]; then
+  . "${CRAFT_LIB}/$op.sh"
+  ${op}_command "$@"
+else 
+  invalid_command "$command" "${op}"
+fi

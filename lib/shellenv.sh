@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 shellenv-command() {
   if [[ "${PATH}" == *"${CRAFT_PREFIX}/bin"* ]]
@@ -7,4 +7,6 @@ shellenv-command() {
   fi
 
   echo "export PATH=\"${CRAFT_PREFIX}/bin\${PATH+:\$PATH}\";"
+
+  exit 0
 }

@@ -1,13 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 command="create"
 server_name=false
 minecraft_version=false
 loader=false
 snapshot=false
-install_command="java -jar ${craft_home_dir}/config/fabric-installer.jar server -downloadMinecraft -dir"
-
-. "${craft_lib}/common.sh"
+install_command="java -jar ${CRAFT_HOME_DIR}/config/fabric-installer.jar server -downloadMinecraft -dir"
+test=false
 
 sign_eula () {
 
@@ -18,15 +17,15 @@ sign_eula () {
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
     
-      ohai "Sigining ${craft_server_dir}/${server_name}/eula.txt"
-      sed -i '' -e '$ d' "${craft_server_dir}/${server_name}/eula.txt"
-      echo "eula=true" >> ${craft_server_dir}/${server_name}/eula.txt
+      ohai "Sigining ${CRAFT_SERVER_DIR}/${server_name}/eula.txt"
+      sed -i '' -e '$ d' "${CRAFT_SERVER_DIR}/${server_name}/eula.txt"
+      echo "eula=true" >> ${CRAFT_SERVER_DIR}/${server_name}/eula.txt
 
       break
 
     elif [[ $REPLY =~ ^[Nn]$ ]]; then
 
-      warn "You will need to accept eula by editing ${craft_server_dir}/${server_name}/eula.txt 
+      warn "You will need to accept eula by editing ${CRAFT_SERVER_DIR}/${server_name}/eula.txt 
       before you can start the server" 
 
       break
@@ -39,24 +38,26 @@ sign_eula () {
 
   done
 
-  ohai "${server_name} has been installed!"
+  ohai "${server_name} has been created!"
   echo
-  echo "  Location ${craft_server_dir}/${server_name}"
+  echo "  Server location ${CRAFT_SERVER_DIR}/${server_name}"
   echo "  To start the server - Run:
-    > craft start -n ${server_name}"
+      craft start -n ${server_name}"
   echo
-  mkdir $craft_server_dir/$server_name/logs/monitor
-  echo "$(date) : Create: ${server_name} created!" >> $craft_server_dir/$server_name/logs/monitor/$(date '+%Y-%m').log
+  mkdir $CRAFT_SERVER_DIR/$server_name/logs/monitor
+  echo "$(date) : Create: ${server_name} created!" >> $CRAFT_SERVER_DIR/$server_name/logs/monitor/$(date '+%Y-%m').log
+
+  exit 0
 
 }
 
 ask_config_server () {
 
   # Add initial fabric-server-properties
-  echo -e "#Fabric launcher properties\n$(cat ${craft_server_dir}/${server_name}/fabric-server-launcher.properties)" > ${craft_server_dir}/${server_name}/fabric-server-launcher.properties
-  echo "server_init_mem=512M" >> "${craft_server_dir}/${server_name}/fabric-server-launcher.properties"
-  echo "server_max_mem=8G" >> "${craft_server_dir}/${server_name}/fabric-server-launcher.properties"
-  echo "discord_webhook=" >> "${craft_server_dir}/${server_name}/fabric-server-launcher.properties"
+  echo -e "#Fabric launcher properties\n$(cat ${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties)" > ${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties
+  echo "server_init_mem=512M" >> "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties"
+  echo "server_max_mem=8G" >> "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties"
+  echo "discord_webhook=" >> "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties"
 
   # Ask about custom config
   while true; do
@@ -93,9 +94,9 @@ init_server () {
 
   echo "init"
 
-  cd ${craft_server_dir}/${server_name}
+  cd ${CRAFT_SERVER_DIR}/${server_name}
   # screen -AmdS "$server_name" 
-  java -jar -Xmx8192M ${craft_server_dir}/${server_name}/fabric-server-launch.jar --nogui --initSettings &
+  java -jar -Xmx8192M ${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launch.jar --nogui --initSettings &
   wait
 
   ask_config_server
@@ -104,13 +105,13 @@ init_server () {
 
 install_sever () {
 
-  jar_count () { cd ${craft_server_dir}/${server_name}; ls -1 *.jar 2>/dev/null | wc -l; }
+  jar_count () { cd ${CRAFT_SERVER_DIR}/${server_name}; ls -1 *.jar 2>/dev/null | wc -l; }
 
   if [ $(jar_count) == "0" ]; then 
 
-    ohai "Installing ${server_name} server in ${craft_server_dir}/${server_name}"
+    ohai "Installing ${server_name} server in ${CRAFT_SERVER_DIR}/${server_name}"
 
-    cd "$craft_server_dir"
+    cd "$CRAFT_SERVER_DIR"
 
     ${install_command} &
     wait
@@ -123,8 +124,8 @@ install_sever () {
 
 create_server_dir () {
 
-  ohai "Creating dir: ${craft_server_dir}/${server_name}"
-  mkdir "${craft_server_dir}/${server_name}"
+  ohai "Creating dir: ${CRAFT_SERVER_DIR}/${server_name}"
+  mkdir "${CRAFT_SERVER_DIR}/${server_name}"
 
   install_sever
 
@@ -132,13 +133,13 @@ create_server_dir () {
 
 create_server () {
   
-  if ! [ -d "${craft_server_dir}/${server_name}" ]; then 
+  if ! [ -d "${CRAFT_SERVER_DIR}/${server_name}" ]; then 
     ohai "Creating ${server_name}"
 
     echo "
     Options: 
     Server name: ${server_name}
-    Server dir: ${craft_server_dir}/${server_name}"
+    Server dir: ${CRAFT_SERVER_DIR}/${server_name}"
 
     install_command="${install_command} ${server_name}"
     if [ "${minecraft_version}" != false ] ; then
@@ -161,10 +162,10 @@ create_server () {
     warn "${server_name} already existis.
     
     To re-install first run:
-    > craft delete -n ${server_name}
+      craft delete -n ${server_name}
 
-    The run:
-    > craft create -n ${server_name} [ options ]
+    To run:
+      craft create -n ${server_name} [ options ]
     "
 
   fi
@@ -173,46 +174,33 @@ create_server () {
 
 create_command () {
 
-  [ ! -n "$1" ] && command_help "$command" 
+  [ ! -n "$1" ] && command_help "$command" 1
 
-	while getopts ":n:v:l:i:m:sh" opt; do
+	while getopts ":n:v:l:i:m:sht" opt; do
     case $opt in 
-      n)
-        server_name="$OPTARG"
-        ;;
-      v)
-        minecraft_version="$OPTARG"
-        ;;
-      l)
-        loader="$OPTARG"
-        ;;
-      i)
-        server_init_mem="$OPTARG"
-        ;;
-      m)
-        server_max_mem="$OPTARG"
-        ;;
-      s)
-        snapshot=true
-        ;;
-      h)
-        command_help "$command" 
-        exit 0
-        ;;
-      :)
-        missing_argument "$command" "$OPTARG"
-        exit 1
-        ;;
-      *)
-        invalid_option "$command" "$OPTARG"
-        exit 1
-        ;;
+      n ) server_name="$OPTARG" ;;
+      v ) minecraft_version="$OPTARG" ;;
+      l ) loader="$OPTARG" ;;
+      s ) snapshot=true ;;
+      h ) command_help "$command" 0 ;;
+      t ) test=true ;;
+      : ) missing_argument "$command" "$OPTARG" ;;
+      * ) invalid_option "$command" "$OPTARG" ;;
     esac
   done
 
   if [ "${server_name}" == false ] ; then
     missing_required_option "$command" "-n"
-    exit 1
+  fi
+
+  if [[ "$test" == true ]]; then
+    echo "command                 : $command        "
+    echo "server_name             : $server_name    "
+    echo "minecraft_version       : $minecraft_version"
+    echo "loader                  : $loader         "
+    echo "snapshot                : $snapshot       "
+    echo "install_command         : $install_command"
+    echo "test                    : $test           "
   fi
 
   create_server

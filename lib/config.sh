@@ -1,9 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 command="config"
 server_name=false
-
-. "${craft_lib}/common.sh"
+test=false
 
 read_properties () {
 
@@ -18,7 +17,7 @@ read_properties () {
       if [ "$input" != "" ]; then
         input=$(printf '%s\n' "${input}")
         echo "${line%=*}=${input}" >> ${properties}.tmp
-        echo "$(date) : Config: ${server_name} setting ${line%=*} changed from \"${set}\" to \"${input}\"" >> $craft_server_dir/$server_name/logs/monitor/$(date '+%Y-%m').log
+        echo "$(date) : Config: ${server_name} setting ${line%=*} changed from \"${set}\" to \"${input}\"" >> $CRAFT_SERVER_DIR/$server_name/logs/monitor/$(date '+%Y-%m').log
       else 
         echo "${line}" >> ${properties}.tmp
       fi
@@ -30,12 +29,14 @@ read_properties () {
   cp ${properties}.tmp ${properties}
   rm ${properties}.tmp
 
+  exit 0
+
 }
 
 config_server () {
 
-  server_properties="${craft_server_dir}/${server_name}/server.properties"
-  launcher_properties="${craft_server_dir}/${server_name}/fabric-server-launcher.properties"
+  server_properties="${CRAFT_SERVER_DIR}/${server_name}/server.properties"
+  launcher_properties="${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties"
 
   ### Server Properties
 
@@ -71,7 +72,7 @@ config_server () {
 
       read -p "Path to file : " input
       input=$(echo $input | tr -d '~')
-      cp "${HOME}${input}" $craft_server_dir/$server_name/logo.txt
+      cp "${HOME}${input}" $CRAFT_SERVER_DIR/$server_name/logo.txt
       break
 
     elif [[ $REPLY =~ ^[Nn]$ ]]; then
@@ -92,34 +93,27 @@ config_server () {
 
 config_command () {
 
-  [ ! -n "$1" ] && command_help "$command" 
+  [ -z "$1" ] && command_help "$command" 1
 
-	while getopts ":n:sh" opt; do
+  while getopts ":n:ht" opt; do
     case $opt in 
-      n)
-        server_name="$OPTARG"
-        ;;
-      h)
-        command_help "$command" 
-        exit 0
-        ;;
-      :)
-        missing_argument "$command" "$OPTARG"
-        exit 1
-        ;;
-      *)
-        invalid_option "$command" "$OPTARG"
-        exit 1
-        ;;
+      n ) server_name="$OPTARG" ;;
+      h ) command_help "$command" 0 ;;
+      t ) test=true ;;
+      : ) missing_argument "$command" "$OPTARG" ;;
+      * ) invalid_option "$command" "$OPTARG" ;;
     esac
   done
 
-  if [ "${server_name}" == false ] ; then
-    missing_required_option "$command" "-n"
-    exit 1
-  fi
+  [[ ${server_name} == false ]] && missing_required_option "$command" "-n"
 
   find_server ${server_name}
+
+  if [[ "$test" == true ]]; then
+    echo "command                 : $command        "
+    echo "server_name             : $server_name    "
+    echo "test                    : $test           "
+  fi
 
   config_server
 
