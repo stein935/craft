@@ -4,29 +4,9 @@ command="status"
 server_name=false
 test=false
 
-server_status () {
-
-  get_properties
-  
-  PID=$(netstat -vanp tcp | grep $server_port | awk '{print $9}')
-  SCREEN=($(screen -ls | grep $server_name | awk '{print $1}'))
-  if [ "$PID" != "" ]; then
-    ohai "${server_name} Minecraft server running on port: ${server_port} PID: ${PID}"
-    ! [[ ${#SCREEN[@]} == 1 ]] && warn "Count screen sessions named ${server_name}: ${#SCREEN[@]}"
-    echo "$(date) : Status: ${server_name} is running on port: ${server_port} PID: ${PID}." >> $CRAFT_SERVER_DIR/$server_name/logs/monitor/$(date '+%Y-%m').log 
-    exit 0
-  else
-    warn "${server_name} is not running"
-    [[ ${#SCREEN[@]} -gt 0 ]] && warn "Count screen sessions named ${server_name}: ${#SCREEN[@]}"
-    echo "$(date) : Status: ${server_name} is not running." >> $CRAFT_SERVER_DIR/$server_name/logs/monitor/$(date '+%Y-%m').log
-    exit 1
-  fi
-
-}
-
 status_command () {
 
-  [ ! -n "$1" ] && command_help "$command" 1
+  [ -z "$1" ] && command_help "$command" 1
 
   while getopts ":n:ht" opt; do
     case "$opt" in
@@ -38,19 +18,25 @@ status_command () {
     esac
   done
 
-  if [[ "${server_name}" == false ]] ; then
-    missing_required_option "$command" "-n"
+  [[ "${server_name}" == false ]] && missing_required_option "$command" "-n"
+
+  find_server "${server_name}"
+
+  get_properties
+
+  if $test; then
+    echo "${tty_yellow}"
+    indent "command                 : $command        "
+    indent "server_name             : $server_name    "
+    indent "test                    : $test           "
+    echo "${tty_reset}"
   fi
 
-  find_server ${server_name}
-
-  if [[ "$test" == true ]]; then
-    echo "command                 : $command        "
-    echo "server_name             : $server_name    "
-    echo "test                    : $test           "
-  fi
+  $test && echo && runtime && echo 
 
   server_status
+
+  exit $?
 
 }
 

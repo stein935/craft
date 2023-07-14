@@ -4,26 +4,9 @@ command="server"
 server_name=false
 test=false
 
-view_server () {
-
-  get_properties 
-  
-  PID=$(netstat -vanp tcp | grep $server_port | awk '{print $9}')
-  if [ -n "$PID" ]; then
-    screen -r ${server_name}
-    echo "$(date) : Server: ${server_name} was viewed." >> $CRAFT_SERVER_DIR/$server_name/logs/monitor/$(date '+%Y-%m').log
-  else
-    warn "${server_name} is not running"
-    exit 1
-  fi
-
-  exit 0
-
-}
-
 server_command () {
 
-  [ ! -n "$1" ] && command_help "$command" 1
+  [ -z "$1" ] && command_help "$command" 1
 
   while getopts ":n:ht" opt; do
     case $opt in 
@@ -35,18 +18,36 @@ server_command () {
     esac
   done
 
-  if [[ "${server_name}" == false && "${server_command}" == false ]] ; then
-    missing_required_option "$command" "-n" 
-  fi
+  [[ "${server_name}" == false ]] && missing_required_option "$command" "-n"
 
-  find_server ${server_name}
+  find_server "${server_name}"
 
-  if [[ "$test" == true ]]; then
-    echo "command                 : $command        "
-    echo "server_name             : $server_name    "
-    echo "test                    : $test           "
+  get_properties
+
+  if $test; then
+    echo "${tty_yellow}"
+    indent "command                 : $command        "
+    indent "server_name             : $server_name    "
+    indent "test                    : $test           "
+    echo "${tty_reset}"
   fi
 
   view_server
+
+}
+
+view_server () {
+  
+  PID=$(netstat -vanp tcp | grep "${server_port}" | awk '{print $9}')
+  if [ -n "$PID" ]; then
+    execute "screen" "-r" "${server_name}"
+    echo "$(date) : Server: \"${server_name}\" was viewed." >> "${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+  else
+    warn "\"${server_name}\" is not running"
+    $test && echo && runtime && echo
+    exit 1
+  fi
+  $test && runtime && echo
+  exit 0
 
 }

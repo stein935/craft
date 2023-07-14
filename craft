@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+START=$(date +%s)
+
+# Look for command
+[ -z "$1" ] && command_help "$command" "OK"
+
 quiet_cd() {
   cd "$@" &>/dev/null || return
 }
@@ -17,20 +22,17 @@ CRAFT_SERVER_DIR="$HOME/Craft"
 
 # Command variable
 command="craft"
-op="${1}"
-
-# Look for command
-[ -z "$1" ] && command_help "$command" "OK"
+fun="${1}"
 
 # Check for aliases
-match_command "${op}" "-ls" "-l --list"
-match_command "${op}" "-h" "--help"
+match_command "${fun}" "-ls" "-l --list"
+match_command "${fun}" "-h" "--help"
 
 # Execute command
 shift
-if [ -f "${CRAFT_LIB}/$op.sh" ]; then
-  . "${CRAFT_LIB}/$op.sh"
-  ${op}_command "$@"
+if [ -f "${CRAFT_LIB}/$fun.sh" ]; then
+  . "${CRAFT_LIB}/$fun.sh"
+  ${fun}_command "$@"
 else 
-  invalid_command "$command" "${op}"
+  invalid_command "$command" "${fun}"
 fi

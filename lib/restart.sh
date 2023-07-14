@@ -1,30 +1,18 @@
 #!/usr/bin/env bash
 
-command="server"
+command="restart"
 server_name=false
 test=false
-
-restart_server () {
-
-  get_properties
-  
-  craft stop -fn $server_name &
-  wait
-  craft start -mn $server_name &
-  wait
-  echo "$(date) : Restart: ${server_name} was restarted." >> $CRAFT_SERVER_DIR/$server_name/logs/monitor/$(date '+%Y-%m').log
-
-  exit 0
-
-}
+monitor=
 
 restart_command () {
 
-  [ ! -n "$1" ] && command_help "$command" 1
+  [ -z "$1" ] && command_help "$command" 1
 
-  while getopts ":n:ht" opt; do
+  while getopts ":n:mht" opt; do
     case $opt in 
       n ) server_name="$OPTARG" ;;
+      m ) monitor="m" ;;
       h ) command_help "$command" 0 ;;
       t ) test=true ;;
       : ) missing_argument "$command" "$OPTARG" ;;
@@ -32,18 +20,28 @@ restart_command () {
     esac
   done
 
-  if [[ "${server_name}" == false && "${server_command}" == false ]] ; then
-    missing_required_option "$command" "-n"
-  fi
+  [[ "${server_name}" == false ]] && missing_required_option "$command" "-n"
 
-  find_server ${server_name}
+  find_server "${server_name}"
 
-  if [[ "$test" == true ]]; then
-    echo "command                 : $command        "
-    echo "server_name             : $server_name    "
-    echo "test                    : $test           "
+  if $test; then
+    echo "${tty_yellow}"
+    indent "command                 : $command        "
+    indent "server_name             : $server_name    "
+    indent "test                    : $test           "
+    echo "${tty_reset}"
   fi
 
   restart_server
+
+}
+
+restart_server () {
+  
+  execute "$0" "stop" "-fn" "${server_name}"
+  execute "$0" "start" "-${monitor}n" "${server_name}"
+  echo "$(date) : Restart: \"${server_name}\" was restarted." >> "${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+  $test && runtime && echo
+  exit 0
 
 }

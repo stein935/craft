@@ -2,33 +2,11 @@
 
 command="delete"
 server_name=false
-test=true
-
-delete_server () {
-
-  if [ -d "${CRAFT_SERVER_DIR}/${server_name}" ]; then
-    warn "Are you sure you want to permanently delete ${server_name}?"
-    read -p "(y/n) : " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]
-    then
-      ohai "Deleting dir: ${CRAFT_SERVER_DIR}/${server_name}"
-      rm -r ${CRAFT_SERVER_DIR}/${server_name}
-    else 
-      ohai "Cancelled"
-    fi
-  else 
-    warn "${server_name} does not exist in ${CRAFT_SERVER_DIR}"
-    exit 1
-  fi
-
-  exit 0
-
-}
+test=false
 
 delete_command () {
 
-  [ ! -n "$1" ] && command_help "$command" 1
+  [ -z "$1" ] && command_help "$command" 1
 
 	while getopts ":n:ht" opt; do
     case $opt in 
@@ -40,18 +18,42 @@ delete_command () {
     esac
   done
 
-  if [ "${server_name}" == false ] ; then
-    missing_required_option "$command" "-n"
-  fi
+  [[ "${server_name}" == false ]] && missing_required_option "$command" "-n"
 
-  find_server ${server_name}
+  find_server "${server_name}"
 
-  if [[ "$test" == true ]]; then
-    echo "command                 : $command        "
-    echo "server_name             : $server_name    "
-    echo "test                    : $test           "
+  if $test; then
+    echo "${tty_yellow}"
+    indent "command                 : $command        "
+    indent "server_name             : $server_name    "
+    indent "test                    : $test           "
+    echo "${tty_reset}"
   fi
 
   delete_server
+
+}
+
+delete_server () {
+
+  if [ -d "${CRAFT_SERVER_DIR}/${server_name}" ]; then
+    warn "Are you sure you want to permanently delete \"${server_name}?\""
+    read -p "(y/n) : " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+      fwhip "Deleting dir: ${CRAFT_SERVER_DIR}/${server_name// /\ }"
+      execute "rm" "-r" "${CRAFT_SERVER_DIR}/${server_name}"
+    else 
+      fwhip "Cancelled"
+    fi
+  else 
+    warn "\"${server_name}\" does not exist in ${CRAFT_SERVER_DIR}"
+    $test && echo && runtime && echo
+    exit 1
+  fi
+
+  $test && echo && runtime && echo
+  exit 0
 
 }

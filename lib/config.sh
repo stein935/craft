@@ -4,93 +4,6 @@ command="config"
 server_name=false
 test=false
 
-read_properties () {
-
-  properties="${1}"
-
-  # Read server.properties
-  count=0
-  while IFS="" read -r line || [ -n "$line" ]; do
-    if [[ $count -gt 1 ]]; then
-      set="${line##*=}"
-      read -p "${line%=*} (Set to: \"${set}\"): " input </dev/tty
-      if [ "$input" != "" ]; then
-        input=$(printf '%s\n' "${input}")
-        echo "${line%=*}=${input}" >> ${properties}.tmp
-        echo "$(date) : Config: ${server_name} setting ${line%=*} changed from \"${set}\" to \"${input}\"" >> $CRAFT_SERVER_DIR/$server_name/logs/monitor/$(date '+%Y-%m').log
-      else 
-        echo "${line}" >> ${properties}.tmp
-      fi
-    fi
-    (( count++ ))
-  done < ${properties}
-
-  # Write modified properties
-  cp ${properties}.tmp ${properties}
-  rm ${properties}.tmp
-
-  exit 0
-
-}
-
-config_server () {
-
-  server_properties="${CRAFT_SERVER_DIR}/${server_name}/server.properties"
-  launcher_properties="${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties"
-
-  ### Server Properties
-
-  # Start collecting server properties
-  ohai "Minecraft server properties"
-
-  # server.properties header
-  echo "#Minecraft server properties" >> ${server_properties}.tmp
-  echo "#$(date)" >> ${server_properties}.tmp
-
-  # Read server.properties
-  read_properties ${server_properties}
-
-
-  ### Launcher Properties
-
-  # Start collecting launcher properties 
-  ohai "Minecraft launcher properties"
-
-  # fabric-server-launcher.properties header
-  echo "#Fabric launcher properties" >> ${launcher_properties}.tmp
-  echo "#$(date)" >> ${launcher_properties}.tmp
-
-  # Read fabric-server-launcher.properties
-  read_properties ${launcher_properties}
-
-  while true; do
-
-    ohai "Do you want to add a text art logo to ${server_name}?"
-    read -p "(y/n) : " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-
-      read -p "Path to file : " input
-      input=$(echo $input | tr -d '~')
-      cp "${HOME}${input}" $CRAFT_SERVER_DIR/$server_name/logo.txt
-      break
-
-    elif [[ $REPLY =~ ^[Nn]$ ]]; then
-
-      break
-
-    else
-
-      echo "Please enter y or n"
-
-    fi
-
-  done
-
-  ohai "Configuration complete"
-
-}
-
 config_command () {
 
   [ -z "$1" ] && command_help "$command" 1
@@ -105,16 +18,93 @@ config_command () {
     esac
   done
 
-  [[ ${server_name} == false ]] && missing_required_option "$command" "-n"
+  [[ "${server_name}" == false ]] && missing_required_option "$command" "-n"
 
-  find_server ${server_name}
+  find_server "${server_name}"
 
-  if [[ "$test" == true ]]; then
-    echo "command                 : $command        "
-    echo "server_name             : $server_name    "
-    echo "test                    : $test           "
+  if $test; then
+    echo "${tty_yellow}"
+    indent "command                 : $command        "
+    indent "server_name             : $server_name    "
+    indent "test                    : $test           "
+    echo "${tty_reset}"
   fi
 
   config_server
+
+}
+
+function cleanup {
+  [ -f "${CRAFT_SERVER_DIR}/${server_name}/server.properties.tmp" ] && rm -r "${CRAFT_SERVER_DIR}/${server_name}/server.properties.tmp"
+  [ -f "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties.tmp" ] && rm -r "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties.tmp"
+}
+
+trap cleanup EXIT
+
+config_server () {
+
+  server_properties="server.properties"
+  launcher_properties="fabric-server-launcher.properties"
+
+  ### Server Properties
+  fwhip "Minecraft server properties"
+  echo "#Minecraft server properties" > "${server_properties}.tmp"
+  echo "#$(date)" >> "${server_properties}.tmp"
+  read_properties "${server_properties}"
+
+  ### Launcher Properties
+  fwhip "Minecraft launcher properties"
+  echo "#Fabric launcher properties" > "${launcher_properties}.tmp"
+  echo "#$(date)" >> "${launcher_properties}.tmp"
+  read_properties "${launcher_properties}"
+
+  while true; do
+    fwhip "Do you want to add a text art logo to \"${server_name}?\""
+    read -p "(y/n) : " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      read -p "Path to file : " ans
+      ans=$(echo $ans | tr -d '~')
+      cp "${HOME}${ans}" "${CRAFT_SERVER_DIR}/${server_name}/logo.txt"
+      break
+    elif [[ $REPLY =~ ^[Nn]$ ]]; then
+      break
+    else
+      echo "Please enter y or n"
+    fi
+  done
+
+  fwhip "Configuration complete"
+  $test && echo && runtime && echo
+  exit 0
+
+}
+
+read_properties () {
+
+  execute "cd" "${CRAFT_SERVER_DIR}/${server_name}"
+
+  file=$1
+  properties=$(cat $file)
+  OLDIFS="$IFS"
+  IFS=$'\n'
+  for line in $properties; do
+    prop=$(echo ${line%=*} | tr -d '\n') 
+    set=$(echo ${line##*=} | tr -d '\n')
+    if [[ "${line:0:1}" != "#" ]]; then
+      read -p "${prop} (Set to: \"${set}\"): " -n 1 -r input 
+      if [[ $input != '' ]]; then
+        echo "${prop}=${input}" >> "${file}.tmp"
+        echo "$(date) : Config: \"${server_name}\" setting ${prop} changed from \"${set}\" to \"${input}\"" >> "${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+      else
+        echo "${line}" >> "${file}.tmp"
+      fi
+    fi
+  done
+  IFS="$OLDIFS"
+
+  # # Write modified properties
+  execute "cp" "${file}.tmp" "${file}"
+  execute "rm" "${file}.tmp"
 
 }

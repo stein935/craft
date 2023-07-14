@@ -5,176 +5,14 @@ server_name=false
 minecraft_version=false
 loader=false
 snapshot=false
-install_command="java -jar ${CRAFT_HOME_DIR}/config/fabric-installer.jar server -downloadMinecraft -dir"
+install_command=("java" "-jar" "${CRAFT_HOME_DIR}/config/fabric-installer.jar" "server" "-downloadMinecraft" "-dir")
+get_init_command () { init_command=("java" "-jar" "-Xmx8192M" "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launch.jar" "--nogui" "--initSettings") ; }
 test=false
 
-sign_eula () {
-
-   while true; do
-
-    ohai "Agree to Minecraft eula for ${server_name}?"
-    read -p "(y/n) : " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-    
-      ohai "Sigining ${CRAFT_SERVER_DIR}/${server_name}/eula.txt"
-      sed -i '' -e '$ d' "${CRAFT_SERVER_DIR}/${server_name}/eula.txt"
-      echo "eula=true" >> ${CRAFT_SERVER_DIR}/${server_name}/eula.txt
-
-      break
-
-    elif [[ $REPLY =~ ^[Nn]$ ]]; then
-
-      warn "You will need to accept eula by editing ${CRAFT_SERVER_DIR}/${server_name}/eula.txt 
-      before you can start the server" 
-
-      break
-
-    else
-
-      echo "Please enter y or n"
-
-    fi
-
-  done
-
-  ohai "${server_name} has been created!"
-  echo
-  echo "  Server location ${CRAFT_SERVER_DIR}/${server_name}"
-  echo "  To start the server - Run:
-      craft start -n ${server_name}"
-  echo
-  mkdir $CRAFT_SERVER_DIR/$server_name/logs/monitor
-  echo "$(date) : Create: ${server_name} created!" >> $CRAFT_SERVER_DIR/$server_name/logs/monitor/$(date '+%Y-%m').log
-
-  exit 0
-
-}
-
-ask_config_server () {
-
-  # Add initial fabric-server-properties
-  echo -e "#Fabric launcher properties\n$(cat ${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties)" > ${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties
-  echo "server_init_mem=512M" >> "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties"
-  echo "server_max_mem=8G" >> "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties"
-  echo "discord_webhook=" >> "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties"
-
-  # Ask about custom config
-  while true; do
-
-    ohai "Do you want to configure ${server_name}?"
-    read -p "(y/n) : " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-
-      craft config -n "$server_name" &
-      wait
-
-      sign_eula
-
-      break
-
-    elif [[ $REPLY =~ ^[Nn]$ ]]; then
-
-      sign_eula
-
-      break
-
-    else
-
-      echo "Please enter y or n"
-
-    fi
-
-  done
-
-}
-
-init_server () {
-
-  echo "init"
-
-  cd ${CRAFT_SERVER_DIR}/${server_name}
-  # screen -AmdS "$server_name" 
-  java -jar -Xmx8192M ${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launch.jar --nogui --initSettings &
-  wait
-
-  ask_config_server
-
-}
-
-install_sever () {
-
-  jar_count () { cd ${CRAFT_SERVER_DIR}/${server_name}; ls -1 *.jar 2>/dev/null | wc -l; }
-
-  if [ $(jar_count) == "0" ]; then 
-
-    ohai "Installing ${server_name} server in ${CRAFT_SERVER_DIR}/${server_name}"
-
-    cd "$CRAFT_SERVER_DIR"
-
-    ${install_command} &
-    wait
-
-    init_server
-
-  fi
-
-}
-
-create_server_dir () {
-
-  ohai "Creating dir: ${CRAFT_SERVER_DIR}/${server_name}"
-  mkdir "${CRAFT_SERVER_DIR}/${server_name}"
-
-  install_sever
-
-}
-
-create_server () {
-  
-  if ! [ -d "${CRAFT_SERVER_DIR}/${server_name}" ]; then 
-    ohai "Creating ${server_name}"
-
-    echo "
-    Options: 
-    Server name: ${server_name}
-    Server dir: ${CRAFT_SERVER_DIR}/${server_name}"
-
-    install_command="${install_command} ${server_name}"
-    if [ "${minecraft_version}" != false ] ; then
-      install_command="${install_command} -mcversion ${minecraft_version}"
-      echo "    Minecraft version: ${minecraft_version}"
-    fi
-    if [ "${loader}" != false ] ; then
-      install_command="${install_command} -loader ${loader}"
-      echo "    Fabric loader: ${loader}"
-    fi
-    if [ "${snapshot}" != false ] ; then
-      install_command="${install_command} -snapshot"
-      echo "   snapshot: ${snapshot}"
-    fi
-
-    echo ""
-
-    create_server_dir
-  else 
-    warn "${server_name} already existis.
-    
-    To re-install first run:
-      craft delete -n ${server_name}
-
-    To run:
-      craft create -n ${server_name} [ options ]
-    "
-
-  fi
-
-}
 
 create_command () {
 
-  [ ! -n "$1" ] && command_help "$command" 1
+  [ -z "$1" ] && command_help "$command" 1
 
 	while getopts ":n:v:l:i:m:sht" opt; do
     case $opt in 
@@ -189,20 +27,167 @@ create_command () {
     esac
   done
 
-  if [ "${server_name}" == false ] ; then
-    missing_required_option "$command" "-n"
-  fi
+  [[ "${server_name}" == false ]] && missing_required_option "$command" "-n"
 
-  if [[ "$test" == true ]]; then
-    echo "command                 : $command        "
-    echo "server_name             : $server_name    "
-    echo "minecraft_version       : $minecraft_version"
-    echo "loader                  : $loader         "
-    echo "snapshot                : $snapshot       "
-    echo "install_command         : $install_command"
-    echo "test                    : $test           "
+  if $test; then
+    echo "${tty_yellow}"
+    indent "command                 : $command        "
+    indent "server_name             : $server_name    "
+    indent "minecraft_version       : $minecraft_version"
+    indent "loader                  : $loader         "
+    indent "snapshot                : $snapshot       "
+    indent "install_command         : $install_command"
+    indent "test                    : $test           "
+    echo "${tty_reset}"
   fi
 
   create_server
+
+}
+
+create_server () {
+  
+  if ! [ -d "${CRAFT_SERVER_DIR}/${server_name}" ]; then 
+    fwhip "Creating \"${server_name}\""
+    echo
+    indent "${tty_underline}Options:${tty_reset}" 
+    indent "Server name: \"${server_name}\""
+    indent "Server dir: $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")"
+
+    install_command+=("${server_name}")
+    if [ "${minecraft_version}" != false ] ; then
+      install_command+=("-mcversion" "${minecraft_version}")
+      indent "Minecraft version: ${minecraft_version}"
+    fi
+    if [ "${loader}" != false ] ; then
+      install_command+=("-loader" "${loader}")
+      indent "Fabric loader: ${loader}"
+    fi
+    if [ "${snapshot}" != false ] ; then
+      install_command+=("-snapshot")
+      indent "snapshot: ${snapshot}"
+    fi
+
+    echo
+
+    create_server_dir
+  else 
+    warn "\"${server_name}\" already existis."
+    echo
+    indent "To re-install first run:"
+    indent "craft delete -n \"${server_name}\"" "6"
+    echo
+    indent "To run:"
+    indent "craft create -n \"${server_name}\" [ options ]" "6"
+    $test && echo && runtime
+    echo
+    exit 1
+  fi
+
+}
+
+create_server_dir () {
+
+  fwhip "Creating dir: $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")"
+  mkdir "${CRAFT_SERVER_DIR}/${server_name}"
+
+  install_sever
+
+}
+
+install_sever () {
+
+  jar_count () { find "${CRAFT_SERVER_DIR}/${server_name}" | grep -c '\.jar$' ; }
+
+  execute "cd" "${CRAFT_SERVER_DIR}"
+
+  if [[ $(jar_count) == "0" ]]; then 
+    fwhip "Installing \"${server_name}\" server in $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")"
+    echo "${tty_cyan}"
+    execute "${install_command[@]}"
+    echo "${tty_reset}"
+    wait
+
+    init_server
+  else 
+    warn "There are already .jar files in $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")"
+  fi
+
+}
+
+init_server () {
+
+  get_init_command
+  execute "cd" "${CRAFT_SERVER_DIR}/${server_name}"
+  echo "${tty_cyan}"
+  execute "${init_command[@]}" 
+  echo "${tty_reset}"
+  wait
+
+  ask_config_server
+
+}
+
+ask_config_server () {
+
+  # Add initial fabric-server-properties
+  echo -e "#Fabric launcher properties\n$(execute "cat" "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties")" > "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties"
+  echo "server_init_mem=512M" >> "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties"
+  echo "server_max_mem=2G" >> "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties"
+  echo "discord_webhook=" >> "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties"
+
+  # Ask about custom config
+  while true; do
+    fwhip "Do you want to configure \"${server_name}\"?"
+    read -p "(y/n) : " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      $0 config -n "${server_name}"
+      sign_eula
+      break
+    elif [[ $REPLY =~ ^[Nn]$ ]]; then
+      sign_eula
+      break
+    else
+      echo "Please enter y or n"
+    fi
+  done
+
+}
+
+sign_eula () {
+
+   while true; do
+
+    fwhip "Agree to Minecraft eula for \"${server_name}\"?"
+    read -p "(y/n) : " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      fwhip "Sigining $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")/eula.txt"
+      sed -i '' -e '$ d' "${CRAFT_SERVER_DIR}/${server_name}/eula.txt"
+      echo "eula=true" >> "${CRAFT_SERVER_DIR}/${server_name}/eula.txt"
+      break
+    elif [[ $REPLY =~ ^[Nn]$ ]]; then
+      warn "You will need to accept eula by editing $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")/eula.txt before you can start the server" 
+      break
+    else
+      echo "Please enter y or n"
+    fi
+
+  done
+
+  fwhip "\"${server_name}\" has been created!"
+  echo
+  indent "${tty_underline}Server location${tty_reset}: $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")"
+  echo
+  indent "${tty_underline}Next steps${tty_reset}:"
+  indent "To start the server - Run:" 
+  indent "craft start -n \"${server_name}\"" "6"
+  echo
+  mkdir "${CRAFT_SERVER_DIR}/${server_name}/logs/monitor"
+  echo "$(date) : Create: \"${server_name}\" created!" >> "${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+  $test && echo && runtime
+  echo
+  exit 0
 
 }
