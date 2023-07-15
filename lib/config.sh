@@ -70,7 +70,7 @@ config_server () {
     elif [[ $REPLY =~ ^[Nn]$ ]]; then
       break
     else
-      echo "Please enter y or n"
+      warn "Please enter y or n"
     fi
   done
 
@@ -84,6 +84,8 @@ read_properties () {
 
   execute "cd" "${CRAFT_SERVER_DIR}/${server_name}"
 
+  change=false
+
   file=$1
   properties=$(cat $file)
   OLDIFS="$IFS"
@@ -92,8 +94,9 @@ read_properties () {
     prop=$(echo ${line%=*} | tr -d '\n') 
     set=$(echo ${line##*=} | tr -d '\n')
     if [[ "${line:0:1}" != "#" ]]; then
-      read -p "${prop} (Set to: \"${set}\"): " -n 1 -r input 
+      read -p "${prop} (Set to: \"${set}\"): " -r input 
       if [[ $input != '' ]]; then
+        change=true
         echo "${prop}=${input}" >> "${file}.tmp"
         echo "$(date) : Config: \"${server_name}\" setting ${prop} changed from \"${set}\" to \"${input}\"" >> "${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
       else
@@ -102,9 +105,25 @@ read_properties () {
     fi
   done
   IFS="$OLDIFS"
-
-  # # Write modified properties
-  execute "cp" "${file}.tmp" "${file}"
-  execute "rm" "${file}.tmp"
+  
+  if [[ $change == true ]]; then
+    while true; do
+      fwhip "Do you want to save changes to \"${server_name}?\""
+      read -p "(y/n) : " -n 1 -r
+      echo
+      if [[ $REPLY =~ ^[Yy]$ ]]; then
+        # Write modified properties
+        execute "cp" "${file}.tmp" "${file}"
+        execute "rm" "${file}.tmp"
+        break
+      elif [[ $REPLY =~ ^[Nn]$ ]]; then
+        break
+      else
+        warn "Please enter y or n"
+      fi
+    done
+  else 
+    execute "rm" "${file}.tmp"
+  fi
 
 }

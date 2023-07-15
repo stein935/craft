@@ -149,7 +149,7 @@ ask_config_server () {
       sign_eula
       break
     else
-      echo "Please enter y or n"
+      warn "Please enter y or n"
     fi
   done
 
@@ -171,7 +171,7 @@ sign_eula () {
       warn "You will need to accept eula by editing $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")/eula.txt before you can start the server" 
       break
     else
-      echo "Please enter y or n"
+      warn "Please enter y or n"
     fi
 
   done
