@@ -1,4 +1,4 @@
-# Craft CLI - Minecraft Server Manager 
+# Craft CLI - Minecraft Server Manager
 
 ## Install
 
@@ -11,6 +11,7 @@
 ```
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/stein935/craft_install/main/uninstall.sh)"
 ```
+
 ## Introduction
 
 Craft CLI is a headless management tool for Fabric servers running on MacOS. Use Craft CLI to create and configure new servers. Run and monitor servers. Auto restart servers when they crash.
@@ -24,22 +25,22 @@ Craft CLI is a headless management tool for Fabric servers running on MacOS. Use
 - Start - Run a server.
 - Stop - Safely stop a server.
 - Restart - Safely stop then restart a server.
-- Monitor - Set a watchdog on you running server that restarts it if it fails. Send a message to a Discord channel. 
+- Monitor - Set a watchdog on you running server that restarts it if it fails. Send a message to a Discord channel.
 - Status - Check to see if a serer is running.
 - Server - View the server process shell.
 
-## Environment Requirements 
+## Environment Requirements
 
-1. MacOS 
+1. MacOS
 2. [Java 17+](https://www.oracle.com/java/technologies/downloads/)
 3. [Git 2.7.0+ ](https://git-scm.com/download/mac)
 
-## Usage 
+## Usage
 
 ```
   Command: craft
 
-  Usage: 
+  Usage:
     craft <command> [ options ]     Usage details: Run '$ craft <command> -h'
 
   Commands
@@ -47,7 +48,7 @@ Craft CLI is a headless management tool for Fabric servers running on MacOS. Use
     command                         Send a command to a running server
     config                          Configure a server
     create                          Creates a new Minecraft server
-    delete                          Delete an existing server 
+    delete                          Delete an existing server
     mod                             Add mods to an existing server
     restart                         If running, stop then restart an existing server
     server                          Enter shell for a server that is running
@@ -56,32 +57,31 @@ Craft CLI is a headless management tool for Fabric servers running on MacOS. Use
     stop                            Stop an existing server
 ```
 
-
-## Commands 
+## Commands
 
 ### -h
 
-`craft -h` *Craft cli help*
+`craft -h` _Craft cli help_
 
-### -ls 
+### -ls
 
-`craft -ls` *List all existing servers*
+`craft -ls` _List all existing servers_
 
-### Command 
+### Command
 
-*Send a server command to a running server*
+_Send a server command to a running server_
 
 `craft command -n <server_name> -c <minectaft_server_command`
 
 ```
   Command: command
 
-  Usage: 
+  Usage:
    craft command -n <server_name> -c <command [ options ]>   Usage details: Run '$ craft command -h'
 
   Required:
-   -n <server_name>                Name of server to command      
-   -c <command [ options ]>        Minecraft server command 
+   -n <server_name>                Name of server to command
+   -c <command [ options ]>        Minecraft server command
 
   Minecraft commands:
   See https://minecraft.fandom.com/wiki/Commands for more info
@@ -89,14 +89,14 @@ Craft CLI is a headless management tool for Fabric servers running on MacOS. Use
 
 ### Config
 
-*Configure an existing server. This includes the server properties and launcher properties*
+_Configure an existing server. This includes the server properties and launcher properties_
 
 `craft config -n <new _server_name>`
 
 ```
   Command: config
 
-  Usage: 
+  Usage:
    craft config -n <server_name>           Usage details: Run '$ craft config -h'
 
   Required:
@@ -126,7 +126,7 @@ Craft CLI is a headless management tool for Fabric servers running on MacOS. Use
    -hardcore                               Default: false
    -hide-online-players                    Default: false
    -level-name                             Default: world
-   -level-seed                              
+   -level-seed
    -level-type                             Default: minecraft:normal
    -max-chained-neighbor-updates           Default: 1000000
    -max-players                            Default: 20
@@ -142,13 +142,13 @@ Craft CLI is a headless management tool for Fabric servers running on MacOS. Use
    -pvp                                    Default: true
    -query.port                             Default: 25565
    -rate-limit                             Default: 0
-   -rcon.password                           
+   -rcon.password
    -rcon.port                              Default: 25575
    -require-resource-pack                  Default: false
-   -resource-pack                           
-   -resource-pack-prompt                    
-   -resource-pack-sha1                      
-   -server-ip                               
+   -resource-pack
+   -resource-pack-prompt
+   -resource-pack-sha1
+   -server-ip
    -server-port                            Default: 25565
    -simulation-distance                    Default: 10
    -spawn-animals                          Default: true
@@ -156,11 +156,11 @@ Craft CLI is a headless management tool for Fabric servers running on MacOS. Use
    -spawn-npcs                             Default: true
    -spawn-protection                       Default: 16
    -sync-chunk-writes                      Default: true
-   -text-filtering-config                   
+   -text-filtering-config
    -use-native-transport                   Default: true
    -view-distance                          Default: 10
    -white-list                             Default: false
-   -help | -h                              usage 
+   -help | -h                              usage
 
   Launcher properties:
    -serverJar                              Jar file in server dir to use when launching
@@ -170,39 +170,39 @@ Craft CLI is a headless management tool for Fabric servers running on MacOS. Use
 
 ### Create
 
-*Create a new minecraft server. Specify name, versions, configure server options and accept terms*
+_Create a new minecraft server. Specify name, versions, configure server options and accept terms_
 
 `craft create -n <new _server_name>`
 
 ```
   Command: create
 
-  Usage: 
+  Usage:
    craft create -n <server_name> [ options ]       Usage details: Run '$ craft create -h'
 
   Required:
-   -n <server_name>                        Sets name of new server 
+   -n <server_name>                        Sets name of new server
 
   Install options:
    -mcversion <minecraft_version>          Sets Minecraft game version
-   -loader <fabric_loader_version>         Sets Fabric loader version       
+   -loader <fabric_loader_version>         Sets Fabric loader version
    -snapshot                               Enables snapshot Minecraft versions
 
   Server properties:
   See https://minecraft.fandom.com/wiki/Server.properties for more info
 ```
 
-### Delete 
+### Delete
 
-*Perminantly delete an existing server. This removes all files*
+_Perminantly delete an existing server. This removes all files_
 
 `craft delete -n <server_name>`
 
 ```
   Command: delete
 
-  Usage: 
-   craft delete -n <server_name>      Usage details: Run '$ craft delete -h' 
+  Usage:
+   craft delete -n <server_name>      Usage details: Run '$ craft delete -h'
 
   Required:
    -n <server_name>                   Name of server to delete
@@ -210,18 +210,18 @@ Craft CLI is a headless management tool for Fabric servers running on MacOS. Use
 
 ### Mod
 
-*Add, remove or list mods for an existing server*
+_Add, remove or list mods for an existing server_
 
 `craft mod -n <server_name> -p <local_path_to_new_mod>`
 
 ```
   Command: mod
 
-  Usage: 
+  Usage:
    craft mod -n <server_name> [ options ]     Usage details: Run '$ craft mod -h'
 
   Required:
-   -n <server_name>     Name of server to start       
+   -n <server_name>     Name of server to start
 
   Options*
    -l                   List mods in mods directory
@@ -232,14 +232,14 @@ Craft CLI is a headless management tool for Fabric servers running on MacOS. Use
 
 ### Restart
 
-*Safely stop (if running) then restart a server*
+_Safely stop (if running) then restart a server_
 
 `craft restart -n <server_name>`
 
 ```
   Command: restart
 
-  Usage: 
+  Usage:
    craft restart -n <server_name>     Usage details: Run '$ craft restart -h'
 
   Required:
@@ -248,14 +248,14 @@ Craft CLI is a headless management tool for Fabric servers running on MacOS. Use
 
 ### Server
 
-*View window where a server is running* 
+_View window where a server is running_
 
 `craft server -n <server_name>`
 
 ```
   Command: server
 
-  Usage: 
+  Usage:
    craft server -n <server_name>       Usage details: Run '$ craft server -h'
 
   Required:
@@ -264,18 +264,18 @@ Craft CLI is a headless management tool for Fabric servers running on MacOS. Use
 
 ### Start
 
-*Start an existing server. Option -m is used to periodically monitor server status and restart if down.*
+_Start an existing server. Option -m is used to periodically monitor server status and restart if down._
 
 `craft start -n <server_name>`
 
 ```
   Command: start
 
-  Usage: 
+  Usage:
    craft start -n <server_name> [ options ]     Usage details: Run '$ craft start -h'
 
   Required:
-   -n <server_name>     Name of server to start       
+   -n <server_name>     Name of server to start
 
   Options*
    -m                   Automatically restart server when it fails
@@ -284,31 +284,32 @@ Craft CLI is a headless management tool for Fabric servers running on MacOS. Use
 
 ### Status
 
-*Chech the status of an existing server*
+_Chech the status of an existing server_
 
 `craft status -n <server_name>`
 
 ```
   Command: status
 
-  Usage: 
-   craft status -n <server_name>     Usage details: Run '$ craft status -h' 
+  Usage:
+   craft status             Usage details: Run '$ craft status -h'
 
-  Required:
-   -n <server_name>                  Name of server
+  Options:
+   -n <server_name>         Name of server
 ```
 
 ### Stop
 
-*Safely stop a running server*
+_Safely stop a running server_
 
 `craft stop -n <server_name>`
-  
+
 ```
   Command: stop
 
-  Usage: 
+  Usage:
    craft stop -n <server_name>     Usage details: Run '$ craft stop -h'
 
   Required:
    -n <server_name>                Name of server to stop
+```

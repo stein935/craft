@@ -6,7 +6,7 @@ test=false
 
 status_command () {
 
-  [ -z "$1" ] && command_help "$command" 1
+  # [ -z "$1" ] && command_help "$command" 1
 
   while getopts ":n:ht" opt; do
     case "$opt" in
@@ -18,11 +18,7 @@ status_command () {
     esac
   done
 
-  [[ "${server_name}" == false ]] && missing_required_option "$command" "-n"
-
-  find_server "${server_name}"
-
-  get_properties
+  # [[ "${server_name}" == false ]] && missing_required_option "$command" "-n"
 
   if $test; then
     echo "${tty_yellow}"
@@ -34,7 +30,18 @@ status_command () {
 
   $test && echo && runtime && echo 
 
-  server_status
+  if [[ "${server_name}" == false ]]; then
+    servers=$(ls "${CRAFT_SERVER_DIR}")
+    while IFS=$'\t' read -r server; do
+      server_name="${server}"
+      get_properties
+      server_status
+    done <<< "${servers[@]}"
+  else 
+    find_server "${server_name}"
+    get_properties
+    server_status
+  fi
 
   exit $?
 

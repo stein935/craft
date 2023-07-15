@@ -97,9 +97,9 @@ pids () {
   PIDS=($(netstat -vanp tcp | grep "${server_port}" | awk '{print $9}'))
 }
 screens () {
-  SCREENS=("$(screen -ls "${server_name}" | grep -o "[0-9]*\.${server_name}")")
+  SCREENS=($(screen -ls "${server_name}" | grep -o "[0-9]*\.${server_name}"))
   TMP_SCREENS=()
-  while IFS= read -r line; do
+  while IFS=$'\t' read -r line; do
     TMP_SCREENS+=("${line}")
   done <<< "${SCREENS[@]}"
   SCREENS=("${TMP_SCREENS[@]}")
@@ -134,7 +134,7 @@ server_status () {
 
   pids; screens
 
-  if [ ${#PIDS[@]} -gt 0 ] ; then
+  if [ ${#PIDS[@]} -gt 0 ] && [ ${#SCREENS[@]} -gt 0 ] ; then
     fwhip "\"${server_name}\" Minecraft server running on port: ${server_port} PID: ${PIDS[*]}"
     [ ${#PIDS[@]} -gt 1 ] && warn "\"${server_name}\" somehow running on more than one PID" && indent "count: ${#PIDS[@]}" && indent "PIDS: ${PIDS[*]}"
     if [ ${#SCREENS[@]} -ne 1 ]; then 
