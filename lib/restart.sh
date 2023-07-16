@@ -5,18 +5,18 @@ server_name=false
 test=false
 monitor=
 
-restart_command () {
+restart_command() {
 
   [ -z "$1" ] && command_help "$command" 1
 
   while getopts ":n:mht" opt; do
-    case $opt in 
-      n ) server_name="$OPTARG" ;;
-      m ) monitor="m" ;;
-      h ) command_help "$command" 0 ;;
-      t ) test=true ;;
-      : ) missing_argument "$command" "$OPTARG" ;;
-      * ) invalid_option "$command" "$OPTARG" ;;
+    case $opt in
+    n) server_name="$OPTARG" ;;
+    m) monitor="m" ;;
+    h) command_help "$command" 0 ;;
+    t) test=true ;;
+    :) missing_argument "$command" "$OPTARG" ;;
+    *) invalid_option "$command" "$OPTARG" ;;
     esac
   done
 
@@ -36,11 +36,11 @@ restart_command () {
 
 }
 
-restart_server () {
-  
+restart_server() {
+
   execute "$0" "stop" "-fn" "${server_name}"
   execute "$0" "start" "-${monitor}n" "${server_name}"
-  echo "$(date) : Restart: \"${server_name}\" was restarted." >> "${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+  echo "$(date) : Restart: \"${server_name}\" was restarted." >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
   $test && runtime && echo
   exit 0
 

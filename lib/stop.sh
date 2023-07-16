@@ -5,18 +5,18 @@ server_name=false
 force=false
 test=false
 
-stop_command () {
+stop_command() {
 
   [ -z "$1" ] && command_help "$command" 1
 
   while getopts ":n:fht" opt; do
-    case $opt in 
-      n ) server_name="$OPTARG" ;;
-      f ) force=true ;;
-      h ) command_help "$command" 0 ;;
-      t ) test=true ;;
-      : ) missing_argument "$command" "$OPTARG" ;;
-      * ) invalid_option "$command" "$OPTARG" ;;
+    case $opt in
+    n) server_name="$OPTARG" ;;
+    f) force=true ;;
+    h) command_help "$command" 0 ;;
+    t) test=true ;;
+    :) missing_argument "$command" "$OPTARG" ;;
+    *) invalid_option "$command" "$OPTARG" ;;
     esac
   done
 
@@ -39,27 +39,28 @@ stop_command () {
 
 }
 
-stop_server () {
+stop_server() {
 
-  pids; screens
+  pids
+  screens
 
   if [ -z "${PIDS[@]}" ]; then
     warn "No server running on port: ${server_port}"
     ! $force && indent "To force stop run:" && indent "craft stop -fn \"${server_name}\"" "6" && exit 1 || warn "Force stopping all related processes ... just in case"
-  else 
+  else
     fwhip "Stopping \"${server_name}\" Minecraft server"
   fi
 
-  execute "crontab" "-l" > "${CRAFT_SERVER_DIR}/.crontab"
+  execute "crontab" "-l" >"${CRAFT_SERVER_DIR}/.crontab"
   execute "sed" "-i" ".bak" "/${server_name}/d" "${CRAFT_SERVER_DIR}/.crontab"
   execute "crontab" "${CRAFT_SERVER_DIR}/.crontab" && execute "rm" "${CRAFT_SERVER_DIR}/.crontab"
 
   if [ ${#SCREENS[@]} -gt 0 ]; then
     for screen in "${SCREENS[@]}"; do
-      execute "screen" "-S" "${screen[@]}" "-p" "0" '-X' "stuff" "$(printf '%s\r' "/stop")" 
+      execute "screen" "-S" "${screen[@]}" "-p" "0" '-X' "stuff" "$(printf '%s\r' "/stop")"
       sleep 3
-      while [ -n "$(screen -ls "${server_name}" | grep -o "${screen[@]}")" ]; do 
-        execute "screen" "-S" "${screen[@]}" "-p" "0" '-X' "stuff" "$(printf '%s\r' "exit")" 
+      while [ -n "$(screen -ls "${server_name}" | grep -o "${screen[@]}")" ]; do
+        execute "screen" "-S" "${screen[@]}" "-p" "0" '-X' "stuff" "$(printf '%s\r' "exit")"
         sleep 1
       done
     done
@@ -69,14 +70,14 @@ stop_server () {
     done
   fi
 
-  $force && screen -wipe &> /dev/null
+  $force && screen -wipe &>/dev/null
 
-  server_status &> /dev/null
+  server_status &>/dev/null
 
-  if [[ $? == 1 ]] &> /dev/null; then 
+  if [[ $? == 1 ]] &>/dev/null; then
     fwhip "\"${server_name}\" Minecraft server stopped"
-    echo "$(date) : Stop: \"${server_name}\" stopped" >> "${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
-  else 
+    echo "$(date) : Stop: \"${server_name}\" stopped" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+  else
     warn "Failed to stop \"${server_name}\""
     $test && echo && runtime && echo
     exit 1

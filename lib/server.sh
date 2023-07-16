@@ -4,17 +4,17 @@ command="server"
 server_name=false
 test=false
 
-server_command () {
+server_command() {
 
   [ -z "$1" ] && command_help "$command" 1
 
   while getopts ":n:ht" opt; do
-    case $opt in 
-      n ) server_name="$OPTARG" ;;
-      h ) command_help "$command" 0 ;;
-      t ) test=true ;;
-      : ) missing_argument "$command" "$OPTARG" ;;
-      * ) invalid_option "$command" "$OPTARG" ;;
+    case $opt in
+    n) server_name="$OPTARG" ;;
+    h) command_help "$command" 0 ;;
+    t) test=true ;;
+    :) missing_argument "$command" "$OPTARG" ;;
+    *) invalid_option "$command" "$OPTARG" ;;
     esac
   done
 
@@ -36,12 +36,12 @@ server_command () {
 
 }
 
-view_server () {
-  
+view_server() {
+
   PID=$(netstat -vanp tcp | grep "${server_port}" | awk '{print $9}')
   if [ -n "$PID" ]; then
     execute "screen" "-r" "${server_name}"
-    echo "$(date) : Server: \"${server_name}\" was viewed." >> "${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+    echo "$(date) : Server: \"${server_name}\" was viewed." >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
   else
     warn "\"${server_name}\" is not running"
     $test && echo && runtime && echo

@@ -10,20 +10,20 @@ $quiet && screen_init="-AmdS" || screen_init="-AmS"
 frequency="5"
 test=false
 
-start_command () {
+start_command() {
 
   [ -z "$1" ] && command_help "$command" 1
 
   while getopts ":n:f:mvht" opt; do
-    case $opt in 
-      n ) server_name="$OPTARG" ;;
-      f ) monitor=true frequency="$OPTARG" ;;
-      m ) monitor=true ;;
-      v ) quiet=false ;;
-      h ) command_help "$command" 0 ;;
-      t ) test=true ;;
-      : ) missing_argument "$command" "$OPTARG" ;;
-      * ) invalid_option "$command" "$OPTARG" ;;
+    case $opt in
+    n) server_name="$OPTARG" ;;
+    f) monitor=true frequency="$OPTARG" ;;
+    m) monitor=true ;;
+    v) quiet=false ;;
+    h) command_help "$command" 0 ;;
+    t) test=true ;;
+    :) missing_argument "$command" "$OPTARG" ;;
+    *) invalid_option "$command" "$OPTARG" ;;
     esac
   done
 
@@ -50,15 +50,16 @@ start_command () {
 
 }
 
-start_server () {
+start_server() {
 
   # Check if a server is already running on the port
-  pids; screens
+  pids
+  screens
 
   if [ ${#PIDS[@]} -gt 0 ]; then
     warn "A server is already running on port: ${server_port} PID: ${PID[@]}"
     echo
-    indent "Run:" 
+    indent "Run:"
     indent "craft stop -n \"${server_name}\" or $ craft restart -n \"${server_name}\"" "6"
     echo
     $test && runtime && echo
@@ -75,7 +76,7 @@ start_server () {
   # Message that the server is starting
   fwhip "Starting \"${server_name}\" Minecraft server"
 
-  if [ -f "${CRAFT_SERVER_DIR}/${server_name}/logo.txt" ]; then 
+  if [ -f "${CRAFT_SERVER_DIR}/${server_name}/logo.txt" ]; then
     execute "cat" "${CRAFT_SERVER_DIR}/${server_name}/logo.txt"
     echo
   fi
@@ -87,21 +88,22 @@ start_server () {
 
   # Wait for server to start
   while [ 1 ]; do
-    pids; screens
+    pids
+    screens
     if [ ${#SCREENS[@]} -gt 0 ] && [ ${#PIDS[@]} -gt 0 ]; then
 
       # Do this if the server is running
       fwhip "\"${server_name}\" Minecraft server running on port: ${server_port} PID: ${PIDS[*]}"
-      echo "$(date) : Start: \"${server_name}\" running on port: ${server_port} PID: ${PIDS[*]}" >> "${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+      echo "$(date) : Start: \"${server_name}\" running on port: ${server_port} PID: ${PIDS[*]}" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
 
       if $monitor; then
-        
-        # Set server monitor cron job 
-        crontab -l > "${CRAFT_SERVER_DIR}/.crontab"
-        echo "*/${frequency} * * * * ${0} monitor -n \"$server_name\"" >> "${CRAFT_SERVER_DIR}/.crontab"
+
+        # Set server monitor cron job
+        crontab -l >"${CRAFT_SERVER_DIR}/.crontab"
+        echo "*/${frequency} * * * * ${0} monitor -n \"$server_name\"" >>"${CRAFT_SERVER_DIR}/.crontab"
         crontab "${CRAFT_SERVER_DIR}/.crontab" && rm "${CRAFT_SERVER_DIR}/.crontab"
 
-      fi 
+      fi
       $test && echo && runtime && echo
       exit 0
     fi

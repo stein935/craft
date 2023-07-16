@@ -3,12 +3,12 @@
 server_name="test server of doom"
 
 function cleanup {
-  craft delete -n "${server_name}" &> /dev/null
+  craft delete -n "${server_name}" &>/dev/null
 }
 
 trap cleanup EXIT
 
-test_command () {
+test_command() {
   passed=()
   failed=()
 
@@ -47,25 +47,25 @@ test_command () {
     "craft delete -tn,true,0,y"
   )
 
-  bar () { printf '\n%*s\n\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' - ; }
-  test_pass () {
-    passed+=("$(printf '%s\texpected: %s : result: %s\tcommand: %s' "$((i+1))" "${test[2]}" "${status}" "${command_string}")")
+  bar() { printf '\n%*s\n\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -; }
+  test_pass() {
+    passed+=("$(printf '%s\texpected: %s : result: %s\tcommand: %s' "$((i + 1))" "${test[2]}" "${status}" "${command_string}")")
   }
-  test_fail () {
-    failed+=("$(printf '%s\texpected: %s : result: %s\tcommand: %s' "$((i+1))" "${test[2]}" "${status}" "${tty_red}${command_string}${tty_reset}")")
+  test_fail() {
+    failed+=("$(printf '%s\texpected: %s : result: %s\tcommand: %s' "$((i + 1))" "${test[2]}" "${status}" "${tty_red}${command_string}${tty_reset}")")
   }
 
   bar
   for ((i = 0; i < ${#tests[@]}; i++)); do
 
-    IFS="," read -a test <<< "${tests[$i]}"
+    IFS="," read -a test <<<"${tests[$i]}"
 
     ! $(boolean ${test[1]}) && command_string="${test[0]}" || command_string="${test[0]} \"${server_name}\""
 
-    fwhip "Test $((i+1)): ${command_string}"
+    fwhip "Test $((i + 1)): ${command_string}"
     echo
 
-    if [[ ${test[1]} == "false" ]]; then 
+    if [[ ${test[1]} == "false" ]]; then
       ${test[0]}
       status="$?"
     elif [ -z ${test[3]} ]; then
@@ -94,5 +94,5 @@ test_command () {
   done
   bar
   exit 0
- 
+
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Bits 
+# Bits
 ring_bell() { [ -t 1 ] && printf "\a"; }
 
 # string formatters
@@ -34,79 +34,81 @@ abort() {
 }
 
 execute() {
-  if ! "$@"
-  then
+  if ! "$@"; then
     abort "$(printf "Failed during: %s" "$(shell_join "$@")")"
   fi
 }
 
 fwhip() { printf "${tty_blue_bold}>>>>>>>${tty_bold}: %s${tty_reset}\n" "$@"; }
-warn() { ring_bell; printf "${tty_red_bold}Warning${tty_bold}: %s${tty_reset}\n" "$@" >&2; }
-indent() { 
+warn() {
+  ring_bell
+  printf "${tty_red_bold}Warning${tty_bold}: %s${tty_reset}\n" "$@" >&2
+}
+indent() {
   space_count=${2:-4}
   spaces=""
   count=0
-  while [[ $count -lt $space_count ]]; do 
-    spaces+=" " 
-    (( count++ ))
+  while [[ $count -lt $space_count ]]; do
+    spaces+=" "
+    ((count++))
   done
-  printf "${spaces}%s\n" "$1" 
+  printf "${spaces}%s\n" "$1"
 }
 min_sec() { printf "%dm %ds" "$((10#$1 / 60))" "$((10#$1 % 60))"; }
 
 # Errors and help
-match_command () {
+match_command() {
   aliases=("${3}" "${2}")
-  for alias in ${aliases[@]}; do 
+  for alias in ${aliases[@]}; do
     if [[ "${alias}" == "${1}" ]]; then
       export op="${2}"
     fi
   done
 }
 
-command_help () {
+command_help() {
   printf '\n%s\n\n' "$(cat ${CRAFT_HOME_DIR}/config/help/${1}_help.txt)"
   exit ${2}
 }
 
-missing_argument () {
+missing_argument() {
   warn "Invalid option: -$2 requires an argument"
   command_help $1 1
 }
 
-invalid_command () {
+invalid_command() {
   warn "Invalid command: $2"
   command_help $1 1
 }
 
-invalid_option () {
+invalid_option() {
   warn "Invalid option: -$2"
   command_help $1 1
 }
 
-missing_required_option () {
+missing_required_option() {
   warn "Missing option: $1 requires \"$2\""
   command_help $1 1
 }
 
-runtime () {
-  indent "${tty_yellow}Runtime: $(min_sec $(( $(date +%s )-START )))${tty_reset}"
+runtime() {
+  indent "${tty_yellow}Runtime: $(min_sec $(($(date +%s) - START)))${tty_reset}"
 }
 
-pids () {
+pids() {
   PIDS=($(netstat -vanp tcp | grep "${server_port}" | awk '{print $9}'))
 }
-screens () {
+screens() {
   SCREENS=($(screen -ls "${server_name}" | grep -o "[0-9]*\.${server_name}"))
   TMP_SCREENS=()
   while IFS=$'\t' read -r line; do
     TMP_SCREENS+=("${line}")
-  done <<< "${SCREENS[@]}"
+  done <<<"${SCREENS[@]}"
   SCREENS=("${TMP_SCREENS[@]}")
   [ -z "${SCREENS[@]}" ] && SCREENS=()
 }
 
-list_properties () {
+list_properties() {
   count=0
   while IFS="" read -r line || [ -n "$line" ]; do
     if [[ $count -gt 1 ]]; then
@@ -114,49 +116,50 @@ list_properties () {
       set=$(printf '%s\n' "${line##*=}")
       export $prop="$set"
     fi
-    (( count++ ))
-  done < "${1}"
+    ((count++))
+  done <"${1}"
 }
 
-get_properties () {
+get_properties() {
   list_properties "${CRAFT_SERVER_DIR}/${server_name}/server.properties"
   list_properties "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties"
 }
 
-find_server () {
+find_server() {
   if ! [[ -d ${CRAFT_SERVER_DIR}/"${1}" ]]; then
     warn "No server named ${1} in ${CRAFT_SERVER_DIR}"
     exit 1
   fi
 }
 
-server_status () {
+server_status() {
 
-  pids; screens
+  pids
+  screens
 
-  if [ ${#PIDS[@]} -gt 0 ] && [ ${#SCREENS[@]} -gt 0 ] ; then
+  if [ ${#PIDS[@]} -gt 0 ] && [ ${#SCREENS[@]} -gt 0 ]; then
     fwhip "\"${server_name}\" Minecraft server running on port: ${server_port} PID: ${PIDS[*]}"
     [ ${#PIDS[@]} -gt 1 ] && warn "\"${server_name}\" somehow running on more than one PID" && indent "count: ${#PIDS[@]}" && indent "PIDS: ${PIDS[*]}"
-    if [ ${#SCREENS[@]} -ne 1 ]; then 
+    if [ ${#SCREENS[@]} -ne 1 ]; then
       [ ${#SCREENS[@]} -lt 1 ] && warn "However, there are zero screens named \"${server_name}\"" && indent "count: ${#SCREENS[@]}"
       [ ${#SCREENS[@]} -gt 1 ] && warn "However, there is more than one screen named \"${server_name}\"" && indent "count: ${#SCREENS[@]}"
     fi
-    echo "$(date) : Status: \"${server_name}\" is running on port: ${server_port} PID: ${PID[*]}." >> "${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
-    (exit 0) 
+    echo "$(date) : Status: \"${server_name}\" is running on port: ${server_port} PID: ${PID[*]}." >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+    (exit 0)
   else
     warn "\"${server_name}\" is not running"
-    if [ ${#SCREENS[@]} -ne 0 ]; then 
+    if [ ${#SCREENS[@]} -ne 0 ]; then
       [ ${#SCREENS[@]} -gt 1 ] && warn "However, there is still a screen named \"${server_name}\"" && indent "count: ${#SCREENS[@]}"
     fi
-    echo "$(date) : Status: \"${server_name}\" is not running." >> "${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+    echo "$(date) : Status: \"${server_name}\" is not running." >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
     (exit 1)
   fi
 
 }
 
-discord_message () {
+discord_message() {
 
-  message () {
+  message() {
     cat <<EOF
 {
   "embeds":[{
@@ -180,8 +183,8 @@ EOF
 
 boolean() {
   case $1 in
-    true) echo true ;;
-    false) echo false ;;
-    *) echo true ;;
+  true) echo true ;;
+  false) echo false ;;
+  *) echo true ;;
   esac
 }

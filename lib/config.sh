@@ -4,17 +4,17 @@ command="config"
 server_name=false
 test=false
 
-config_command () {
+config_command() {
 
   [ -z "$1" ] && command_help "$command" 1
 
   while getopts ":n:ht" opt; do
-    case $opt in 
-      n ) server_name="$OPTARG" ;;
-      h ) command_help "$command" 0 ;;
-      t ) test=true ;;
-      : ) missing_argument "$command" "$OPTARG" ;;
-      * ) invalid_option "$command" "$OPTARG" ;;
+    case $opt in
+    n) server_name="$OPTARG" ;;
+    h) command_help "$command" 0 ;;
+    t) test=true ;;
+    :) missing_argument "$command" "$OPTARG" ;;
+    *) invalid_option "$command" "$OPTARG" ;;
     esac
   done
 
@@ -41,21 +41,21 @@ function cleanup {
 
 trap cleanup EXIT
 
-config_server () {
+config_server() {
 
   server_properties="server.properties"
   launcher_properties="fabric-server-launcher.properties"
 
   ### Server Properties
   fwhip "Minecraft server properties"
-  echo "#Minecraft server properties" > "${server_properties}.tmp"
-  echo "#$(date)" >> "${server_properties}.tmp"
+  echo "#Minecraft server properties" >"${server_properties}.tmp"
+  echo "#$(date)" >>"${server_properties}.tmp"
   read_properties "${server_properties}"
 
   ### Launcher Properties
   fwhip "Minecraft launcher properties"
-  echo "#Fabric launcher properties" > "${launcher_properties}.tmp"
-  echo "#$(date)" >> "${launcher_properties}.tmp"
+  echo "#Fabric launcher properties" >"${launcher_properties}.tmp"
+  echo "#$(date)" >>"${launcher_properties}.tmp"
   read_properties "${launcher_properties}"
 
   while true; do
@@ -80,7 +80,7 @@ config_server () {
 
 }
 
-read_properties () {
+read_properties() {
 
   execute "cd" "${CRAFT_SERVER_DIR}/${server_name}"
 
@@ -91,21 +91,21 @@ read_properties () {
   OLDIFS="$IFS"
   IFS=$'\n'
   for line in $properties; do
-    prop=$(echo ${line%=*} | tr -d '\n') 
+    prop=$(echo ${line%=*} | tr -d '\n')
     set=$(echo ${line##*=} | tr -d '\n')
     if [[ "${line:0:1}" != "#" ]]; then
-      read -p "${prop} (Set to: \"${set}\"): " -r input 
+      read -p "${prop} (Set to: \"${set}\"): " -r input
       if [[ $input != '' ]]; then
         change=true
-        echo "${prop}=${input}" >> "${file}.tmp"
-        echo "$(date) : Config: \"${server_name}\" setting ${prop} changed from \"${set}\" to \"${input}\"" >> "${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+        echo "${prop}=${input}" >>"${file}.tmp"
+        echo "$(date) : Config: \"${server_name}\" setting ${prop} changed from \"${set}\" to \"${input}\"" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
       else
-        echo "${line}" >> "${file}.tmp"
+        echo "${line}" >>"${file}.tmp"
       fi
     fi
   done
   IFS="$OLDIFS"
-  
+
   if [[ $change == true ]]; then
     while true; do
       fwhip "Do you want to save changes to \"${server_name}?\""
@@ -122,7 +122,7 @@ read_properties () {
         warn "Please enter y or n"
       fi
     done
-  else 
+  else
     execute "rm" "${file}.tmp"
   fi
 

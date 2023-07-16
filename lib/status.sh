@@ -4,17 +4,17 @@ command="status"
 server_name=false
 test=false
 
-status_command () {
+status_command() {
 
   # [ -z "$1" ] && command_help "$command" 1
 
   while getopts ":n:ht" opt; do
     case "$opt" in
-      n ) server_name=${OPTARG} ;;
-      h ) command_help "${command}" 0 ;;
-      t ) test=true ;;
-      : ) missing_argument "$command" "$OPTARG" ;;
-      * ) invalid_option "$command" "$OPTARG" ;;
+    n) server_name=${OPTARG} ;;
+    h) command_help "${command}" 0 ;;
+    t) test=true ;;
+    :) missing_argument "$command" "$OPTARG" ;;
+    *) invalid_option "$command" "$OPTARG" ;;
     esac
   done
 
@@ -28,7 +28,7 @@ status_command () {
     echo "${tty_reset}"
   fi
 
-  $test && echo && runtime && echo 
+  $test && echo && runtime && echo
 
   if [[ "${server_name}" == false ]]; then
     servers=$(ls "${CRAFT_SERVER_DIR}")
@@ -36,8 +36,8 @@ status_command () {
       server_name="${server}"
       get_properties
       server_status
-    done <<< "${servers[@]}"
-  else 
+    done <<<"${servers[@]}"
+  else
     find_server "${server_name}"
     get_properties
     server_status
@@ -46,4 +46,3 @@ status_command () {
   exit $?
 
 }
-

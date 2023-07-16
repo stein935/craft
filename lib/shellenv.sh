@@ -2,7 +2,7 @@
 
 shellenv_command() {
   if [[ "${PATH}" == *"${CRAFT_PREFIX}/bin"* ]]; then
-    return 
+    return
   fi
   echo "export PATH=\"${CRAFT_PREFIX}/bin\${PATH+:\$PATH}\";"
   exit 0
