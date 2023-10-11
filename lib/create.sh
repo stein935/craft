@@ -77,7 +77,8 @@ create_server() {
     indent "craft delete -n \"${server_name}\"" "6"
     echo
     indent "To run:"
-    indent "craft create -n \"${server_name}\" [ options ]" "6"
+    indent "craft create -n 
+    \"${server_name}\" [ options ]" "6"
     $test && echo && runtime
     echo
     exit 1
@@ -122,6 +123,24 @@ init_server() {
   execute "${init_command[@]}"
   echo "${tty_reset}"
   wait
+
+  create_daemon
+
+}
+
+create_daemon() {
+
+  daemon_path="/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist"
+  log_path=$(printf '%s\n' "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log" | sed -e 's/[\/&]/\\&/g')
+
+  sudo cp "${CRAFT_HOME_DIR}/config/craft.servername.daemon.plist" /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
+
+  sudo sed -i '' "s/_servername_/${server_name// /}/g" $daemon_path
+  sudo sed -i '' "s/_server_name_/${server_name// /\ }/g" $daemon_path
+  sudo sed -i '' "s/_log_path_/${log_path}/g" $daemon_path
+  sudo sed -i '' "s/_user_/${USER}/g" $daemon_path
+
+  execute "touch" "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log"
 
   ask_config_server
 

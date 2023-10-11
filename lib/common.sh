@@ -126,7 +126,7 @@ get_properties() {
 }
 
 find_server() {
-  if ! [[ -d ${CRAFT_SERVER_DIR}/"${1}" ]]; then
+  if ! [[ -d "${CRAFT_SERVER_DIR}/${1}" ]]; then
     warn "No server named ${1} in ${CRAFT_SERVER_DIR}"
     exit 1
   fi
@@ -151,7 +151,7 @@ server_status() {
     if [ ${#SCREENS[@]} -ne 0 ]; then
       [ ${#SCREENS[@]} -gt 1 ] && warn "However, there is still a screen named \"${server_name}\"" && indent "count: ${#SCREENS[@]}"
     fi
-    echo "$(date) : Status: \"${server_name}\" is not running." >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+    echo "$(date) : Status: \"${server_name}\" is not running" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
     (exit 1)
   fi
 

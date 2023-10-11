@@ -82,9 +82,13 @@ start_server() {
   fi
 
   # Start the server
-  execute "cd" "${CRAFT_SERVER_DIR}/${server_name}"
-  execute "screen" "${screen_init}" "${server_name}"
-  execute "screen" "-S" "${server_name}" "-p" "0" "-X" "stuff" "$(printf '%s\r' "java -jar -Xms${server_init_mem} -Xmx${server_max_mem} fabric-server-launch.jar --nogui")"
+  cd "${CRAFT_SERVER_DIR}/${server_name}"
+  screen "${screen_init}" "${server_name}"
+  while true; do
+    screen -ls | grep -q "Detached" && break
+    sleep 1
+  done
+  screen -S "${server_name}" -p 0 -X stuff "$(printf '%s\r' "java -jar -Xms${server_init_mem} -Xmx${server_max_mem} fabric-server-launch.jar --nogui")"
 
   # Wait for server to start
   while [ 1 ]; do
@@ -98,10 +102,8 @@ start_server() {
 
       if $monitor; then
 
-        # Set server monitor cron job
-        crontab -l >"${CRAFT_SERVER_DIR}/.crontab"
-        echo "*/${frequency} * * * * ${0} monitor -n \"$server_name\"" >>"${CRAFT_SERVER_DIR}/.crontab"
-        crontab "${CRAFT_SERVER_DIR}/.crontab" && rm "${CRAFT_SERVER_DIR}/.crontab"
+        sudo launchctl unload /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist &>/dev/null
+        sudo launchctl load /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist &>/dev/null
 
       fi
       $test && echo && runtime && echo

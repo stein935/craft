@@ -3,15 +3,17 @@
 command="stop"
 server_name=false
 force=false
+monitor=false
 test=false
 
 stop_command() {
 
   [ -z "$1" ] && command_help "$command" 1
 
-  while getopts ":n:fht" opt; do
+  while getopts ":n:fmht" opt; do
     case $opt in
     n) server_name="$OPTARG" ;;
+    m) monitor=true ;;
     f) force=true ;;
     h) command_help "$command" 0 ;;
     t) test=true ;;
@@ -31,6 +33,7 @@ stop_command() {
     indent "command                 : $command        "
     indent "server_name             : $server_name    "
     indent "force                   : $force          "
+    indent "monitor                 : $monitor        "
     indent "test                    : $test           "
     echo "${tty_reset}"
   fi
@@ -51,9 +54,7 @@ stop_server() {
     fwhip "Stopping \"${server_name}\" Minecraft server"
   fi
 
-  execute "crontab" "-l" >"${CRAFT_SERVER_DIR}/.crontab"
-  execute "sed" "-i" ".bak" "/${server_name}/d" "${CRAFT_SERVER_DIR}/.crontab"
-  execute "crontab" "${CRAFT_SERVER_DIR}/.crontab" && execute "rm" "${CRAFT_SERVER_DIR}/.crontab"
+  $monitor && sudo launchctl unload /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
 
   if [ ${#SCREENS[@]} -gt 0 ]; then
     for screen in "${SCREENS[@]}"; do

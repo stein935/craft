@@ -43,6 +43,7 @@ delete_server() {
     if [[ $REPLY =~ ^[Yy]$ ]]; then
       fwhip "Deleting dir: ${CRAFT_SERVER_DIR}/${server_name// /\ }"
       execute "rm" "-r" "${CRAFT_SERVER_DIR}/${server_name}"
+      sudo rm /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
     else
       fwhip "Cancelled"
     fi
