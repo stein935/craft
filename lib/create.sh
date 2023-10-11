@@ -124,24 +124,6 @@ init_server() {
   echo "${tty_reset}"
   wait
 
-  create_daemon
-
-}
-
-create_daemon() {
-
-  daemon_path="/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist"
-  log_path=$(printf '%s\n' "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log" | sed -e 's/[\/&]/\\&/g')
-
-  sudo cp "${CRAFT_HOME_DIR}/config/craft.servername.daemon.plist" /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
-
-  sudo sed -i '' "s/_servername_/${server_name// /}/g" $daemon_path
-  sudo sed -i '' "s/_server_name_/${server_name// /\ }/g" $daemon_path
-  sudo sed -i '' "s/_log_path_/${log_path}/g" $daemon_path
-  sudo sed -i '' "s/_user_/${USER}/g" $daemon_path
-
-  execute "touch" "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log"
-
   ask_config_server
 
 }

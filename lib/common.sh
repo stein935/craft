@@ -95,17 +95,8 @@ runtime() {
   indent "${tty_yellow}Runtime: $(min_sec $(($(date +%s) - START)))${tty_reset}"
 }
 
-pids() {
-  PIDS=($(netstat -vanp tcp | grep "${server_port}" | awk '{print $9}'))
-}
-screens() {
-  SCREENS=($(screen -ls "${server_name}" | grep -o "[0-9]*\.${server_name}"))
-  TMP_SCREENS=()
-  while IFS=$'\t' read -r line; do
-    TMP_SCREENS+=("${line}")
-  done <<<"${SCREENS[@]}"
-  SCREENS=("${TMP_SCREENS[@]}")
-  [ -z "${SCREENS[@]}" ] && SCREENS=()
+pid() {
+  PID=($(lsof -i :$server_port | grep $server_port | awk '{print $2}'))
 }
 
 list_properties() {
@@ -134,23 +125,14 @@ find_server() {
 
 server_status() {
 
-  pids
-  screens
+  pid
 
-  if [ ${#PIDS[@]} -gt 0 ] && [ ${#SCREENS[@]} -gt 0 ]; then
-    fwhip "\"${server_name}\" Minecraft server running on port: ${server_port} PID: ${PIDS[*]}"
-    [ ${#PIDS[@]} -gt 1 ] && warn "\"${server_name}\" somehow running on more than one PID" && indent "count: ${#PIDS[@]}" && indent "PIDS: ${PIDS[*]}"
-    if [ ${#SCREENS[@]} -ne 1 ]; then
-      [ ${#SCREENS[@]} -lt 1 ] && warn "However, there are zero screens named \"${server_name}\"" && indent "count: ${#SCREENS[@]}"
-      [ ${#SCREENS[@]} -gt 1 ] && warn "However, there is more than one screen named \"${server_name}\"" && indent "count: ${#SCREENS[@]}"
-    fi
-    echo "$(date) : Status: \"${server_name}\" is running on port: ${server_port} PID: ${PID[*]}." >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+  if [ $PID ]; then
+    fwhip "\"${server_name}\" Minecraft server running on port: ${server_port} PID: ${PID}"
+    echo "$(date) : Status: \"${server_name}\" is running on port: ${server_port} PID: ${PID}" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
     (exit 0)
   else
     warn "\"${server_name}\" is not running"
-    if [ ${#SCREENS[@]} -ne 0 ]; then
-      [ ${#SCREENS[@]} -gt 1 ] && warn "However, there is still a screen named \"${server_name}\"" && indent "count: ${#SCREENS[@]}"
-    fi
     echo "$(date) : Status: \"${server_name}\" is not running" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
     (exit 1)
   fi

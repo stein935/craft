@@ -53,24 +53,16 @@ start_command() {
 start_server() {
 
   # Check if a server is already running on the port
-  pids
-  screens
+  pid
 
-  if [ ${#PIDS[@]} -gt 0 ]; then
-    warn "A server is already running on port: ${server_port} PID: ${PID[@]}"
+  if [ $PID ]; then
+    warn "A server is already running on port: ${server_port} PID: ${PID}"
     echo
     indent "Run:"
     indent "craft stop -n \"${server_name}\" or $ craft restart -n \"${server_name}\"" "6"
     echo
     $test && runtime && echo
     exit 1
-  fi
-
-  if [ ${#SCREENS[@]} -gt 0 ]; then
-    warn "Quiting ${#SCREENS[@]} existing screens named \"${server_name}\""
-    for screen in "${SCREENS[@]}"; do
-      execute "screen" "-S" "${screen[@]}" "-X" "quit"
-    done
   fi
 
   # Message that the server is starting
@@ -83,27 +75,32 @@ start_server() {
 
   # Start the server
   cd "${CRAFT_SERVER_DIR}/${server_name}"
-  screen "${screen_init}" "${server_name}"
-  while true; do
-    screen -ls | grep -q "Detached" && break
-    sleep 1
-  done
-  screen -S "${server_name}" -p 0 -X stuff "$(printf '%s\r' "java -jar -Xms${server_init_mem} -Xmx${server_max_mem} fabric-server-launch.jar --nogui")"
+  rm -f command-fifo
+  mkfifo command-fifo
+  java -jar -Xms${server_init_mem} -Xmx${server_max_mem} fabric-server-launch.jar --nogui <>command-fifo &
 
   # Wait for server to start
   while [ 1 ]; do
-    pids
-    screens
-    if [ ${#SCREENS[@]} -gt 0 ] && [ ${#PIDS[@]} -gt 0 ]; then
+    pid
+    if [ $PID ]; then
 
       # Do this if the server is running
-      fwhip "\"${server_name}\" Minecraft server running on port: ${server_port} PID: ${PIDS[*]}"
-      echo "$(date) : Start: \"${server_name}\" running on port: ${server_port} PID: ${PIDS[*]}" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+      fwhip "\"${server_name}\" Minecraft server running on port: ${server_port} PID: ${PID}"
+      echo "$(date) : Start: \"${server_name}\" running on port: ${server_port} PID: ${PID}" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
 
       if $monitor; then
 
-        sudo launchctl unload /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist &>/dev/null
-        sudo launchctl load /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist &>/dev/null
+        daemon_path="/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist"
+        log_path=$(printf '%s\n' "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log" | sed -e 's/[\/&]/\\&/g')
+
+        sudo cp "${CRAFT_HOME_DIR}/config/craft.servername.daemon.plist" /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
+
+        sudo sed -i '' "s/_servername_/${server_name// /}/g" $daemon_path
+        sudo sed -i '' "s/_server_name_/${server_name// /\ }/g" $daemon_path
+        sudo sed -i '' "s/_log_path_/${log_path}/g" $daemon_path
+        sudo sed -i '' "s/_user_/${USER}/g" $daemon_path
+
+        if ! [ -f "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log" ]; then execute "touch" "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log"; fi
 
       fi
       $test && echo && runtime && echo
@@ -111,5 +108,4 @@ start_server() {
     fi
     sleep 1
   done
-
 }

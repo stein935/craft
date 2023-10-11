@@ -44,34 +44,21 @@ stop_command() {
 
 stop_server() {
 
-  pids
-  screens
+  pid
 
-  if [ -z "${PIDS[@]}" ]; then
+  if [ -z "${PID}" ]; then
     warn "No server running on port: ${server_port}"
     ! $force && indent "To force stop run:" && indent "craft stop -fn \"${server_name}\"" "6" && exit 1 || warn "Force stopping all related processes ... just in case"
   else
     fwhip "Stopping \"${server_name}\" Minecraft server"
   fi
 
-  $monitor && sudo launchctl unload /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
+  $monitor || sudo rm -f /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
 
-  if [ ${#SCREENS[@]} -gt 0 ]; then
-    for screen in "${SCREENS[@]}"; do
-      execute "screen" "-S" "${screen[@]}" "-p" "0" '-X' "stuff" "$(printf '%s\r' "/stop")"
-      sleep 3
-      while [ -n "$(screen -ls "${server_name}" | grep -o "${screen[@]}")" ]; do
-        execute "screen" "-S" "${screen[@]}" "-p" "0" '-X' "stuff" "$(printf '%s\r' "exit")"
-        sleep 1
-      done
-    done
-    pids
-    for pid in "${PIDS[@]}"; do
-      $force && execute "kill" "-9" "${pid}"
-    done
-  fi
+  echo save-all >>"${CRAFT_SERVER_DIR}/${server_name}/command-fifo"
+  echo stop >>"${CRAFT_SERVER_DIR}/${server_name}/command-fifo"
 
-  $force && screen -wipe &>/dev/null
+  wait $PID
 
   server_status &>/dev/null
 
