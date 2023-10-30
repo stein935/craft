@@ -39,16 +39,17 @@ monitor_command() {
 
 monitor_server() {
 
-  # if server_status &>/dev/null; then
-  if server_status; then
+  if server_status &>/dev/null; then
     $test && runtime && echo
     exit 0
   else
-    execute "$0" "restart" "-mn" "${server_name}"
-    echo "$(date) : Monitor: \"${server_name}\" was restarted automatically when a crash was detected. Port: ${server_port} PID: ${PIDS}" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+    execute "$0" "restart" "-n" "${server_name}"
+    pid
+    echo "$(date) : Monitor: \"${server_name}\" was restarted automatically when a crash was detected. Port: ${server_port} PID: ${PID}" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
     if [ -n "$discord_webhook" ]; then
       discord_message "Auto Restart" "\"${server_name}\" was restarted automatically when a crash was detected" "12745742" "Server Monitor"
     fi
+    execute "$0" "status" "-n" "${server_name}"
     $test && echo && runtime && echo
     exit 1
   fi

@@ -46,30 +46,42 @@ stop_server() {
 
   pid
 
-  if [ -z "${PID}" ]; then
+  $monitor || fwhip "Checking for sudo ..." && sudo ls &>/dev/null
+
+  if ! [ $PID ]; then
     warn "No server running on port: ${server_port}"
     ! $force && indent "To force stop run:" && indent "craft stop -fn \"${server_name}\"" "6" && exit 1 || warn "Force stopping all related processes ... just in case"
   else
     fwhip "Stopping \"${server_name}\" Minecraft server"
   fi
 
-  $monitor || sudo rm -f /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
-
-  echo save-all >>"${CRAFT_SERVER_DIR}/${server_name}/command-fifo"
-  echo stop >>"${CRAFT_SERVER_DIR}/${server_name}/command-fifo"
-
-  wait $PID
-
-  server_status &>/dev/null
-
-  if [[ $? == 1 ]] &>/dev/null; then
-    fwhip "\"${server_name}\" Minecraft server stopped"
-    echo "$(date) : Stop: \"${server_name}\" stopped" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
-  else
-    warn "Failed to stop \"${server_name}\""
-    $test && echo && runtime && echo
-    exit 1
+  if ! $monitor; then
+    sudo launchctl list | grep "craft.${server_name// /}.daemon" &>/dev/null && [ -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" ] && sudo launchctl unload /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
+    [ -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" ] && sudo rm -f /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
   fi
+
+  if [ $PID ]; then
+    exec 8<>"${CRAFT_SERVER_DIR}/${server_name}/command-fifo"
+
+    echo "${tty_cyan}"
+
+    echo save-all >>"${CRAFT_SERVER_DIR}/${server_name}/command-fifo"
+    echo stop >>"${CRAFT_SERVER_DIR}/${server_name}/command-fifo"
+
+    while true; do
+      while read -r line; do
+        if [[ "$line" == *"All dimensions are saved"* ]]; then
+          break 2
+        fi
+      done <"${CRAFT_SERVER_DIR}/${server_name}/logs/latest.log"
+      sleep 1
+    done
+  fi
+
+  echo "${tty_reset}"
+
+  fwhip "\"${server_name}\" Minecraft server stopped"
+  echo "$(date) : Stop: \"${server_name}\" stopped" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
   $test && echo && runtime && echo
   exit 0
 

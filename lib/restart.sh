@@ -38,7 +38,7 @@ restart_command() {
 
 restart_server() {
 
-  execute "$0" "stop" "-fn" "${server_name}"
+  execute "$0" "stop" "-mfn" "${server_name}"
   execute "$0" "start" "-${monitor}n" "${server_name}"
   echo "$(date) : Restart: \"${server_name}\" was restarted." >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
   $test && runtime && echo
