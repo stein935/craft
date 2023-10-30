@@ -54,7 +54,10 @@ stop_server() {
     fwhip "Stopping \"${server_name}\" Minecraft server"
   fi
 
-  $monitor && sudo launchctl unload /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
+  if ! $monitor; then
+    sudo launchctl list | grep "craft.${server_name// /}.daemon" &>/dev/null && [ -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" ] && sudo launchctl unload /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
+    [ -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" ] && sudo rm -f /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
+  fi
 
   if [ ${#SCREENS[@]} -gt 0 ]; then
     for screen in "${SCREENS[@]}"; do
