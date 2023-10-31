@@ -5,7 +5,11 @@ server_name=false
 monitor=false
 server_init_mem="512M"
 server_max_mem="8G"
+<<<<<<< HEAD
 quiet=true
+=======
+daemon=false
+>>>>>>> fifo
 frequency="5"
 test=false
 
@@ -13,12 +17,12 @@ start_command() {
 
   [ -z "$1" ] && command_help "$command" 1
 
-  while getopts ":n:f:mvht" opt; do
+  while getopts ":n:f:mdht" opt; do
     case $opt in
     n) server_name="$OPTARG" ;;
     f) monitor=true frequency="$OPTARG" ;;
     m) monitor=true ;;
-    v) quiet=false ;;
+    d) daemon=true ;;
     h) command_help "$command" 0 ;;
     t) test=true ;;
     :) missing_argument "$command" "$OPTARG" ;;
@@ -39,7 +43,7 @@ start_command() {
     indent "monitor                 : $monitor        "
     indent "server_init_mem         : $server_init_mem"
     indent "server_max_mem          : $server_max_mem "
-    indent "quiet                   : $quiet          "
+    indent "daemon                  : $daemon          "
     indent "frequency               : $frequency      "
     indent "test                    : $test           "
     echo "${tty_reset}"
@@ -52,11 +56,10 @@ start_command() {
 start_server() {
 
   # Check if a server is already running on the port
-  pids
-  screens
+  pid
 
-  if [ ${#PIDS[@]} -gt 0 ]; then
-    warn "A server is already running on port: ${server_port} PID: ${PID[@]}"
+  if [ $PID ]; then
+    warn "A server is already running on port: ${server_port} PID: ${PID}"
     echo
     indent "Run:"
     indent "craft stop -n \"${server_name}\" or $ craft restart -n \"${server_name}\"" "6"
@@ -65,15 +68,9 @@ start_server() {
     exit 1
   fi
 
-  if [ ${#SCREENS[@]} -gt 0 ]; then
-    warn "Quiting ${#SCREENS[@]} existing screens named \"${server_name}\""
-    for screen in "${SCREENS[@]}"; do
-      execute "screen" "-S" "${screen[@]}" "-X" "quit"
-    done
-  fi
-
   # Message that the server is starting
   fwhip "Starting \"${server_name}\" Minecraft server"
+  $monitor && fwhip "Checking for sudo ..." && sudo ls &>/dev/null
 
   if [ -f "${CRAFT_SERVER_DIR}/${server_name}/logo.txt" ]; then
     execute "cat" "${CRAFT_SERVER_DIR}/${server_name}/logo.txt"
@@ -82,47 +79,59 @@ start_server() {
 
   # Start the server
   cd "${CRAFT_SERVER_DIR}/${server_name}"
-  # while true; do
-  #   screen -ls | grep -q "Detached" && break
-  #   sleep 1
-  # done
-  screen java -jar -Xms${server_init_mem} -Xmx${server_max_mem} fabric-server-launch.jar --nogui
 
-  # Wait for server to start
-  # while [ 1 ]; do
-  #   pids
-  #   screens
-  #   if [ ${#SCREENS[@]} -gt 0 ] && [ ${#PIDS[@]} -gt 0 ]; then
+  pipe=command-pipe
+  [ -f $pipe ] || [ -p $pipe ] && rm -f $pipe
+  mkfifo $pipe
+  echo "${tty_cyan}"
 
-  #     # Do this if the server is running
-  #     fwhip "\"${server_name}\" Minecraft server running on port: ${server_port} PID: ${PIDS[*]}"
-  #     echo "$(date) : Start: \"${server_name}\" running on port: ${server_port} PID: ${PIDS[*]}" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+  if $daemon; then
+    java -jar -Xms${server_init_mem} -Xmx${server_max_mem} fabric-server-launch.jar --nogui
+  else
 
-  #     if $monitor; then
+    java -jar -Xms${server_init_mem} -Xmx${server_max_mem} fabric-server-launch.jar --nogui <>$pipe &
 
-  #       daemon_path="/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist"
-  #       log_path=$(printf '%s\n' "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log" | sed -e 's/[\/&]/\\&/g')
+    sleep 3
 
-  #       if [ -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" ]; then
-  #         sudo rm -f /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
-  #       fi
+    while true; do
+      while read -r line; do
+        if [[ "$line" == *"Done"* ]]; then
+          break 2
+        fi
+      done <logs/latest.log
+      sleep 1
+    done
 
-  #       sudo cp "${CRAFT_HOME_DIR}/config/craft.servername.daemon.plist" $daemon_path
+    echo "${tty_reset}"
 
-  #       sudo sed -i '' "s/_servername_/${server_name// /}/g" $daemon_path
-  #       sudo sed -i '' "s/_server_name_/${server_name// /\ }/g" $daemon_path
-  #       sudo sed -i '' "s/_log_path_/${log_path}/g" $daemon_path
-  #       sudo sed -i '' "s/_user_/${USER}/g" $daemon_path
+    pid
 
-  #       if [ ! -f "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log" ]; then execute "touch" "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log"; fi
+    # Do this if the server is running
+    fwhip "\"${server_name}\" Minecraft server running on port: ${server_port} PID: ${PID}"
+    echo "$(date) : Start: \"${server_name}\" running on port: ${server_port} PID: ${PID}" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
 
-  #       ! sudo launchctl list | grep "craft.${server_name// /}.daemon" &>/dev/null && sudo launchctl load $daemon_path
+    if $monitor; then
 
-  #     fi
-  #     $test && echo && runtime && echo
-  #     exit 0
-  #   fi
-  #   sleep 1
-  # done
+      daemon_path="/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist"
+      log_path=$(printf '%s\n' "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log" | sed -e 's/[\/&]/\\&/g')
 
+      if [ -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" ]; then
+        sudo rm -f /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
+      fi
+
+      sudo cp "${CRAFT_HOME_DIR}/config/craft.servername.daemon.plist" $daemon_path
+
+      sudo sed -i '' "s/_servername_/${server_name// /}/g" $daemon_path
+      sudo sed -i '' "s/_server_name_/${server_name// /\ }/g" $daemon_path
+      sudo sed -i '' "s/_log_path_/${log_path}/g" $daemon_path
+      sudo sed -i '' "s/_user_/${USER}/g" $daemon_path
+
+      if [ ! -f "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log" ]; then execute "touch" "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log"; fi
+
+      ! sudo launchctl list | grep "craft.${server_name// /}.daemon" &>/dev/null && sudo launchctl load $daemon_path
+
+    fi
+    $test && echo && runtime && echo
+    exit 0
+  fi
 }

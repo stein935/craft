@@ -44,48 +44,63 @@ stop_command() {
 
 stop_server() {
 
-  pids
-  screens
+  pid
 
-  if [ -z "${PIDS[@]}" ]; then
+  if ! [ $PID ]; then
     warn "No server running on port: ${server_port}"
     ! $force && indent "To force stop run:" && indent "craft stop -fn \"${server_name}\"" "6" && exit 1 || warn "Force stopping all related processes ... just in case"
   else
     fwhip "Stopping \"${server_name}\" Minecraft server"
   fi
 
+<<<<<<< HEAD
+  if ! $monitor; then
+    sudo launchctl list | grep "craft.${server_name// /}.daemon" &>/dev/null && [ -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" ] && sudo launchctl unload /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
+    [ -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" ] && sudo rm -f /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
+  fi
+=======
+  $monitor || fwhip "Checking for sudo ..." && sudo ls &>/dev/null
+>>>>>>> fifo
+
   if ! $monitor; then
     sudo launchctl list | grep "craft.${server_name// /}.daemon" &>/dev/null && [ -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" ] && sudo launchctl unload /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
     [ -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" ] && sudo rm -f /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
   fi
 
-  if [ ${#SCREENS[@]} -gt 0 ]; then
-    for screen in "${SCREENS[@]}"; do
-      execute "screen" "-S" "${screen[@]}" "-p" "0" '-X' "stuff" "$(printf '%s\r' "/stop")"
-      sleep 3
-      while [ -n "$(screen -ls "${server_name}" | grep -o "${screen[@]}")" ]; do
-        execute "screen" "-S" "${screen[@]}" "-p" "0" '-X' "stuff" "$(printf '%s\r' "exit")"
+  cd "${CRAFT_SERVER_DIR}/${server_name}"
+  pipe=command-pipe
+  exec 8<>$pipe
+
+  if [ $PID ]; then
+    if [ -p $pipe ]; then
+      echo "${tty_cyan}"
+      echo save-all >>$pipe
+      echo stop >>$pipe
+      i=0
+      until [ $i -gt 15 ]; do
+        while read -r line; do
+          if [[ "$line" == *"All dimensions are saved"* ]]; then
+            echo "${tty_reset}"
+            break 2
+          fi
+        done <"${CRAFT_SERVER_DIR}/${server_name}/logs/latest.log"
+        ((i = i + 1))
         sleep 1
       done
-    done
-    pids
-    for pid in "${PIDS[@]}"; do
-      $force && execute "kill" "-9" "${pid}"
-    done
+      if [ $i -gt 15 ]; then
+        echo "${tty_reset}"
+        warn "Unable to run save-all and stop. Some game data may have been lost"
+        kill -9 $PID
+      fi
+    else
+      echo "${tty_reset}"
+      warn "Unable to run save-all and stop. Some game data may have been lost"
+      kill -9 $PID
+    fi
   fi
 
-  $force && screen -wipe &>/dev/null
-
-  server_status &>/dev/null
-
-  if [[ $? == 1 ]] &>/dev/null; then
-    fwhip "\"${server_name}\" Minecraft server stopped"
-    echo "$(date) : Stop: \"${server_name}\" stopped" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
-  else
-    warn "Failed to stop \"${server_name}\""
-    $test && echo && runtime && echo
-    exit 1
-  fi
+  fwhip "\"${server_name}\" Minecraft server stopped"
+  echo "$(date) : Stop: \"${server_name}\" stopped" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
   $test && echo && runtime && echo
   exit 0
 
