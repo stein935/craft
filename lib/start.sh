@@ -5,11 +5,7 @@ server_name=false
 monitor=false
 server_init_mem="512M"
 server_max_mem="8G"
-<<<<<<< HEAD
-quiet=true
-=======
 daemon=false
->>>>>>> fifo
 frequency="5"
 test=false
 
