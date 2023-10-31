@@ -43,7 +43,7 @@ monitor_server() {
     $test && runtime && echo
     exit 0
   else
-    execute "$0" "restart" "-n" "${server_name}"
+    execute "$0" "restart" "-mn" "${server_name}"
     pid
     echo "$(date) : Monitor: \"${server_name}\" was restarted automatically when a crash was detected. Port: ${server_port} PID: ${PID}" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
     if [ -n "$discord_webhook" ]; then

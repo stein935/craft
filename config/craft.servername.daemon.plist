@@ -18,7 +18,7 @@
 		<key>ProgramArguments</key>
 		<array>
 			<string>/usr/local/bin/craft</string>
-			<string>start</string>
+			<string>monitor</string>
 			<string>-n</string>
 			<string>_server_name_</string>
 		</array>
@@ -33,6 +33,7 @@
 		<true/>
 
 		<key>StartInterval</key>
-		<integer>300</integer>
+		<integer>30</integer>
+
 	</dict>
 </plist>
