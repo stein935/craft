@@ -53,14 +53,7 @@ stop_server() {
     fwhip "Stopping \"${server_name}\" Minecraft server"
   fi
 
-<<<<<<< HEAD
-  if ! $monitor; then
-    sudo launchctl list | grep "craft.${server_name// /}.daemon" &>/dev/null && [ -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" ] && sudo launchctl unload /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
-    [ -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" ] && sudo rm -f /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
-  fi
-=======
   $monitor || fwhip "Checking for sudo ..." && sudo ls &>/dev/null
->>>>>>> fifo
 
   if ! $monitor; then
     sudo launchctl list | grep "craft.${server_name// /}.daemon" &>/dev/null && [ -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" ] && sudo launchctl unload /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
@@ -69,7 +62,7 @@ stop_server() {
 
   cd "${CRAFT_SERVER_DIR}/${server_name}"
   pipe=command-pipe
-  exec 8<>$pipe
+  exec <>$pipe
 
   if [ $PID ]; then
     if [ -p $pipe ]; then
@@ -77,10 +70,13 @@ stop_server() {
       echo save-all >>$pipe
       echo stop >>$pipe
       i=0
+      tail -f logs/latest.log &
+      tailpid=$!
       until [ $i -gt 15 ]; do
         while read -r line; do
           if [[ "$line" == *"All dimensions are saved"* ]]; then
             echo "${tty_reset}"
+            kill $tailpid
             break 2
           fi
         done <"${CRAFT_SERVER_DIR}/${server_name}/logs/latest.log"

@@ -159,7 +159,7 @@ EOF
   }
 
   # POST request to Discord Webhook
-  curl -H "Content-Type: application/json" -X POST -d "$(message "$1" "$2" "$3" "$4")" $discord_webhook
+  curl -H "Content-Type: application/json" -X POST -d "$(message "$1" "$2" "$3" "$4")" $discord_webhook &>/dev/null
 
 }
 

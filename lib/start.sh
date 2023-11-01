@@ -6,6 +6,7 @@ monitor=false
 server_init_mem="512M"
 server_max_mem="8G"
 daemon=false
+players=
 frequency="5"
 test=false
 
@@ -13,12 +14,13 @@ start_command() {
 
   [ -z "$1" ] && command_help "$command" 1
 
-  while getopts ":n:f:mdht" opt; do
+  while getopts ":n:f:mdpht" opt; do
     case $opt in
     n) server_name="$OPTARG" ;;
     f) monitor=true frequency="$OPTARG" ;;
     m) monitor=true ;;
     d) daemon=true ;;
+    p) players="p" ;;
     h) command_help "$command" 0 ;;
     t) test=true ;;
     :) missing_argument "$command" "$OPTARG" ;;
@@ -39,7 +41,8 @@ start_command() {
     indent "monitor                 : $monitor        "
     indent "server_init_mem         : $server_init_mem"
     indent "server_max_mem          : $server_max_mem "
-    indent "daemon                  : $daemon          "
+    indent "daemon                  : $daemon         "
+    indent "players                 : $players        "
     indent "frequency               : $frequency      "
     indent "test                    : $test           "
     echo "${tty_reset}"
@@ -82,16 +85,20 @@ start_server() {
   echo "${tty_cyan}"
 
   if $daemon; then
-    java -jar -Xms${server_init_mem} -Xmx${server_max_mem} fabric-server-launch.jar --nogui
+    java -jar -Xms${server_init_mem} -Xmx${server_max_mem} fabric-server-launch.jar --nogui &>/dev/null
   else
 
-    java -jar -Xms${server_init_mem} -Xmx${server_max_mem} fabric-server-launch.jar --nogui <>$pipe &
+    java -jar -Xms${server_init_mem} -Xmx${server_max_mem} fabric-server-launch.jar --nogui <>$pipe >/dev/null &
 
     sleep 3
+
+    tail -f logs/latest.log &
+    tailpid=$!
 
     while true; do
       while read -r line; do
         if [[ "$line" == *"Done"* ]]; then
+          kill $tailpid
           break 2
         fi
       done <logs/latest.log
@@ -121,12 +128,14 @@ start_server() {
       sudo sed -i '' "s/_server_name_/${server_name// /\ }/g" $daemon_path
       sudo sed -i '' "s/_log_path_/${log_path}/g" $daemon_path
       sudo sed -i '' "s/_user_/${USER}/g" $daemon_path
+      sudo sed -i '' "s/_args_/-${players}n/g" $daemon_path
 
       if [ ! -f "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log" ]; then execute "touch" "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log"; fi
 
       ! sudo launchctl list | grep "craft.${server_name// /}.daemon" &>/dev/null && sudo launchctl load $daemon_path
 
     fi
+
     $test && echo && runtime && echo
     exit 0
   fi

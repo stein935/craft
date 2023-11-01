@@ -28,6 +28,7 @@ restart_command() {
     echo "${tty_yellow}"
     indent "command                 : $command        "
     indent "server_name             : $server_name    "
+    indent "monitor                 : $monitor        "
     indent "test                    : $test           "
     echo "${tty_reset}"
   fi
