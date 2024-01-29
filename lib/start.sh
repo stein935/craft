@@ -36,15 +36,14 @@ start_command() {
 
   if $test; then
     echo "${tty_yellow}"
-    indent "command                 : $command        "
-    indent "server_name             : $server_name    "
-    indent "monitor                 : $monitor        "
-    indent "server_init_mem         : $server_init_mem"
-    indent "server_max_mem          : $server_max_mem "
-    indent "daemon                  : $daemon         "
-    indent "players                 : $players        "
-    indent "frequency               : $frequency      "
-    indent "test                    : $test           "
+    indent "server_name             : $server_name      "
+    indent "monitor                 : $monitor          "
+    indent "server_init_mem         : $server_init_mem  "
+    indent "server_max_mem          : $server_max_mem   "
+    indent "daemon                  : $daemon           "
+    indent "players                 : $players          "
+    indent "frequency               : $frequency        "
+    indent "test                    : $test             "
     echo "${tty_reset}"
   fi
 
@@ -53,7 +52,6 @@ start_command() {
 }
 
 start_server() {
-
   # Check if a server is already running on the port
   pid
 
@@ -84,11 +82,14 @@ start_server() {
   mkfifo $pipe
   echo "${tty_cyan}"
 
+  args=(-Xms${server_init_mem} -Xmx${server_max_mem} -XX:+UnlockExperimentalVMOptions -XX:+UnlockDiagnosticVMOptions -XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+UseNUMA -XX:NmethodSweepActivity=1 -XX:ReservedCodeCacheSize=400M -XX:NonNMethodCodeHeapSize=12M -XX:ProfiledCodeHeapSize=194M -XX:NonProfiledCodeHeapSize=194M -XX:-DontCompileHugeMethods -XX:MaxNodeLimit=240000 -XX:NodeLimitFudgeFactor=8000 -XX:+UseVectorCmov -XX:+PerfDisableSharedMem -XX:+UseFastUnorderedTimeStamps -XX:+UseCriticalJavaThreadPriority -XX:ThreadPriorityPolicy=1 -XX:AllocatePrefetchStyle=3 -XX:+UseG1GC -XX:MaxGCPauseMillis=37 -XX:+PerfDisableSharedMem -XX:G1HeapRegionSize=16M -XX:G1NewSizePercent=23 -XX:G1ReservePercent=20 -XX:SurvivorRatio=32 -XX:G1MixedGCCountTarget=3 -XX:G1HeapWastePercent=20 -XX:InitiatingHeapOccupancyPercent=10 -XX:G1RSetUpdatingPauseTimePercent=0 -XX:MaxTenuringThreshold=1 -XX:G1SATBBufferEnqueueingThresholdPercent=30 -XX:G1ConcMarkStepDurationMillis=5.0 -XX:G1ConcRSHotCardLimit=16 -XX:G1ConcRefinementServiceIntervalMillis=150 -XX:GCTimeRatio=99 -XX:+UseLargePages -XX:LargePageSizeInBytes=2m)
+
   if $daemon; then
     java -jar -Xms${server_init_mem} -Xmx${server_max_mem} fabric-server-launch.jar --nogui &>/dev/null
   else
 
-    java -jar -Xms${server_init_mem} -Xmx${server_max_mem} fabric-server-launch.jar --nogui <>$pipe >/dev/null &
+    # echo ${args[@]}
+    java ${args[@]} -jar fabric-server-launch.jar --nogui <>$pipe >/dev/null &
 
     sleep 3
 
