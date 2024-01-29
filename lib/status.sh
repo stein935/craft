@@ -30,6 +30,8 @@ status_command() {
 
   $test && echo && runtime && echo
 
+  fwhip "Checking for sudo ..." && sudo ls &>/dev/null
+
   if [[ "${server_name}" == false ]]; then
     servers=$(ls "${CRAFT_SERVER_DIR}")
     while IFS=$'\t' read -r server; do

@@ -96,7 +96,7 @@ runtime() {
 }
 
 pid() {
-  PID=($(lsof -i :$server_port | grep $server_port | awk '{print $2}'))
+  PID=($(sudo lsof -i :$server_port | grep $server_port | awk '{print $2}'))
 }
 
 list_properties() {

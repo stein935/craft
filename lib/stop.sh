@@ -44,6 +44,8 @@ stop_command() {
 
 stop_server() {
 
+  fwhip "Checking for sudo ..." && sudo ls &>/dev/null
+
   pid
 
   if ! [ $PID ]; then
@@ -52,8 +54,6 @@ stop_server() {
   else
     fwhip "Stopping \"${server_name}\" Minecraft server"
   fi
-
-  $monitor || fwhip "Checking for sudo ..." && sudo ls &>/dev/null
 
   if ! $monitor; then
     sudo launchctl list | grep "craft.${server_name// /}.daemon" &>/dev/null && [ -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" ] && sudo launchctl unload /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
