@@ -6,6 +6,10 @@ Usage:
 Required:
   -n <server_name>     Name of server to start       
 
-Options
-  -m                   Automatically restart server when it fails
-  -v                   Verbose mode (see the java server starting in current vindow)
+Options:
+  -m                   Enables monitor. Automatically restart server when it fails
+  -f <minutes>         Frequency (in minutes) of server monitor. Setting this value will
+                       also enable -m (monitor)
+  -d                   TODO _daemon_
+  -p                   Writes active players on server 
+                       to players.txt
