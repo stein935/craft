@@ -5,3 +5,9 @@ Usage:
 
 Required:
   -n <server_name>                Name of server to stop
+
+Options:
+  -m                              If used, the stop command will not 
+                                  unload and delete the daemon if one exists.
+  -f                              Forces the server to stop. WARNING: using this 
+                                  option can lead to data loss.                                  

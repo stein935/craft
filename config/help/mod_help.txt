@@ -6,7 +6,7 @@ Usage:
 Required:
   -n <server_name>     Name of server to start       
 
-Options
+Options:
   -l                   List mods in mods directory
   -p <path>            Local path to mod file you would like to instal
   -r <file_name>       Name of mod file you would like to remove

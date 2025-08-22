@@ -6,10 +6,10 @@ Usage:
 Required:
   -n <server_name>                        Sets name of new server 
 
-Install options:
-  -mcversion <minecraft_version>          Sets Minecraft game version
-  -loader <fabric_loader_version>         Sets Fabric loader version       
-  -snapshot                               Enables snapshot Minecraft versions
+Options:
+  -v <minecraft_version>                  Sets Minecraft game version
+  -l <fabric_loader_version>              Sets Fabric loader version       
+  -s                                      Enables snapshot Minecraft versions
 
 Server properties:
 See https://minecraft.fandom.com/wiki/Server.properties for more info
