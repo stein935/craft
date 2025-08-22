@@ -12,13 +12,12 @@ quiet_cd() {
 # Env variables
 CRAFT_FILE_DIRECTORY="$(quiet_cd "${0%/*}/" && pwd -P)"
 CRAFT_FILE="${CRAFT_FILE_DIRECTORY%/}/${0##*/}"
-CRAFT_PREFIX="${CRAFT_FILE%/*/*}"
-CRAFT_HOME_DIR="${CRAFT_PREFIX}/craft"
+CRAFT_HOME_DIR="${CRAFT_FILE%/*/*}"
 CRAFT_LIB="${CRAFT_HOME_DIR}/lib"
-CRAFT_SERVER_DIR="$HOME/Craft" 
+CRAFT_SERVER_DIR="$HOME/Craft"
 
-# Load common functions 
-. "${CRAFT_LIB}/common.sh"
+# Load common functions
+source "${CRAFT_LIB}/common.sh"
 
 # Command variable
 command="craft"
@@ -31,8 +30,8 @@ match_command "${fun}" "-h" "--help"
 # Execute command
 shift
 if [ -f "${CRAFT_LIB}/$fun.sh" ]; then
-  . "${CRAFT_LIB}/$fun.sh"
+  execute "source" "${CRAFT_LIB}/$fun.sh"
   ${fun}_command "$@"
-else 
+else
   invalid_command "$command" "${fun}"
 fi
