@@ -6,48 +6,47 @@ test=false
 
 server_command() {
 
-  [ -z "$1" ] && command_help "$command" 1
+	[ -z "$1" ] && command_help "$command" 1
 
-  while getopts ":n:ht" opt; do
-    case $opt in
-    n) server_name="$OPTARG" ;;
-    h) command_help "$command" 0 ;;
-    t) test=true ;;
-    :) missing_argument "$command" "$OPTARG" ;;
-    *) invalid_option "$command" "$OPTARG" ;;
-    esac
-  done
+	while getopts ":n:ht" opt; do
+		case $opt in
+		n) server_name="$OPTARG" ;;
+		h) command_help "$command" 0 ;;
+		t) test=true ;;
+		:) missing_argument "$command" "$OPTARG" ;;
+		*) invalid_option "$command" "$OPTARG" ;;
+		esac
+	done
 
-  [[ "${server_name}" == false ]] && missing_required_option "$command" "-n"
+	echo
 
-  find_server "${server_name}"
+	[[ "${server_name}" == false ]] && missing_required_option "$command" "-n"
 
-  get_properties
+	find_server "${server_name}"
 
-  if $test; then
-    echo "${tty_yellow}"
-    indent "command                 : $command        "
-    indent "server_name             : $server_name    "
-    indent "test                    : $test           "
-    echo "${tty_reset}"
-  fi
+	get_properties
 
-  view_server
+	if $test; then
+		declare -A test_info=([command]="$command" [server_name]="$server_name" [test]="$test")
+		test_form test_info
+	fi
+
+	view_server
 
 }
 
 view_server() {
 
-  PID=$(netstat -vanp tcp | grep "${server_port}" | awk '{print $9}')
-  if [ -n "$PID" ]; then
-    execute "screen" "-r" "${server_name}"
-    echo "$(date) : Server: \"${server_name}\" was viewed." >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
-  else
-    warn "\"${server_name}\" is not running"
-    $test && echo && runtime && echo
-    exit 1
-  fi
-  $test && runtime && echo
-  exit 0
+	PID=$(netstat -vanp tcp | grep "${server_port}" | awk '{print $9}')
+	if [ -n "$PID" ]; then
+		execute "screen" "-r" "${server_name}"
+		echo "$(date) : Server: \"${server_name}\" was viewed." >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+	else
+		warn "\"${server_name}\" is not running"
+		$test && echo && runtime && echo
+		exit 1
+	fi
+	$test && runtime && echo
+	exit 0
 
 }
