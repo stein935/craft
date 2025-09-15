@@ -169,7 +169,7 @@ runtime() {
 }
 
 pid() {
-	PID=($(lsof -i :$server_port | grep "25565 (LISTEN)" | awk '{print $2}'))
+	PID=($(lsof -i :$server_port | grep "$server_port (LISTEN)" | awk '{print $2}'))
 }
 
 list_properties() {
