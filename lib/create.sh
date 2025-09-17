@@ -28,7 +28,7 @@ create_command() {
 
 	echo
 
-	[[ "${server_name}" == false ]] && missing_required_option "$command" "-n"
+	! [ -n "$server_name" ] && missing_required_option "$command" "-n"
 
 	if $test; then
 		declare -A test_info=([command]="$command" [server_name]="$server_name" [minecraft_version]="$minecraft_version" [loader]="$loader" [snapshot]="$snapshot" [install_command]="${install_command[*]}" [test]="$test")
@@ -41,35 +41,48 @@ create_command() {
 
 create_server() {
 
+	if ! [ -d "${CRAFT_SERVER_DIR}" ]; then
+		warn "\"${CRAFT_SERVER_DIR}\" does not exist. Creating it now..."
+		mkdir -p "${CRAFT_SERVER_DIR}"
+		if ! [ -d "${CRAFT_SERVER_DIR}" ]; then
+			warn "Could not create \"${CRAFT_SERVER_DIR}\". Please create it manually and try again."
+			$test && echo && runtime
+			echo
+			exit 1
+		else
+			fwhip "Created \"${CRAFT_SERVER_DIR}\""
+		fi
+	fi
+
 	if ! [ -d "${CRAFT_SERVER_DIR}/${server_name}" ]; then
-		fwhip "Creating \"${server_name}\""
-		indent "$(form "bright_magenta" "underline" "Options:")"
-		indent "$(form "normal" "normal" "Server name : \"${server_name}\"")"
-		[ "${minecraft_version}" != false ] && indent "$(form "normal" "normal" "Minecraft version : \"${minecraft_version}\"")"
-		[ "${loader}" != false ] && indent "$(form "normal" "normal" "Fabric loader : \"${loader}\"")"
-		[ "${snapshot}" == true ] && indent "$(form "normal" "normal" "Snapshot : \"${snapshot}\"")"
-		indent "$(form "normal" "normal" "Server dir: $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")")"
+		fwhip "Creating $(form "bright_cyan" "italic" "\"${server_name}\"")"
+		indent "$(form "normal" "underline" "Options:")"
+		indent "Server name : \"${server_name}\""
+		if [[ "$minecraft_version" != "false" ]]; then indent "Minecraft version : \"${minecraft_version}\""; fi
+		if [[ "$loader" != "false" ]]; then indent "Fabric loader : \"${loader}\""; fi
+		if [[ "$snapshot" != "false" ]]; then indent "Snapshot : \"${snapshot}\""; fi
+		indent "Server dir: $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")"
 		echo
 
 		install_command+=("${server_name}")
-		if [ "${minecraft_version}" != false ]; then
+		if [[ "$minecraft_version" != "false" ]]; then
 			install_command+=("-mcversion" "${minecraft_version}")
 		fi
-		if [ "${loader}" != false ]; then
+		if [[ "$loader" != "false" ]]; then
 			install_command+=("-loader" "${loader}")
 		fi
-		if [ "${snapshot}" != false ]; then
+		if [[ "$snapshot" != "false" ]]; then
 			install_command+=("-snapshot")
 		fi
 
 		create_server_dir
 	else
-		warn "\"${server_name}\" already existis."
+		warn "$(form "bright_cyan" "italic" "\"${server_name}\"") already exists."
 		indent "$(form "bright_red" "underline" "To re-install first run:")"
-		indent "$(form "red" "normal" "craft delete -n \"${server_name}\"")" "6"
+		indent "craft delete -n $(form "bright_cyan" "italic" "\"${server_name}\"")"
 		echo
 		indent "$(form "bright_red" "underline" "To run:")"
-		indent "$(form "red" "normal" "craft create -n \"${server_name}\" [ options ]")" "6"
+		indent "craft create -n $(form "bright_cyan" "italic" "\"${server_name}\"") [ options ]" "6"
 		$test && echo && runtime
 		echo
 		exit 1
@@ -82,18 +95,18 @@ create_server_dir() {
 	fwhip "Creating dir: $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")"
 	mkdir "${CRAFT_SERVER_DIR}/${server_name}"
 
-	install_sever
+	install_server
 
 }
 
-install_sever() {
+install_server() {
 
 	jar_count() { find "${CRAFT_SERVER_DIR}/${server_name}" | grep -c '\.jar$'; }
 
-	execute "cd" "${CRAFT_SERVER_DIR}"
+	cd "${CRAFT_SERVER_DIR}"
 
 	if [[ $(jar_count) == "0" ]]; then
-		fwhip "Installing \"${server_name}\" server in $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")"
+		fwhip "Installing $(form "bright_cyan" "italic" "\"${server_name}\"") server in $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")"
 		form "cyan" "dim" "$(execute "${install_command[@]}")"
 		wait
 		echo
@@ -107,10 +120,12 @@ install_sever() {
 init_server() {
 
 	get_init_command
-	execute "cd" "${CRAFT_SERVER_DIR}/${server_name}"
+	cd "${CRAFT_SERVER_DIR}/${server_name}"
 	form "cyan" "dim" "$(execute "${init_command[@]}")"
 	wait
-	echo && echo
+	echo
+	mkdir "${CRAFT_SERVER_DIR}/${server_name}/logs/monitor"
+	echo
 	ask_config_server
 
 }
@@ -125,7 +140,7 @@ ask_config_server() {
 
 	# Ask about custom config
 	while true; do
-		read -p "$(fwhip "Do you want to configure \"${server_name}\"? (y/n) : ")" -n 1 -r
+		read -p "$(fwhip "Do you want to configure $(form "bright_cyan" "italic" "\"${server_name}\"")? (y/n) : ")" -n 1 -r
 		echo && echo
 		if [[ $REPLY =~ ^[Yy]$ ]]; then
 			$0 config -n "${server_name}"
@@ -145,10 +160,9 @@ sign_eula() {
 
 	while true; do
 
-		read -p "$(fwhip "Agree to Minecraft eula for \"${server_name}\"? (y/n) : ")" -n 1 -r
+		read -p "$(fwhip "Agree to Minecraft eula for $(form "bright_cyan" "italic" "\"${server_name}\"")? (y/n) : ")" -n 1 -r
 		echo && echo
 		if [[ $REPLY =~ ^[Yy]$ ]]; then
-			fwhip "Sigining $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")/eula.txt"
 			sed -i '' -e '$ d' "${CRAFT_SERVER_DIR}/${server_name}/eula.txt"
 			echo "eula=true" >>"${CRAFT_SERVER_DIR}/${server_name}/eula.txt"
 			break
@@ -161,15 +175,15 @@ sign_eula() {
 
 	done
 
-	fwhip "\"${server_name}\" has been created!"
+	fwhip "$(form "bright_cyan" "italic" "\"${server_name}\"") has been created!"
 	indent "$(form "normal" "underline" "Server location"): $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")"
 	echo
 	indent "$(form "bright_green" "underline" "Next steps"):"
 	indent "$(form "green" "normal" "To start the server - Run:")"
 	indent "$(form "green" "normal" "craft start -n \"${server_name}\"")" "6"
 	echo
-	mkdir "${CRAFT_SERVER_DIR}/${server_name}/logs/monitor"
 	echo "$(date) : Create: \"${server_name}\" created!" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+
 	$test && runtime && echo
 	exit 0
 

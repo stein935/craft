@@ -75,12 +75,16 @@ execute() {
 }
 
 fwhip() {
-	printf '%s: %s\n\n' "$(form "bright_blue" "normal" ">>>>>>>>")" "$@"
+	printf '%s %s\n\n' "$(form "bright_blue" "normal" "▶")" "$@"
 }
 
 warn() {
 	# ring_bell
-	printf '%s : %s\n\n' "$(form "bright_red" "normal" "Warning")" "$@"
+	printf '%s %s\n\n' "$(form "bright_red" "normal" "✕")" "$@"
+}
+
+send() {
+	printf '%s %s\n\n' "$(form "bright_yellow" "normal" "")" "$@"
 }
 
 indent() {
@@ -130,18 +134,24 @@ test_form() {
 min_sec() { printf "%dm %ds" "$((10#$1 / 60))" "$((10#$1 % 60))"; }
 
 # Errors and help
-match_command() {
-	aliases=("${3}" "${2}")
-	for alias in ${aliases[@]}; do
-		if [[ "${alias}" == "${1}" ]]; then
-			export op="${2}"
+replace_alias_args() {
+	local alias="$1"
+	local replacement="$2"
+	shift 2
+	local out=()
+	for arg in "$@"; do
+		if [[ "$arg" == "$alias" ]]; then
+			out+=("$replacement")
+		else
+			out+=("$arg")
 		fi
 	done
+	printf '%s\n' "${out[@]}"
 }
 
 command_help() {
 	printf '\n%s\n\n' "$(form "cyan" "normal" "$(cat ${CRAFT_HOME_DIR}/config/help/${1}_help.txt)")"
-	exit ${2}
+	exit $2
 }
 
 missing_argument() {
@@ -169,7 +179,32 @@ runtime() {
 }
 
 pid() {
-	PID=($(lsof -i :$server_port | grep "$server_port (LISTEN)" | awk '{print $2}'))
+	wait_time=${2:-10}
+	up=${1:-true}
+	local pid
+	if $up; then
+		while [ $wait_time -gt 0 ]; do
+			pid=$(lsof -i :$server_port | grep "$server_port (LISTEN)" | awk '{print $2}')
+			if [[ -n "$pid" ]]; then
+				printf '%s' "$pid"
+				return 0
+			else
+				sleep 1
+				((wait_time--))
+			fi
+		done
+	else
+		while [ $wait_time -gt 0 ]; do
+			pid=$(lsof -i :$server_port | grep "$server_port (LISTEN)" | awk '{print $2}')
+			if ! [[ -n "$pid" ]]; then
+				return 0
+			else
+				sleep 1
+				((wait_time--))
+			fi
+		done
+	fi
+	return 1
 }
 
 list_properties() {
@@ -198,18 +233,13 @@ find_server() {
 
 server_status() {
 
-	pid
+	local pid
+	pid=$(pid)
 
-	# echo "PID: ${PID}, User: ${USER}" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
-
-	if [ $PID ]; then
-		fwhip "\"${server_name}\" Minecraft server running on port: $(form green normal "${server_port}") PID: $(form green normal "${PID}")"
-		[[ $1 != "silent" ]] && echo "$(date) : Status: \"${server_name}\" is running on port: ${server_port} PID: ${PID}" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
-		(exit 0)
+	if [[ -n "$pid" ]]; then
+		fwhip "$(form "bright_cyan" "italic" "\"${server_name}\"") Minecraft server running on port: $(form green normal "${server_port}") PID: $(form green normal "$pid")"
 	else
 		warn "\"${server_name}\" is not running"
-		[[ $1 != "silent" ]] && echo "$(date) : Status: \"${server_name}\" is not running" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
-		(exit 1)
 	fi
 
 }
@@ -244,57 +274,4 @@ boolean() {
 	false) echo false ;;
 	*) echo true ;;
 	esac
-}
-
-# Usage:
-# long_running_command &          # start something in background
-# bg_pid=$!
-# distractor "Working..." $bg_pid # show spinner until it finishes
-distractor() {
-	local msg="$1"
-	local target_pid="${2:-$!}"
-
-	# If no pid or not a TTY just return
-	[[ -z "$target_pid" ]] && return 0
-	[[ ! -t 1 ]] && {
-		wait "$target_pid" 2>/dev/null
-		return $?
-	}
-
-	# Spinner frames (fallback to simple ASCII if locale has issues)
-	local frames=(⠋ ⠙ ⠚ ⠞ ⠖ ⠦ ⠴ ⠲ ⠳ ⠓)
-	# Validate unicode support; if not, switch
-	printf '%s' "${frames[0]}" | grep -q "?" && frames=('|' '/' '-' '\')
-
-	local i=0
-	local delay=0.1
-
-	# Hide cursor
-	tput civis 2>/dev/null || true
-
-	while kill -0 "$target_pid" 2>/dev/null; do
-		printf "\r%s %s" "$msg" "${frames[i]}"
-		((i = (i + 1) % ${#frames[@]}))
-		sleep "$delay"
-	done
-
-	# Wait to collect exit status
-	local rc=0
-	wait "$target_pid" 2>/dev/null || rc=$?
-
-	# Clear line
-	if command -v tput &>/dev/null; then
-		printf "\r"
-		tput el 2>/dev/null || true
-	else
-		# Fallback clear (overwrite with spaces up to terminal width or 120)
-		local cols
-		cols=$(tput cols 2>/dev/null || echo 120)
-		printf "\r%*s\r" "$cols" ""
-	fi
-
-	# Show cursor again
-	tput cnorm 2>/dev/null || true
-
-	return $rc
 }

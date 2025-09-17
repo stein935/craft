@@ -2,11 +2,8 @@
 
 START=$(date +%s)
 
-# Look for command
-[ -z "$1" ] && command_help "$command" "OK"
-
 quiet_cd() {
-  cd "$@" &>/dev/null || return
+	cd "$@" &>/dev/null || return
 }
 
 # Env variables
@@ -14,24 +11,30 @@ CRAFT_FILE_DIRECTORY="$(quiet_cd "${0%/*}/" && pwd -P)"
 CRAFT_FILE="${CRAFT_FILE_DIRECTORY%/}/${0##*/}"
 CRAFT_HOME_DIR="${CRAFT_FILE%/*/*}"
 CRAFT_LIB="${CRAFT_HOME_DIR}/lib"
-CRAFT_SERVER_DIR="$HOME/Craft"
+CRAFT_SERVER_DIR="/opt/craft/servers"
 
 # Load common functions
 source "${CRAFT_LIB}/common.sh"
+
+# Check for aliases
+args=("$@")
+args=($(replace_alias_args "--help" "-h" "${args[@]}"))
+args=($(replace_alias_args "--list" "-ls" "${args[@]}"))
+args=($(replace_alias_args "--version" "-v" "${args[@]}"))
+set -- "${args[@]}"
 
 # Command variable
 command="craft"
 fun="${1}"
 
-# Check for aliases
-match_command "${fun}" "-ls" "-l --list"
-match_command "${fun}" "-h" "--help"
+# Look for command
+[ -z "$1" ] && command_help "$command" 1
 
 # Execute command
 shift
 if [ -f "${CRAFT_LIB}/$fun.sh" ]; then
-  execute "source" "${CRAFT_LIB}/$fun.sh"
-  ${fun}_command "$@"
+	source "${CRAFT_LIB}/$fun.sh"
+	${fun}_command "$@"
 else
-  invalid_command "$command" "${fun}"
+	invalid_command "$command" "${fun}"
 fi

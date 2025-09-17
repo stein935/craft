@@ -2,19 +2,15 @@
 
 command="stop"
 server_name=false
-force=false
-monitor=false
 test=false
 
 stop_command() {
 
 	[ -z "$1" ] && command_help "$command" 1
 
-	while getopts ":n:fmht" opt; do
+	while getopts ":n:ht" opt; do
 		case $opt in
 		n) server_name="$OPTARG" ;;
-		m) monitor=true ;;
-		f) force=true ;;
 		h) command_help "$command" 0 ;;
 		t) test=true ;;
 		:) missing_argument "$command" "$OPTARG" ;;
@@ -22,7 +18,7 @@ stop_command() {
 		esac
 	done
 
-	[[ "${server_name}" == false ]] && missing_required_option "$command" "-n"
+	! [ -n "$server_name" ] && missing_required_option "$command" "-n"
 
 	echo
 
@@ -31,7 +27,7 @@ stop_command() {
 	get_properties
 
 	if $test; then
-		declare -A test_info=([command]="$command" [server_name]="$server_name" [force]="$force" [monitor]="$monitor" [test]="$test")
+		declare -A test_info=([command]="$command" [server_name]="$server_name" [test]="$test")
 		test_form test_info
 	fi
 
@@ -41,56 +37,30 @@ stop_command() {
 
 stop_server() {
 
-	pid
-
-	if ! [ $PID ]; then
+	if ! pid true 1 >/dev/null; then
 		warn "No server running on port: ${server_port}"
-		! $force && indent "To force stop run:" && indent "craft stop -fn \"${server_name}\"" "6" && echo && exit 1 || warn "Force stopping all related processes ... just in case"
+		exit 1
+	fi
+
+	fwhip "Stopping $(form "bright_cyan" "italic" "\"${server_name}\"") Minecraft server"
+
+	pipe="${CRAFT_SERVER_DIR}/${server_name}/command-pipe"
+	send "Sending save-all and stop commands to the server ..."
+	echo "save-all" | tee "${CRAFT_SERVER_DIR}/${server_name}/command-pipe" >/dev/null
+	echo "stop" | tee "${CRAFT_SERVER_DIR}/${server_name}/command-pipe" >/dev/null
+
+	launchctl bootout system/"craft.${server_name// /}.daemon" 2>/dev/null
+	rm -f /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist 2>/dev/null
+
+	if pid false >/dev/null; then
+		fwhip "$(form "bright_cyan" "italic" "\"${server_name}\"") Minecraft server stopped"
+		ring_bell
+		echo "$(date) : Stop: \"${server_name}\" stopped" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
 	else
-		fwhip "Stopping \"${server_name}\" Minecraft server"
+		warn "Unable to run save-all and stop. Some game data may have been lost"
+		kill -9 $(pid)
 	fi
 
-	if ! $monitor; then
-		fwhip "Checking for sudo ..." && sudo ls &>/dev/null
-		sudo launchctl list | grep "craft.${server_name// /}.daemon" &>/dev/null && [ -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" ] && sudo launchctl unload /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
-		[ -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" ] && sudo rm -f /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
-	fi
-
-	cd "${CRAFT_SERVER_DIR}/${server_name}"
-	pipe=command-pipe
-	exec <>$pipe
-
-	if [ $PID ]; then
-		if [ -p $pipe ]; then
-			echo save-all >>$pipe
-			echo stop >>$pipe
-			i=0
-			printf '%s' "$(tty_escape "2;36")"
-			tail -f logs/latest.log &
-			tailpid=$!
-			until [ $i -gt 15 ]; do
-				while read -r line; do
-					if [[ "$line" == *"All dimensions are saved"* ]]; then
-						kill $tailpid
-						break 2
-					fi
-				done <"${CRAFT_SERVER_DIR}/${server_name}/logs/latest.log"
-				((i = i + 1))
-				sleep 1
-			done
-			echo "$(tty_escape 0)"
-			if [ $i -gt 15 ]; then
-				warn "Unable to run save-all and stop. Some game data may have been lost"
-				kill -9 $PID
-			fi
-		else
-			warn "Unable to run save-all and stop. Some game data may have been lost"
-			kill -9 $PID
-		fi
-	fi
-
-	fwhip "\"${server_name}\" Minecraft server stopped"
-	echo "$(date) : Stop: \"${server_name}\" stopped" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
 	$test && runtime && echo
 	exit 0
 

@@ -1,5 +1,22 @@
 #!/usr/bin/env bash
 
+: <<'END_COMMENT'
+Tests:
+	Valid commands:
+		craft delete -h
+		craft delete --help
+		craft delete -n ServerName
+		craft delete -n ServerName -t
+	Invalid commands:
+		craft delete
+		craft delete -x
+		craft delete -n
+		craft delete -t
+		craft delete -n ServerName -x
+		craft delete -n InvalidServer
+		craft delete -n InvalidServer -t
+END_COMMENT
+
 command="delete"
 server_name=false
 test=false
@@ -20,7 +37,7 @@ delete_command() {
 
 	echo
 
-	[[ "${server_name}" == false ]] && missing_required_option "$command" "-n"
+	! [ -n "$server_name" ] && missing_required_option "$command" "-n"
 
 	find_server "${server_name}"
 

@@ -6,17 +6,19 @@
 		<key>Label</key>
 		<string>craft._server_name_.daemon</string>
 
-		<key>UserName</key>
-		<string>_user_</string>
-
-		<key>ProgramArguments</key>
-		<array>
-      <string>exec</string>
-_arguments_
-		</array>
+    <key>EnvironmentVariables</key>
+		<dict>
+			<key>PATH</key>
+			<string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+		</dict>
 
     <key>WorkingDirectory</key>
     <string>_working_dir_</string>
+
+		<key>ProgramArguments</key>
+		<array>
+_arguments_
+		</array>
 
 		<key>StandardErrorPath</key>
 		<string>_log_path_</string>

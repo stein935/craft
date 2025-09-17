@@ -28,7 +28,7 @@ mod_command() {
 
 	echo
 
-	[[ "${server_name}" == false ]] && missing_required_option "$command" "-n"
+	! [ -n "$server_name" ] && missing_required_option "$command" "-n"
 
 	find_server "${server_name}"
 

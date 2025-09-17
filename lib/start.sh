@@ -4,15 +4,17 @@ command="start"
 server_name=false
 server_init_mem="512M"
 server_max_mem="8G"
+daemon=false
 test=false
 
 start_command() {
 
 	[ -z "$1" ] && command_help "$command" 1
 
-	while getopts ":n:ht" opt; do
+	while getopts ":n:dht" opt; do
 		case $opt in
 		n) server_name="$OPTARG" ;;
+		d) daemon=true ;;
 		h) command_help "$command" 0 ;;
 		t) test=true ;;
 		:) missing_argument "$command" "$OPTARG" ;;
@@ -20,7 +22,7 @@ start_command() {
 		esac
 	done
 
-	[[ ${server_name} == false ]] && missing_required_option "$command" "-n"
+	! [ -n "$server_name" ] && missing_required_option "$command" "-n"
 
 	echo
 
@@ -33,93 +35,97 @@ start_command() {
 		test_form test_info
 	fi
 
+	$daemon && start_daemon
+
 	start_server
 
+}
+
+start_daemon() {
+	mem=(-Xms${server_init_mem} -Xmx${server_max_mem})
+	args=(-XX:+UnlockExperimentalVMOptions -XX:+UnlockDiagnosticVMOptions -XX:MaxGCPauseMillis=130 -XX:G1MixedGCLiveThresholdPercent=90 -XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+UseNUMA -XX:NmethodSweepActivity=1 -XX:ReservedCodeCacheSize=400M -XX:NonNMethodCodeHeapSize=12M -XX:ProfiledCodeHeapSize=194M -XX:NonProfiledCodeHeapSize=194M -XX:-DontCompileHugeMethods -XX:MaxNodeLimit=240000 -XX:NodeLimitFudgeFactor=8000 -XX:+UseVectorCmov -XX:+PerfDisableSharedMem -XX:+UseFastUnorderedTimeStamps -XX:+UseCriticalJavaThreadPriority -XX:ThreadPriorityPolicy=1 -XX:AllocatePrefetchStyle=3 -XX:+UseG1GC -XX:+PerfDisableSharedMem -XX:G1HeapRegionSize=16M -XX:G1NewSizePercent=23 -XX:G1ReservePercent=20 -XX:SurvivorRatio=32 -XX:G1MixedGCCountTarget=3 -XX:G1HeapWastePercent=20 -XX:InitiatingHeapOccupancyPercent=10 -XX:G1RSetUpdatingPauseTimePercent=0 -XX:MaxTenuringThreshold=1 -XX:G1SATBBufferEnqueueingThresholdPercent=30 -XX:G1ConcMarkStepDurationMillis=5 -XX:G1ConcRSHotCardLimit=16 -XX:G1ConcRefinementServiceIntervalMillis=150 -XX:GCTimeRatio=99 -XX:LargePageSizeInBytes=2m)
+	# Build the Java command as an array to preserve argument boundaries
+	java_cmd=("$(command -v java)" "${mem[@]}" "${args[@]}" -jar "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launch.jar" --nogui)
+
+	# Redirect stdin from the named pipe instead of passing "<" as an argument
+	${java_cmd[@]} <>"${CRAFT_SERVER_DIR}/${server_name}/command-pipe"
+	exit 0
 }
 
 start_server() {
 
 	# Check if a server is already running on the port
-	pid
-	if [ $PID ]; then
-		warn "A server is already running on port: $(form "green" "normal" "${server_port}") PID: $(form "green" "normal" "${PID}")"
-		indent "$(form "red" "normal" "Run:")"
-		indent "$(form "red" "normal" "craft stop -n \"${server_name}\" or $ craft restart -n \"${server_name}\"")" "6"
+	if ! pid false 1 >/dev/null; then
+		warn "A server is already running on port: $(form "green" "normal" "${server_port}") PID: $(form "green" "normal" "$(pid)")"
+		indent "$(form "bright_red" "underline" "Run:")"
+		indent "craft stop -n \"${server_name}\"" "6"
 		echo
 		$test && runtime && echo
 		exit 1
 	fi
 
 	# Message that the server is starting
-	fwhip "Starting \"${server_name}\" Minecraft server"
+	fwhip "Starting $(form "bright_cyan" "italic" "\"${server_name}\"") Minecraft server"
 
 	if [ -f "${CRAFT_SERVER_DIR}/${server_name}/logo.txt" ]; then
 		execute "cat" "${CRAFT_SERVER_DIR}/${server_name}/logo.txt"
 		echo
 	fi
 
-	# Check for sudo access
-	fwhip "Checking for sudo ..." && sudo ls &>/dev/null
-
 	daemon_path="/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist"
-	craft_path=$(printf '%s\n' "${CRAFT_FILE}" | sed -e 's/[\/&]/\\&/g')
 	log_path=$(printf '%s\n' "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log" | sed -e 's/[\/&]/\\&/g')
+
+	# Make pipe if it doesn't exist
+	if [ ! -p "${CRAFT_SERVER_DIR}/${server_name}/command-pipe" ]; then
+		execute "mkfifo" "${CRAFT_SERVER_DIR}/${server_name}/command-pipe"
+	fi
+
 	# Command to start the server
-	mem=(-Xms${server_init_mem} -Xmx${server_max_mem})
-	garbageCollection=(-XX:+UseG1GC -XX:MaxGCPauseMillis=130 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:G1NewSizePercent=28 -XX:G1HeapRegionSize=16M -XX:G1ReservePercent=20 -XX:G1MixedGCCountTarget=3 -XX:InitiatingHeapOccupancyPercent=10 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=0 -XX:SurvivorRatio=32 -XX:MaxTenuringThreshold=1 -XX:G1SATBBufferEnqueueingThresholdPercent=30 -XX:G1ConcMarkStepDurationMillis=5 -XX:G1ConcRSHotCardLimit=16 -XX:G1ConcRefinementServiceIntervalMillis=150)
-	args=(-XX:+UnlockExperimentalVMOptions -XX:+UnlockDiagnosticVMOptions -XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+UseNUMA -XX:NmethodSweepActivity=1 -XX:ReservedCodeCacheSize=400M -XX:NonNMethodCodeHeapSize=12M -XX:ProfiledCodeHeapSize=194M -XX:NonProfiledCodeHeapSize=194M -XX:-DontCompileHugeMethods -XX:MaxNodeLimit=240000 -XX:NodeLimitFudgeFactor=8000 -XX:+UseVectorCmov -XX:+PerfDisableSharedMem -XX:+UseFastUnorderedTimeStamps -XX:+UseCriticalJavaThreadPriority -XX:ThreadPriorityPolicy=1 -XX:AllocatePrefetchStyle=3 -XX:+UseG1GC -XX:MaxGCPauseMillis=37 -XX:+PerfDisableSharedMem -XX:G1HeapRegionSize=16M -XX:G1NewSizePercent=23 -XX:G1ReservePercent=20 -XX:SurvivorRatio=32 -XX:G1MixedGCCountTarget=3 -XX:G1HeapWastePercent=20 -XX:InitiatingHeapOccupancyPercent=10 -XX:G1RSetUpdatingPauseTimePercent=0 -XX:MaxTenuringThreshold=1 -XX:G1SATBBufferEnqueueingThresholdPercent=30 -XX:G1ConcMarkStepDurationMillis=5.0 -XX:G1ConcRSHotCardLimit=16 -XX:G1ConcRefinementServiceIntervalMillis=150 -XX:GCTimeRatio=99 -XX:LargePageSizeInBytes=2m)
-	command="java ${mem[@]} ${garbageCollection[@]} ${args[@]} -jar ${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launch.jar --nogui"
+	daemon_command="$(which bash) $(which craft) start -n ${server_name} -d"
 	program() {
 		wrapped_command=()
-		read -r -a _cmd_parts <<<"$command"
+		read -r -a _cmd_parts <<<"$daemon_command"
 		for _part in "${_cmd_parts[@]}"; do
 			_esc=${_part//&/&amp;}
-			_esc=${_esc//</&lt;}
-			_esc=${_esc//>/&gt;}
-			_esc=${_esc//\"/&quot;}
-			_esc=${_esc//\'/&apos;}
-			wrapped_command+=("<string>${_esc}</string>")
+			_esc=${_esc//</\&lt;}
+			_esc=${_esc//>/\&gt;}
+			_esc=${_esc//\"/\&quot;}
+			_esc=${_esc//\'/\&apos;}
+			wrapped_command+=("      <string>${_esc}</string>")
 		done
-		for i in "${!wrapped_command[@]}"; do
-			if ((i == ${#wrapped_command[@]} - 1)); then
-				printf '      %s' "${wrapped_command[i]}"
-			else
-				printf '      %s\\n' "${wrapped_command[i]}"
-			fi
-		done | sed -e 's/[&|]/\\&/g'
+		printf "%s\n" "${wrapped_command[@]}"
 	}
 	program_strings=$(program)
 
-	if [ -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" ]; then
-		sudo rm -f /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
-	fi
+	# Unload and remove existing daemon
+	launchctl bootout system/"craft.${server_name// /}.daemon" 2>/dev/null
+	rm -f /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist 2>/dev/null
 
-	sudo cp "${CRAFT_HOME_DIR}/config/craft.servername.daemon.plist" $daemon_path
+	cp "${CRAFT_HOME_DIR}/config/craft.servername.daemon.plist" $daemon_path
 
-	sudo sed -i '' "s|_server_name_|${server_name// /}|g" $daemon_path
-	sudo sed -i '' "s|_user_|${USER}|g" $daemon_path
-	sudo sed -i '' "s|_arguments_|${program_strings//&/\\&}|g" $daemon_path
-	sudo sed -i '' "s|_working_dir_|${CRAFT_SERVER_DIR}/${server_name}|g" $daemon_path
-	sudo sed -i '' "s|_log_path_|${log_path}|g" $daemon_path
+	sed -i '' "s|_server_name_|${server_name// /}|g" $daemon_path
+	sed -i '' "s|_user_|${USER}|g" $daemon_path
+	sed -i '' "s|_working_dir_|${CRAFT_SERVER_DIR}/${server_name}|g" $daemon_path
+	sed -i '' "s|_log_path_|${log_path}|g" $daemon_path
 
-	if [ ! -f "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log" ]; then execute "touch" "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log"; fi
+	awk '
+  /_arguments_/ {
+    while ((getline line < ARGV[2]) > 0) print line
+    ARGV[2] = ""
+    next
+  }
+  { print }
+' "$daemon_path" <(printf "%s\n" "$program_strings") >"${daemon_path}.tmp" && mv "${daemon_path}.tmp" "$daemon_path"
 
-	! sudo launchctl list | grep "craft.${server_name// /}.daemon" &>/dev/null && sudo launchctl load $daemon_path
+	rm -f "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log" 2>/dev/null
 
-	sleep 3
+	touch "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log"
 
-	while true; do
-		while read -r line; do
-			if [[ "$line" == *"Done"* ]]; then
-				break 2
-			fi
-		done <"${CRAFT_SERVER_DIR}/${server_name}/logs/latest.log"
-		sleep 1
-	done
+	# Load daemon
+	launchctl bootstrap system "$daemon_path" 2>/dev/null
 
 	# Do this if the server is running
-	echo
-	server_status && echo "$(date) : Start: \"${server_name}\" running on port: ${server_port} PID: ${PID}" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+	server_status && echo "$(date) : Start: \"${server_name}\" running on port: ${server_port} PID: $(pid)" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log" && ring_bell
 
 	$test && runtime && echo
 
