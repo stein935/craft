@@ -49,7 +49,6 @@ start_daemon() {
 	java_cmd=("$(command -v java)" "${mem[@]}" "${args[@]}" -jar "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launch.jar" --nogui)
 
 	# Redirect stdin from the named pipe instead of passing "<" as an argument
-	echo "${CRAFT_SERVER_DIR}/${server_name}/command-pipe"
 	"${java_cmd[@]}" <>"${CRAFT_SERVER_DIR}/${server_name}/command-pipe"
 	exit 0
 }

@@ -50,12 +50,10 @@ stop_server() {
 	echo "save-all" | tee "$pipe" >/dev/null
 	echo "stop" | tee "$pipe" >/dev/null
 
-	launchctl bootout system/"craft.${server_name// /}.daemon" 2>/dev/null
-	rm -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" 2>/dev/null
-
 	if ! server_status false 10 >/dev/null; then
+		launchctl bootout system/"craft.${server_name// /}.daemon" 2>/dev/null
+		rm -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" 2>/dev/null
 		fwhip "$(form "bright_cyan" "italic" "\"${server_name}\"") Minecraft server stopped"
-		ring_bell
 		echo "$(date) : Stop: \"${server_name}\" stopped" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
 	else
 		warn "Unable to run save-all and stop. Some game data may have been lost"
