@@ -4,23 +4,20 @@
 	<dict>
 
 		<key>Label</key>
-		<string>craft._servername_.daemon</string>
+		<string>craft._server_name_.daemon</string>
 
-		<key>EnvironmentVariables</key>
+    <key>EnvironmentVariables</key>
 		<dict>
 			<key>PATH</key>
 			<string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
 		</dict>
 
-		<key>UserName</key>
-		<string>_user_</string>
+    <key>WorkingDirectory</key>
+    <string>_working_dir_</string>
 
 		<key>ProgramArguments</key>
 		<array>
-			<string>/usr/local/bin/craft</string>
-			<string>monitor</string>
-			<string>_args_</string>
-			<string>_server_name_</string>
+_arguments_
 		</array>
 
 		<key>StandardErrorPath</key>
@@ -29,10 +26,7 @@
 		<key>StandardOutPath</key>
 		<string>_log_path_</string>
 
-		<key>RunAtLoad</key>
-		<true/>
-
-		<key>StartInterval</key>
-		<integer>60</integer>
+		<key>RunAtLoad</key><true/>
+    <key>KeepAlive</key><true/>
 	</dict>
 </plist>

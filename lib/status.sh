@@ -6,45 +6,45 @@ test=false
 
 status_command() {
 
-  # [ -z "$1" ] && command_help "$command" 1
+	while getopts ":n:ht" opt; do
+		case "$opt" in
+		n) server_name=${OPTARG} ;;
+		h) command_help "${command}" 0 ;;
+		t) test=true ;;
+		:) missing_argument "$command" "$OPTARG" ;;
+		*) invalid_option "$command" "$OPTARG" ;;
+		esac
+	done
 
-  while getopts ":n:ht" opt; do
-    case "$opt" in
-    n) server_name=${OPTARG} ;;
-    h) command_help "${command}" 0 ;;
-    t) test=true ;;
-    :) missing_argument "$command" "$OPTARG" ;;
-    *) invalid_option "$command" "$OPTARG" ;;
-    esac
-  done
+	echo
 
-  # [[ "${server_name}" == false ]] && missing_required_option "$command" "-n"
+	if [ -d "${CRAFT_SERVER_DIR}" ] && [ -z "$(ls "${CRAFT_SERVER_DIR}")" ]; then
+		warn "No servers found in ${CRAFT_SERVER_DIR}"
+		exit 1
+	fi
 
-  if $test; then
-    echo "${tty_yellow}"
-    indent "command                 : $command        "
-    indent "server_name             : $server_name    "
-    indent "test                    : $test           "
-    echo "${tty_reset}"
-  fi
+	if $test; then
+		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
+		declare -A test_info=([command]="$command" [server_name]="$server_name" [test]="$test")
+		test_form test_info
+	fi
 
-  $test && echo && runtime && echo
+	if [[ "${server_name}" == false ]]; then
+		servers=$(ls "${CRAFT_SERVER_DIR}")
+		while IFS=$'\t' read -r server; do
+			server_name="${server}"
+			get_properties
+			server_status true 1
+		done <<<"${servers[@]}"
 
-  fwhip "Checking for sudo ..." && sudo ls &>/dev/null
+	else
+		find_server "${server_name}"
+		get_properties
+		server_status true 1
+	fi
 
-  if [[ "${server_name}" == false ]]; then
-    servers=$(ls "${CRAFT_SERVER_DIR}")
-    while IFS=$'\t' read -r server; do
-      server_name="${server}"
-      get_properties
-      server_status
-    done <<<"${servers[@]}"
-  else
-    find_server "${server_name}"
-    get_properties
-    server_status
-  fi
+	$test && runtime && echo
 
-  exit $?
+	exit 0
 
 }

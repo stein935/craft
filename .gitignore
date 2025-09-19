@@ -1,0 +1,46 @@
+# macOS system files
+.DS_Store
+
+# Log files
+logs/
+*.log
+
+# Minecraft server files
+world/
+*.jar
+*.zip
+*.bak
+*.tmp
+
+# LaunchDaemon plists
+*.plist
+
+# IDE files
+.vscode/
+.idea/
+
+# Shell history
+*.swp
+*.swo
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Node modules (if applicable)
+node_modules/
+
+# Backup files
+*~
+*.old
+*.orig
+
+# Test output
+test-output/
+coverage/
+
+# Custom server directories
+servers
+servers/*/logs/
+servers/*/world/
+servers/*/backups/

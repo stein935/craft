@@ -3,46 +3,50 @@
 command="restart"
 server_name=false
 test=false
-monitor=
 
 restart_command() {
 
-  [ -z "$1" ] && command_help "$command" 1
+	[ -z "$1" ] && command_help "$command" 1
 
-  while getopts ":n:mht" opt; do
-    case $opt in
-    n) server_name="$OPTARG" ;;
-    m) monitor="m" ;;
-    h) command_help "$command" 0 ;;
-    t) test=true ;;
-    :) missing_argument "$command" "$OPTARG" ;;
-    *) invalid_option "$command" "$OPTARG" ;;
-    esac
-  done
+	while getopts ":n:ht" opt; do
+		case $opt in
+		n) server_name="$OPTARG" ;;
+		h) command_help "$command" 0 ;;
+		t) test=true ;;
+		:) missing_argument "$command" "$OPTARG" ;;
+		*) invalid_option "$command" "$OPTARG" ;;
+		esac
+	done
 
-  [[ "${server_name}" == false ]] && missing_required_option "$command" "-n"
+	echo
 
-  find_server "${server_name}"
+	! [ -n "$server_name" ] && missing_required_option "$command" "-n"
 
-  if $test; then
-    echo "${tty_yellow}"
-    indent "command                 : $command        "
-    indent "server_name             : $server_name    "
-    indent "monitor                 : $monitor        "
-    indent "test                    : $test           "
-    echo "${tty_reset}"
-  fi
+	find_server "${server_name}"
 
-  restart_server
+	get_properties
+
+	if $test; then
+		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
+		declare -A test_info=([command]="$command" [server_name]="$server_name" [test]="$test")
+		test_form test_info
+	fi
+
+	restart_server
 
 }
 
 restart_server() {
 
-  execute "$0" "stop" "-${monitor}fn" "${server_name}"
-  execute "$0" "start" "-dn" "${server_name}"
-  echo "$(date) : Restart: \"${server_name}\" was restarted." >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
-  $test && runtime && echo
-  exit 0
+	if server_status true 1 >/dev/null; then
+		echo "$(date) : Restart: \"${server_name}\" was restarted." >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+		execute "$0" "stop" "-n" "${server_name}"
+	else
+		warn "No server running on port: ${server_port:?server_port must be set by parent script}"
+	fi
+	execute "$0" "start" "-n" "${server_name}"
+	status=$?
+	$test && runtime && echo
+	exit $status
 
 }
