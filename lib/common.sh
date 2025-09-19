@@ -7,6 +7,7 @@ ring_bell() { [ -t 1 ] && printf "\a"; }
 [ -t 1 ] && tty_escape() { printf "\033[%sm" "$1"; } || tty_escape() { :; }
 
 # ANSI color codes
+# shellcheck disable=SC2034  # color used indirectly via nameref in form_get
 declare -A color=(
 	[black]=0
 	[red]=1
@@ -18,8 +19,8 @@ declare -A color=(
 	[white]=7
 	[normal]=9
 )
-
 # ANSI text format codes
+# shellcheck disable=SC2034  # style used indirectly via nameref in form_get
 declare -A style=(
 	[normal]=0
 	[bold]=1
@@ -45,10 +46,13 @@ form() {
 		color_name=$1
 	fi
 
-	declare -i color=$(form_get color $color_name)
-	declare -i style=$(form_get style $2)
+	# Retrieve numeric codes without shadowing associative arrays
+	local -i color_code
+	color_code=$(form_get color "$color_name")
+	local -i style_code
+	style_code=$(form_get style "$2")
 
-	start="$(tty_escape "$style;$((bright + 30 + $color))")"
+	start="$(tty_escape "$style_code;$((bright + 30 + color_code))")"
 	reset="$(tty_escape 0)"
 	printf "${start}%s${reset}" "$3"
 }
@@ -79,7 +83,6 @@ fwhip() {
 }
 
 warn() {
-	# ring_bell
 	printf '%s %s\n\n' "$(form "bright_red" "normal" "✕")" "$@"
 }
 
@@ -150,61 +153,65 @@ replace_alias_args() {
 }
 
 command_help() {
-	printf '\n%s\n\n' "$(form "cyan" "normal" "$(cat ${CRAFT_HOME_DIR}/config/help/${1}_help.txt)")"
-	exit $2
+	printf '\n%s\n\n' "$(form "cyan" "normal" "$(cat "${CRAFT_HOME_DIR}"/config/help/"${1}"_help.txt)")"
+	exit "$2"
 }
 
 missing_argument() {
 	warn "Invalid option: -$2 requires an argument"
-	command_help $1 1
+	command_help "$1" 1
 }
 
 invalid_command() {
 	warn "Invalid command: $2"
-	command_help $1 1
+	command_help "$1" 1
 }
 
 invalid_option() {
 	warn "Invalid option: -$2"
-	command_help $1 1
+	command_help "$1" 1
 }
 
 missing_required_option() {
 	warn "Missing option: $1 requires \"$2\""
-	command_help $1 1
+	command_help "$1" 1
 }
 
 runtime() {
-	indent "$(form "yellow" "normal" "Runtime: $(min_sec $(($(date +%s) - START)))")"
+	time=$(min_sec $(($(date +%s) - "${START:?START must be set by parent script}")))
+	indent "$(form "yellow" "normal" "Runtime: $time")"
 }
 
 pid() {
-	wait_time=${2:-10}
-	up=${1:-true}
-	local pid
+
+	local time
+	local time=${2:-10}
+	local up=${1:-true}
+
+	PID=""
+	local port="${server_port:?server_port must be set by parent script}"
+
 	if $up; then
-		while [ $wait_time -gt 0 ]; do
-			pid=$(lsof -i :$server_port | grep "$server_port (LISTEN)" | awk '{print $2}')
-			if [[ -n "$pid" ]]; then
-				printf '%s' "$pid"
-				return 0
+		while [ "$time" -gt 0 ]; do
+			PID=$(lsof -i :"$port" | grep "$port (LISTEN)" | awk '{print $2}')
+			if [[ -n "$PID" ]]; then
+				break
 			else
 				sleep 1
-				((wait_time--))
+				((time--))
 			fi
 		done
 	else
-		while [ $wait_time -gt 0 ]; do
-			pid=$(lsof -i :$server_port | grep "$server_port (LISTEN)" | awk '{print $2}')
-			if ! [[ -n "$pid" ]]; then
-				return 0
+		while [ "$time" -gt 0 ]; do
+			PID=$(lsof -i :"$port" | grep "$port (LISTEN)" | awk '{print $2}')
+			if ! [[ -n "$PID" ]]; then
+				break
 			else
 				sleep 1
-				((wait_time--))
+				((time--))
 			fi
 		done
 	fi
-	return 1
 }
 
 list_properties() {
@@ -213,15 +220,15 @@ list_properties() {
 		if [[ $count -gt 1 ]]; then
 			prop=$(echo "${line%=*}" | tr .- _)
 			set=$(printf '%s\n' "${line##*=}")
-			export $prop="$set"
+			export "$prop"="$set"
 		fi
 		((count++))
 	done <"${1}"
 }
 
 get_properties() {
-	list_properties "${CRAFT_SERVER_DIR}/${server_name}/server.properties"
-	list_properties "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties"
+	list_properties "${CRAFT_SERVER_DIR}/${server_name:?server_name must be set by parent script}/server.properties"
+	list_properties "${CRAFT_SERVER_DIR}/${server_name:?server_name must be set by parent script}/fabric-server-launcher.properties"
 }
 
 find_server() {
@@ -233,14 +240,19 @@ find_server() {
 
 server_status() {
 
-	local pid
-	pid=$(pid)
+	# Get the server PID safely (quoted to prevent word splitting)
+	pid "$@"
 
-	if [[ -n "$pid" ]]; then
-		fwhip "$(form "bright_cyan" "italic" "\"${server_name}\"") Minecraft server running on port: $(form green normal "${server_port}") PID: $(form green normal "$pid")"
-	else
-		warn "\"${server_name}\" is not running"
+	if [[ -n "$PID" ]]; then
+		local pipe
+		pipe=$(lsof -p "$PID" | grep "${server_name}/command-pipe" | awk '{print $2}')
+		if [[ -n "$pipe" ]]; then
+			fwhip "$(form "bright_cyan" "italic" "\"${server_name}\"") Minecraft server running on port: $(form green normal "${server_port}") PID: $(form green normal "$PID")"
+			return 0
+		fi
 	fi
+	warn "$(form "bright_cyan" "italic" "\"${server_name}\"") is not running"
+	return 1
 
 }
 
@@ -264,7 +276,7 @@ EOF
 	}
 
 	# POST request to Discord Webhook
-	curl -H "Content-Type: application/json" -X POST -d "$(message "$1" "$2" "$3" "$4")" $discord_webhook &>/dev/null
+	curl -H "Content-Type: application/json" -X POST -d "$(message "$1" "$2" "$3" "$4")" "${discord_webhook:?discord_webhook must be set by parent script}" &>/dev/null
 
 }
 

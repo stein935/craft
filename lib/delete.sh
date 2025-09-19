@@ -42,6 +42,7 @@ delete_command() {
 	find_server "${server_name}"
 
 	if $test; then
+		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
 		declare -A test_info=([command]="$command" [server_name]="$server_name" [test]="$test")
 		test_form test_info
 	fi
@@ -58,7 +59,7 @@ delete_server() {
 		if [[ $REPLY =~ ^[Yy]$ ]]; then
 			fwhip "Deleting dir: ${CRAFT_SERVER_DIR}/${server_name// /\ }"
 			execute "rm" "-r" "${CRAFT_SERVER_DIR}/${server_name}"
-			[ -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" ] && fwhip "Checking for sudo ..." && sudo ls &>/dev/null && sudo rm /Library/LaunchDaemons/craft.${server_name// /}.daemon.plist
+			[ -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" ] && fwhip "Checking for sudo ..." && sudo ls &>/dev/null && sudo rm /Library/LaunchDaemons/craft."${server_name// /}".daemon.plist
 		else
 			fwhip "Cancelled"
 		fi

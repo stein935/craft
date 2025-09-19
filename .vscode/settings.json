@@ -1,0 +1,5 @@
+{
+  "bashIde.explainshellEndpoint": "https://explainshell.com",
+  "bashIde.shellcheckPath": "/opt/homebrew/bin/shellcheck",
+  "bashIde.globPattern": "**/*.sh"
+}

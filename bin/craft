@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-START=$(date +%s)
+START="$(date +%s)"
+export START
 
 quiet_cd() {
 	cd "$@" &>/dev/null || return
@@ -11,16 +12,17 @@ CRAFT_FILE_DIRECTORY="$(quiet_cd "${0%/*}/" && pwd -P)"
 CRAFT_FILE="${CRAFT_FILE_DIRECTORY%/}/${0##*/}"
 CRAFT_HOME_DIR="${CRAFT_FILE%/*/*}"
 CRAFT_LIB="${CRAFT_HOME_DIR}/lib"
-CRAFT_SERVER_DIR="/opt/craft/servers"
+export CRAFT_SERVER_DIR="/opt/craft/servers"
 
 # Load common functions
+# shellcheck source=lib/common.sh
 source "${CRAFT_LIB}/common.sh"
 
 # Check for aliases
 args=("$@")
-args=($(replace_alias_args "--help" "-h" "${args[@]}"))
-args=($(replace_alias_args "--list" "-ls" "${args[@]}"))
-args=($(replace_alias_args "--version" "-v" "${args[@]}"))
+mapfile -t args < <(replace_alias_args "--help" "-h" "${args[@]}")
+mapfile -t args < <(replace_alias_args "--list" "-ls" "${args[@]}")
+mapfile -t args < <(replace_alias_args "--version" "-v" "${args[@]}")
 set -- "${args[@]}"
 
 # Command variable
@@ -32,9 +34,11 @@ fun="${1}"
 
 # Execute command
 shift
-if [ -f "${CRAFT_LIB}/$fun.sh" ]; then
+# Validate command name to avoid sourcing unexpected files
+if [[ "$fun" =~ ^[A-Za-z0-9_-]+$ ]] && [ -f "${CRAFT_LIB}/$fun.sh" ]; then
+	# shellcheck disable=SC1090  # dynamic but validated file name
 	source "${CRAFT_LIB}/$fun.sh"
-	${fun}_command "$@"
+	"${fun}"_command "$@"
 else
 	invalid_command "$command" "${fun}"
 fi

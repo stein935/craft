@@ -3,16 +3,14 @@
 command="restart"
 server_name=false
 test=false
-monitor=
 
 restart_command() {
 
 	[ -z "$1" ] && command_help "$command" 1
 
-	while getopts ":n:mht" opt; do
+	while getopts ":n:ht" opt; do
 		case $opt in
 		n) server_name="$OPTARG" ;;
-		m) monitor="m" ;;
 		h) command_help "$command" 0 ;;
 		t) test=true ;;
 		:) missing_argument "$command" "$OPTARG" ;;
@@ -26,8 +24,11 @@ restart_command() {
 
 	find_server "${server_name}"
 
+	get_properties
+
 	if $test; then
-		declare -A test_info=([command]="$command" [server_name]="$server_name" [monitor]="$monitor" [test]="$test")
+		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
+		declare -A test_info=([command]="$command" [server_name]="$server_name" [test]="$test")
 		test_form test_info
 	fi
 
@@ -37,10 +38,15 @@ restart_command() {
 
 restart_server() {
 
-	echo "$(date) : Restart: \"${server_name}\" was restarted." >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
-	execute "$0" "stop" "-${monitor}fn" "${server_name}"
-	execute "$0" "start" "-dn" "${server_name}"
+	if server_status true 1 >/dev/null; then
+		echo "$(date) : Restart: \"${server_name}\" was restarted." >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+		execute "$0" "stop" "-n" "${server_name}"
+	else
+		warn "No server running on port: ${server_port:?server_port must be set by parent script}"
+	fi
+	execute "$0" "start" "-n" "${server_name}"
+	status=$?
 	$test && runtime && echo
-	exit 0
+	exit $status
 
 }

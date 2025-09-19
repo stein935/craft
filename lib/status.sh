@@ -6,8 +6,6 @@ test=false
 
 status_command() {
 
-	[ -z "$1" ] && command_help "$command" 1
-
 	while getopts ":n:ht" opt; do
 		case "$opt" in
 		n) server_name=${OPTARG} ;;
@@ -20,32 +18,33 @@ status_command() {
 
 	echo
 
-	[[ $(ls ${CRAFT_SERVER_DIR}) == "" ]] && warn "No servers found in ${CRAFT_SERVER_DIR}" && exit 1
+	if [ -d "${CRAFT_SERVER_DIR}" ] && [ -z "$(ls "${CRAFT_SERVER_DIR}")" ]; then
+		warn "No servers found in ${CRAFT_SERVER_DIR}"
+		exit 1
+	fi
 
 	if $test; then
+		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
 		declare -A test_info=([command]="$command" [server_name]="$server_name" [test]="$test")
 		test_form test_info
 	fi
-
-	status=
 
 	if [[ "${server_name}" == false ]]; then
 		servers=$(ls "${CRAFT_SERVER_DIR}")
 		while IFS=$'\t' read -r server; do
 			server_name="${server}"
 			get_properties
-			server_status
-			status=$?
+			server_status true 1
 		done <<<"${servers[@]}"
+
 	else
 		find_server "${server_name}"
 		get_properties
-		server_status
-		status=$?
+		server_status true 1
 	fi
 
 	$test && runtime && echo
 
-	exit $status
+	exit 0
 
 }

@@ -31,6 +31,7 @@ create_command() {
 	! [ -n "$server_name" ] && missing_required_option "$command" "-n"
 
 	if $test; then
+		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
 		declare -A test_info=([command]="$command" [server_name]="$server_name" [minecraft_version]="$minecraft_version" [loader]="$loader" [snapshot]="$snapshot" [install_command]="${install_command[*]}" [test]="$test")
 		test_form test_info
 	fi
@@ -103,7 +104,7 @@ install_server() {
 
 	jar_count() { find "${CRAFT_SERVER_DIR}/${server_name}" | grep -c '\.jar$'; }
 
-	cd "${CRAFT_SERVER_DIR}"
+	cd "${CRAFT_SERVER_DIR}" || exit 1
 
 	if [[ $(jar_count) == "0" ]]; then
 		fwhip "Installing $(form "bright_cyan" "italic" "\"${server_name}\"") server in $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")"
@@ -120,17 +121,17 @@ install_server() {
 init_server() {
 
 	get_init_command
-	cd "${CRAFT_SERVER_DIR}/${server_name}"
+	cd "${CRAFT_SERVER_DIR}/${server_name}" || exit
 	form "cyan" "dim" "$(execute "${init_command[@]}")"
 	wait
 	echo
 	mkdir "${CRAFT_SERVER_DIR}/${server_name}/logs/monitor"
 	echo
-	ask_config_server
+	config_server
 
 }
 
-ask_config_server() {
+config_server() {
 
 	# Add initial fabric-server-properties
 	echo -e "#Fabric launcher properties\n$(execute "cat" "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties")" >"${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties"
@@ -145,10 +146,8 @@ ask_config_server() {
 		if [[ $REPLY =~ ^[Yy]$ ]]; then
 			$0 config -n "${server_name}"
 			sign_eula
-			break
 		elif [[ $REPLY =~ ^[Nn]$ ]]; then
 			sign_eula
-			break
 		else
 			warn "Please enter y or n"
 		fi
@@ -163,8 +162,7 @@ sign_eula() {
 		read -p "$(fwhip "Agree to Minecraft eula for $(form "bright_cyan" "italic" "\"${server_name}\"")? (y/n) : ")" -n 1 -r
 		echo && echo
 		if [[ $REPLY =~ ^[Yy]$ ]]; then
-			sed -i '' -e '$ d' "${CRAFT_SERVER_DIR}/${server_name}/eula.txt"
-			echo "eula=true" >>"${CRAFT_SERVER_DIR}/${server_name}/eula.txt"
+			sed -i '' 's/eula=false/eula=true/' "${CRAFT_SERVER_DIR}/${server_name}/eula.txt"
 			break
 		elif [[ $REPLY =~ ^[Nn]$ ]]; then
 			warn "You will need to accept eula by editing $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")/eula.txt before you can start the server"

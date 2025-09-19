@@ -33,6 +33,7 @@ mod_command() {
 	find_server "${server_name}"
 
 	if $test; then
+		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
 		declare -A test_info=([command]="$command" [server_name]="$server_name" [file]="$file" [list]="$list" [remove]="$remove" [test]="$test")
 		test_form test_info
 	fi

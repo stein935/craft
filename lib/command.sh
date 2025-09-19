@@ -45,15 +45,17 @@ command_command() {
 	get_properties
 
 	if $test; then
+		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
 		declare -A test_info=([command]="$command" [server_command]="$server_command" [server_name]="$server_name" [test]="$test")
 		test_form test_info
 	fi
 
-	command_server
+	send_command
 
 }
 
-command_server() {
+send_command() {
+
 	if ! server_status &>/dev/null; then
 		warn "$(form "bright_cyan" "italic" "\"${server_name}\"") is not running"
 		$test && echo && runtime && echo
@@ -64,12 +66,13 @@ command_server() {
 
 	pipe="${CRAFT_SERVER_DIR}/${server_name}/command-pipe"
 	send "Sending $(form "green" "italic" "\"${server_command}\"") to $(form "bright_cyan" "italic" "\"${server_name}\"") Minecraft server"
-	echo "${server_command}" | tee "${CRAFT_SERVER_DIR}/${server_name}/command-pipe" >/dev/null
+	echo "${server_command}" | tee "${pipe}" >/dev/null
 
-	while [ 1 ]; do
+	while true; do
 		compare=$(comm -23 "${CRAFT_SERVER_DIR}/${server_name}/logs/latest.log" "${CRAFT_SERVER_DIR}/${server_name}/logs/latest.log.tmp")
 		if [ -n "$compare" ]; then
-			form "cyan" "normal" "${compare#*INFO]: }"
+			pattern='*INFO]: }'
+			form "cyan" "normal" "${compare#"$pattern"}"
 			echo
 			echo "$(date) : Command: \"${server_command}\" sent to \"${server_name}\". Server log: ${compare}" >>"$CRAFT_SERVER_DIR/$server_name/logs/monitor/$(date '+%Y-%m').log"
 			rm "${CRAFT_SERVER_DIR}/${server_name}/logs/latest.log.tmp"
