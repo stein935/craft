@@ -67,8 +67,13 @@ shell_join() {
 	done
 }
 
+version_ge() {
+	# Returns 0 if $1 >= $2, 1 otherwise
+	[ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" = "$2" ]
+}
+
 abort() {
-	printf "%s\n" "$(form "red" "normal" "$@")" >&2
+	printf "%s\n" "$(warn "$@")" >&2
 	exit 1
 }
 
@@ -214,6 +219,24 @@ pid() {
 	fi
 }
 
+server_status() {
+
+	# Get the server PID safely (quoted to prevent word splitting)
+	pid "$@"
+
+	if [[ -n "$PID" ]]; then
+		local pipe
+		pipe=$(lsof -p "$PID" | grep "${server_name:?server_name must be set by parent script}/command-pipe" | awk '{print $2}')
+		if [[ -n "$pipe" ]]; then
+			fwhip "$(form "bright_cyan" "italic" "\"${server_name}\"") Minecraft server running on port: $(form green normal "${server_port}") PID: $(form green normal "$PID")"
+			return 0
+		fi
+	fi
+	warn "$(form "bright_cyan" "italic" "\"${server_name}\"") is not running"
+	return 1
+
+}
+
 list_properties() {
 	count=0
 	while IFS="" read -r line || [ -n "$line" ]; do
@@ -237,22 +260,46 @@ find_server() {
 		exit 1
 	fi
 }
+check_java() {
 
-server_status() {
+	local game
+	game=$1
 
-	# Get the server PID safely (quoted to prevent word splitting)
-	pid "$@"
-
-	if [[ -n "$PID" ]]; then
-		local pipe
-		pipe=$(lsof -p "$PID" | grep "${server_name}/command-pipe" | awk '{print $2}')
-		if [[ -n "$pipe" ]]; then
-			fwhip "$(form "bright_cyan" "italic" "\"${server_name}\"") Minecraft server running on port: $(form green normal "${server_port}") PID: $(form green normal "$PID")"
-			return 0
-		fi
+	if ! command -v java >/dev/null 2>&1; then
+		echo "Java is not installed."
+		exit 1
 	fi
-	warn "$(form "bright_cyan" "italic" "\"${server_name}\"") is not running"
-	return 1
+
+	local java_version
+	java_version=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | cut -d. -f1)
+
+	# Determine required Java version
+	local required_java
+	if version_ge "$game" "1.20.5"; then
+		required_java=21
+	elif version_ge "$game" "1.18.2"; then
+		required_java=17
+	elif version_ge "$game" "1.17.2"; then
+		required_java=16
+	else
+		required_java=8
+	fi
+
+	if [ "$java_version" -eq "$required_java" ]; then
+		return 0
+	else
+		local found_java
+		found_java=$(/usr/libexec/java_home -V 2>&1 | grep -E " $required_java(\.|$)")
+		if [ -z "$found_java" ]; then
+			warn "Required Java $required_java not found via /usr/libexec/java_home."
+			return 1
+		fi
+		JAVA_HOME=$(/usr/libexec/java_home -v "$required_java")
+		export JAVA_HOME
+		export PATH="$JAVA_HOME/bin:$PATH"
+		warn "Minecraft $game requires Java $required_java; overriding detected Java $java_version"
+		return 0
+	fi
 
 }
 

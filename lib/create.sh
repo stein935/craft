@@ -2,21 +2,25 @@
 
 command="create"
 server_name=false
-minecraft_version=false
+
+game=false
 loader=false
+
+installers=$(curl -s https://meta.fabricmc.net/v2/versions/installer | jq '[.[] | select(.stable == true)]')
+installer=$(echo "$installers" | jq -r '.[0].version')
+installer_url="https://maven.fabricmc.net/net/fabricmc/fabric-installer/$installer/fabric-installer-$installer.jar"
+
 snapshot=false
-install_command=("java" "-jar" "${CRAFT_HOME_DIR}/config/fabric-installer.jar" "server" "-downloadMinecraft" "-dir")
-get_init_command() { init_command=("java" "-jar" "-Xmx8192M" "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launch.jar" "--nogui" "--initSettings"); }
 test=false
 
 create_command() {
 
 	[ -z "$1" ] && command_help "$command" 1
 
-	while getopts ":n:v:l:i:m:sht" opt; do
+	while getopts ":n:g:l:sht" opt; do
 		case $opt in
 		n) server_name="$OPTARG" ;;
-		v) minecraft_version="$OPTARG" ;;
+		g) game="$OPTARG" ;;
 		l) loader="$OPTARG" ;;
 		s) snapshot=true ;;
 		h) command_help "$command" 0 ;;
@@ -32,11 +36,11 @@ create_command() {
 
 	if $test; then
 		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
-		declare -A test_info=([command]="$command" [server_name]="$server_name" [minecraft_version]="$minecraft_version" [loader]="$loader" [snapshot]="$snapshot" [install_command]="${install_command[*]}" [test]="$test")
+		declare -A test_info=([command]="$command" [server_name]="$server_name" [game]="$game" [loader]="$loader" [snapshot]="$snapshot" [test]="$test")
 		test_form test_info
 	fi
 
-	create_server
+	check_java "$game" && create_server
 
 }
 
@@ -59,22 +63,11 @@ create_server() {
 		fwhip "Creating $(form "bright_cyan" "italic" "\"${server_name}\"")"
 		indent "$(form "normal" "underline" "Options:")"
 		indent "Server name : \"${server_name}\""
-		if [[ "$minecraft_version" != "false" ]]; then indent "Minecraft version : \"${minecraft_version}\""; fi
+		if [[ "$game" != "false" ]]; then indent "Minecraft version : \"${game}\""; fi
 		if [[ "$loader" != "false" ]]; then indent "Fabric loader : \"${loader}\""; fi
 		if [[ "$snapshot" != "false" ]]; then indent "Snapshot : \"${snapshot}\""; fi
 		indent "Server dir: $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")"
 		echo
-
-		install_command+=("${server_name}")
-		if [[ "$minecraft_version" != "false" ]]; then
-			install_command+=("-mcversion" "${minecraft_version}")
-		fi
-		if [[ "$loader" != "false" ]]; then
-			install_command+=("-loader" "${loader}")
-		fi
-		if [[ "$snapshot" != "false" ]]; then
-			install_command+=("-snapshot")
-		fi
 
 		create_server_dir
 	else
@@ -94,7 +87,7 @@ create_server() {
 create_server_dir() {
 
 	fwhip "Creating dir: $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")"
-	mkdir "${CRAFT_SERVER_DIR}/${server_name}"
+	mkdir -p "${CRAFT_SERVER_DIR}/${server_name}/tmp"
 
 	install_server
 
@@ -102,28 +95,41 @@ create_server_dir() {
 
 install_server() {
 
-	jar_count() { find "${CRAFT_SERVER_DIR}/${server_name}" | grep -c '\.jar$'; }
+	fwhip "Installing $(form "bright_cyan" "italic" "\"${server_name}\"") server in $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")"
 
-	cd "${CRAFT_SERVER_DIR}" || exit 1
+	get_installer_command=("curl" "-s" "$installer_url" "-o" "${CRAFT_SERVER_DIR}/${server_name}/tmp/fabric-installer.jar")
+	execute "${get_installer_command[@]}" || exit 1
+	echo
 
-	if [[ $(jar_count) == "0" ]]; then
-		fwhip "Installing $(form "bright_cyan" "italic" "\"${server_name}\"") server in $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")"
-		form "cyan" "dim" "$(execute "${install_command[@]}")"
-		wait
-		echo
-		init_server
-	else
-		warn "There are already .jar files in $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")"
+	install_command=("java" "-jar" "${CRAFT_SERVER_DIR}/${server_name}/tmp/fabric-installer.jar" "server" "-downloadMinecraft" "-dir" "${CRAFT_SERVER_DIR}/${server_name}")
+	if [[ "$game" != "false" ]]; then
+		install_command+=("-mcversion" "${game}")
 	fi
+	if [[ "$loader" != "false" ]]; then
+		install_command+=("-loader" "${loader}")
+	fi
+	if [[ "$snapshot" != "false" ]]; then
+		install_command+=("-snapshot")
+	fi
+
+	local output
+	output=$(execute "${install_command[@]}") || exit 1
+	form "cyan" "dim" "$output"
+	echo
+
+	rm -rf "${CRAFT_SERVER_DIR:?}/${server_name}/tmp"
+
+	init_server
 
 }
 
 init_server() {
 
-	get_init_command
-	cd "${CRAFT_SERVER_DIR}/${server_name}" || exit
-	form "cyan" "dim" "$(execute "${init_command[@]}")"
-	wait
+	init_command=("java" "-jar" "-Xmx8192M" "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launch.jar" "--nogui" "--initSettings")
+	cd "${CRAFT_SERVER_DIR}/${server_name}" || exit 1
+	local output
+	output=$(execute "${init_command[@]}") || exit 1
+	form "cyan" "dim" "$output"
 	echo
 	mkdir "${CRAFT_SERVER_DIR}/${server_name}/logs/monitor"
 	echo
@@ -174,8 +180,7 @@ sign_eula() {
 	done
 
 	fwhip "$(form "bright_cyan" "italic" "\"${server_name}\"") has been created!"
-	indent "$(form "normal" "underline" "Server location"): $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")"
-	echo
+	indent "$(form "normal" "underline" "Server location"): $(printf '%q\n' "${CRAFT_SERVER_DIR}/${server_name}")"
 	indent "$(form "bright_green" "underline" "Next steps"):"
 	indent "$(form "green" "normal" "To start the server - Run:")"
 	indent "$(form "green" "normal" "craft start -n \"${server_name}\"")" "6"

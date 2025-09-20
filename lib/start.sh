@@ -38,7 +38,7 @@ start_command() {
 
 	$daemon && start_daemon
 
-	start_server
+	check_java "$(ls "${CRAFT_SERVER_DIR}/${server_name}/versions")" && start_server
 
 }
 
@@ -54,8 +54,6 @@ start_daemon() {
 }
 
 start_server() {
-
-	# server_status false 1 && echo "true" || echo "false"
 
 	# Check if a server is already running on the port
 	if server_status false 1 >/dev/null; then
