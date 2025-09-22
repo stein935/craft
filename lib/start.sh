@@ -36,9 +36,11 @@ start_command() {
 		test_form test_info
 	fi
 
+	check_java "$(ls "${CRAFT_SERVER_DIR}/${server_name}/versions")"
+
 	$daemon && start_daemon
 
-	check_java "$(ls "${CRAFT_SERVER_DIR}/${server_name}/versions")" && start_server
+	start_server
 
 }
 
