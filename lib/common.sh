@@ -308,16 +308,16 @@ discord_message() {
 	message() {
 		cat <<-EOF
 			{
-				"embeds":[{
-				"title": "${1}",
-				"description":"${2}",
-				"timestamp":"$(date +'%Y-%m-%dT%H:%M:%S%z')",
-				"color":"${3}",
-				"author":{
-					"name":"Craft CLI - ${4}",
-					"url":"https://github.com/stein935/craft"
-				}
-				}]
+			  "embeds":[{
+			    "title": "${1}",
+			    "description":"${2}",
+			    "timestamp":"$(date +'%Y-%m-%dT%H:%M:%S%z')",
+			    "color":"${3}",
+			    "author":{
+			      "name":"Craft CLI - ${4}",
+			      "url":"https://github.com/stein935/craft"
+			    }
+			  }]
 			}
 		EOF
 	}
