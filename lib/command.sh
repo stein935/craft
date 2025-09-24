@@ -16,12 +16,12 @@ Tests:
 		craft command -n ServerName -c "say Hello World" -x
 END_COMMENT
 
-command="command"
-server_command=false
-server_name=false
-test=false
-
 command_command() {
+
+	export command="command"
+	export server_name=false
+	server_command=false
+	test=false
 
 	[ -z "$1" ] && command_help "$command" 1
 

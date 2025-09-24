@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-command="config"
-server_name=false
-test=false
-
 config_command() {
+
+	export command="config"
+	export server_name=false
+	test=false
 
 	[ -z "$1" ] && command_help "$command" 1
 
@@ -47,7 +47,6 @@ config_server() {
 	while true; do
 		read -p "$(fwhip "Do you want to add a text art logo to \"${server_name}?\"? (y/n) : ")" -n 1 -r
 		echo && echo
-		echo
 		if [[ $REPLY =~ ^[Yy]$ ]]; then
 			read -rp "Path to file : " ans
 			ans=$(echo "$ans" | tr -d '~')

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-command="restart"
-server_name=false
-test=false
-
 restart_command() {
+
+	export command="restart"
+	export server_name=false
+	test=false
 
 	[ -z "$1" ] && command_help "$command" 1
 

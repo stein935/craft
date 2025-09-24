@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-command="start"
-server_name=false
-server_init_mem="512M"
-server_max_mem="8G"
-daemon=false
-test=false
-
 start_command() {
+
+	export command="start"
+	export server_name=false
+	server_init_mem="512M"
+	server_max_mem="8G"
+	daemon=false
+	test=false
 
 	[ -z "$1" ] && command_help "$command" 1
 

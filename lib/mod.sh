@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
-command="mod"
-server_name=false
-file=false
-url=false
-list=false
-remove=false
-test=false
-
 mod_command() {
+
+	export command="mod"
+	export server_name=false
+	file=false
+	url=false
+	list=false
+	remove=false
+	test=false
 
 	[ -z "$1" ] && command_help "$command" 1
 

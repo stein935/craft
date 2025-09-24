@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 
-command="create"
-server_name=false
-
-game=false
-loader=false
-
-installers=$(curl -s https://meta.fabricmc.net/v2/versions/installer | jq '[.[] | select(.stable == true)]')
-installer=$(echo "$installers" | jq -r '.[0].version')
-installer_url="https://maven.fabricmc.net/net/fabricmc/fabric-installer/$installer/fabric-installer-$installer.jar"
-
-snapshot=false
-test=false
-
 create_command() {
+
+	export command="create"
+	export server_name=false
+
+	game=false
+	loader=false
+
+	installers=$(curl -s https://meta.fabricmc.net/v2/versions/installer | jq '[.[] | select(.stable == true)]')
+	installer=$(echo "$installers" | jq -r '.[0].version')
+	installer_url="https://maven.fabricmc.net/net/fabricmc/fabric-installer/$installer/fabric-installer-$installer.jar"
+
+	snapshot=false
+	test=false
 
 	[ -z "$1" ] && command_help "$command" 1
 

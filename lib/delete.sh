@@ -17,11 +17,11 @@ Tests:
 		craft delete -n InvalidServer -t
 END_COMMENT
 
-command="delete"
-server_name=false
-test=false
-
 delete_command() {
+
+	export command="delete"
+	export server_name=false
+	test=false
 
 	[ -z "$1" ] && command_help "$command" 1
 

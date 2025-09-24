@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-command="status"
-server_name=false
-test=false
-
 status_command() {
+
+	export command="status"
+	export server_name=false
+	test=false
 
 	while getopts ":n:ht" opt; do
 		case "$opt" in
