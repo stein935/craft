@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-command="stop"
-server_name=false
-test=false
-
 stop_command() {
+
+	export command="stop"
+	export server_name=false
+	test=false
 
 	[ -z "$1" ] && command_help "$command" 1
 
