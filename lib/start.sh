@@ -70,11 +70,6 @@ start_server() {
 	# Message that the server is starting
 	fwhip "Starting $(form "bright_cyan" "italic" "\"${server_name}\"") Minecraft server"
 
-	if [ -f "${CRAFT_SERVER_DIR}/${server_name}/logo.txt" ]; then
-		execute "cat" "${CRAFT_SERVER_DIR}/${server_name}/logo.txt"
-		echo
-	fi
-
 	daemon_path="/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist"
 	log_path=$(printf '%s\n' "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log" | sed -e 's/[\/&]/\\&/g')
 
@@ -131,6 +126,11 @@ start_server() {
 	if server_status; then
 
 		echo "$(date) : Start: \"${server_name}\" running on port: ${server_port} PID: ${PID:?PID must be set by parent script}" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+
+		if [ -f "${CRAFT_SERVER_DIR}/${server_name}/logo.txt" ]; then
+			form "cyan" "dim" "$(execute "cat" "${CRAFT_SERVER_DIR}/${server_name}/logo.txt")"
+			echo && echo
+		fi
 
 	fi
 

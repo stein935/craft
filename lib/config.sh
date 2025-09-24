@@ -18,53 +18,39 @@ config_command() {
 		esac
 	done
 
+	echo
+
 	! [ -n "$server_name" ] && missing_required_option "$command" "-n"
 
 	find_server "${server_name}"
 
 	if $test; then
-		echo "${tty_yellow}"
-		indent "command                 : $command        "
-		indent "server_name             : $server_name    "
-		indent "test                    : $test           "
-		echo "${tty_reset}"
+		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
+		declare -A test_info=([command]="$command" [server_name]="$server_name" [test]="$test")
+		test_form test_info
 	fi
 
 	config_server
 
 }
 
-function cleanup {
-	[ -f "${CRAFT_SERVER_DIR}/${server_name}/server.properties.tmp" ] && rm -r "${CRAFT_SERVER_DIR}/${server_name}/server.properties.tmp"
-	[ -f "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties.tmp" ] && rm -r "${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties.tmp"
-}
-
-trap cleanup EXIT
-
 config_server() {
 
-	server_properties="server.properties"
-	launcher_properties="fabric-server-launcher.properties"
+	local propfiles
+	propfiles=("${CRAFT_SERVER_DIR}/${server_name}/"*.properties)
+	local selected
+	selected=$(printf "%s\n" "${propfiles[@]##*/}" | fzf)
 
-	### Server Properties
-	fwhip "Minecraft server properties"
-	echo "#Minecraft server properties" >"${server_properties}.tmp"
-	echo "#$(date)" >>"${server_properties}.tmp"
-	read_properties "${server_properties}"
-
-	### Launcher Properties
-	fwhip "Minecraft launcher properties"
-	echo "#Fabric launcher properties" >"${launcher_properties}.tmp"
-	echo "#$(date)" >>"${launcher_properties}.tmp"
-	read_properties "${launcher_properties}"
+	fwhip "Configuring ${selected}"
+	read_properties "/${CRAFT_SERVER_DIR}/${server_name}/${selected}"
 
 	while true; do
-		fwhip "Do you want to add a text art logo to \"${server_name}?\""
-		read -p "(y/n) : " -n 1 -r
+		read -p "$(fwhip "Do you want to add a text art logo to \"${server_name}?\"? (y/n) : ")" -n 1 -r
+		echo && echo
 		echo
 		if [[ $REPLY =~ ^[Yy]$ ]]; then
-			read -p "Path to file : " ans
-			ans=$(echo $ans | tr -d '~')
+			read -rp "Path to file : " ans
+			ans=$(echo "$ans" | tr -d '~')
 			cp "${HOME}${ans}" "${CRAFT_SERVER_DIR}/${server_name}/logo.txt"
 			break
 		elif [[ $REPLY =~ ^[Nn]$ ]]; then
@@ -82,48 +68,52 @@ config_server() {
 
 read_properties() {
 
-	execute "cd" "${CRAFT_SERVER_DIR}/${server_name}"
+	local file=$1
+	local -a properties_raw
+	mapfile -t properties_raw <"$file"
+	local -A properties
 
-	change=false
-
-	file=$1
-	properties=$(cat $file)
-	OLDIFS="$IFS"
-	IFS=$'\n'
-	for line in $properties; do
-		prop=$(echo ${line%=*} | tr -d '\n')
-		set=$(echo ${line##*=} | tr -d '\n')
-		if [[ "${line:0:1}" != "#" ]]; then
-			read -p "${prop} (Set to: \"${set}\"): " -r input
-			if [[ $input != '' ]]; then
-				change=true
-				echo "${prop}=${input}" >>"${file}.tmp"
-				echo "$(date) : Config: \"${server_name}\" setting ${prop} changed from \"${set}\" to \"${input}\"" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
-			else
-				echo "${line}" >>"${file}.tmp"
-			fi
+	for line in "${properties_raw[@]}"; do
+		key=$(echo "${line%=*}" | tr -d '\n')
+		val=$(echo "${line##*=}" | tr -d '\n')
+		if [[ "${line:0:1}" != "#" && "${line:0:2}" != "##" ]]; then
+			properties["$key"]="$val"
 		fi
 	done
-	IFS="$OLDIFS"
 
-	if [[ $change == true ]]; then
-		while true; do
-			fwhip "Do you want to save changes to \"${server_name}?\""
-			read -p "(y/n) : " -n 1 -r
-			echo
-			if [[ $REPLY =~ ^[Yy]$ ]]; then
-				# Write modified properties
-				execute "cp" "${file}.tmp" "${file}"
-				execute "rm" "${file}.tmp"
-				break
-			elif [[ $REPLY =~ ^[Nn]$ ]]; then
-				break
+	selected=$(for key in "${!properties[@]}"; do
+		printf "%s=%s\n" "$key" "${properties[$key]}"
+	done | fzf)
+
+	# Extract key and value from selection
+	sel_key="${selected%%=*}"
+	sel_val="${selected#*=}"
+
+	# Prompt user for new value
+	read -rp "$sel_key (Current: \"$sel_val\"): " input
+	printf "\033[1A\033[2K"
+
+	# If user entered a new value, update the file
+	if [[ -n "$input" && "$input" != "$sel_val" ]]; then
+		# Update the value in the array
+		properties["$sel_key"]="$input"
+		# Write back to file, preserving comments and order
+		true >"$file"
+		for line in "${properties_raw[@]}"; do
+			if [[ "${line:0:1}" == "#" || "${line:0:2}" == "##" ]]; then
+				echo "$line" >>"$file"
 			else
-				warn "Please enter y or n"
+				key=$(echo "${line%=*}" | tr -d '\n')
+				if [[ "$key" == "$sel_key" ]]; then
+					echo "$key=$input" >>"$file"
+				else
+					echo "$line" >>"$file"
+				fi
 			fi
 		done
+		fwhip "Updated $(form "bright_green" "italic" "$sel_key") to $(form "bright_green" "italic" "$input".)"
 	else
-		execute "rm" "${file}.tmp"
+		warn "No change made to $sel_key."
 	fi
 
 }
