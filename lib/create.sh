@@ -145,24 +145,13 @@ config_server() {
 	echo "server_max_mem=2G" >>"${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties"
 	echo "discord_webhook=" >>"${CRAFT_SERVER_DIR}/${server_name}/fabric-server-launcher.properties"
 
-	# Ask about custom config
-	while true; do
-		read -p "$(fwhip "Do you want to configure $(form "bright_cyan" "italic" "\"${server_name}\"")? (y/n) : ")" -n 1 -r
-		echo && echo
-		if [[ $REPLY =~ ^[Yy]$ ]]; then
-			$0 config -n "${server_name}"
-			sign_eula
-		elif [[ $REPLY =~ ^[Nn]$ ]]; then
-			sign_eula
-		else
-			warn "Please enter y or n"
-		fi
-	done
+	sign_eula
 
 }
 
 sign_eula() {
 
+	ring_bell
 	while true; do
 
 		read -p "$(fwhip "Agree to Minecraft eula for $(form "bright_cyan" "italic" "\"${server_name}\"")? (y/n) : ")" -n 1 -r
@@ -183,7 +172,7 @@ sign_eula() {
 	indent "$(form "normal" "underline" "Server location"): $(printf '%q\n' "${CRAFT_SERVER_DIR}/${server_name}")"
 	indent "$(form "bright_green" "underline" "Next steps"):"
 	indent "$(form "green" "normal" "To start the server - Run:")"
-	indent "$(form "green" "normal" "craft start -n \"${server_name}\"")" "6"
+	indent "$(form "green" "normal" "sudo craft start -n \"${server_name}\"")" "6"
 	echo
 	echo "$(date) : Create: \"${server_name}\" created!" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
 
