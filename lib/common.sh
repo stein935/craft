@@ -212,7 +212,7 @@ command_help() {
 
 missing_argument() {
 
-	warn "Invalid option: -$2 requires an argument"
+	warn "Missing argument: -$2 requires an argument"
 	command_help "$1" 1
 
 }
@@ -319,7 +319,7 @@ get_properties() {
 find_server() {
 
 	if ! [[ -d "${CRAFT_SERVER_DIR}/$server_name" ]]; then
-		warn "No server named $server_name in $CRAFT_SERVER_DIR"
+		warn "Server not found: $server_name"
 		exit 1
 	fi
 

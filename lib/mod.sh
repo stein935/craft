@@ -10,8 +10,6 @@ mod_command() {
 	remove=false
 	test=false
 
-	[ -z "$1" ] && command_help "$command" 1
-
 	while getopts ":n:p:u:r:lth" opt; do
 		case $opt in
 		n) server_name="$OPTARG" ;;
@@ -28,9 +26,9 @@ mod_command() {
 
 	echo
 
-	! [ -n "$server_name" ] && missing_required_option "$command" "-n"
+	[[ "$server_name" != false ]] || missing_required_option "$command" "-n"
 
-	! [ -n "$list" ] && ! [ -n "$remove" ] && ! [ -n "$file" ] && ! [ -n "$url" ] && missing_required_option "$command" "-l, -r, -p, or -u"
+	[[ "$list" != false ]] || [[ "$remove" != false ]] || [[ "$file" != false ]] || [[ "$url" != false ]] || missing_required_option "$command" "-l, -r, -p, or -u"
 
 	find_server "${server_name}"
 

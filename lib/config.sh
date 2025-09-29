@@ -6,8 +6,6 @@ config_command() {
 	export server_name=false
 	test=false
 
-	[ -z "$1" ] && command_help "$command" 1
-
 	while getopts ":n:ht" opt; do
 		case $opt in
 		n) server_name="$OPTARG" ;;
@@ -20,7 +18,7 @@ config_command() {
 
 	echo
 
-	! [ -n "$server_name" ] && missing_required_option "$command" "-n"
+	[[ "$server_name" != false ]] || missing_required_option "$command" "-n"
 
 	find_server "${server_name}"
 
