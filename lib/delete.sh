@@ -18,7 +18,15 @@ delete_command() {
 
 	echo
 
-	[[ "$server_name" != false ]] || missing_required_option "$command" "-n"
+	if [[ "$server_name" == false ]]; then
+		if [ -d "${CRAFT_SERVER_DIR}" ] && [ -z "$(ls "${CRAFT_SERVER_DIR}")" ]; then
+			warn "No servers found in ${CRAFT_SERVER_DIR}"
+			exit 1
+		fi
+		local servers
+		servers=$(ls "${CRAFT_SERVER_DIR}")
+		server_name=$(printf "%s\n" "${servers[@]##*/}" | use_fzf "Select a server") || exit 0
+	fi
 
 	find_server "${server_name}"
 

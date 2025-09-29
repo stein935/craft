@@ -18,7 +18,14 @@ config_command() {
 
 	echo
 
-	[[ "$server_name" != false ]] || missing_required_option "$command" "-n"
+	if [[ "$server_name" == false ]]; then
+		if [ -d "${CRAFT_SERVER_DIR}" ] && [ -z "$(ls "${CRAFT_SERVER_DIR}")" ]; then
+			warn "No servers found in ${CRAFT_SERVER_DIR}"
+			exit 1
+		fi
+		cd "${CRAFT_SERVER_DIR}" || exit 1
+		server_name=$(ls | use_fzf "Select a server") || exit 0
+	fi
 
 	find_server "${server_name}"
 
@@ -34,13 +41,14 @@ config_command() {
 
 config_server() {
 
-	local propfiles
-	propfiles=("${CRAFT_SERVER_DIR}/${server_name}/"*.properties)
+	echo "$CONFIG_FILE" >&3
+
 	local selected
 	if [[ -n "$CONFIG_FILE" ]]; then
 		selected=$CONFIG_FILE
 	else
-		selected=$(printf "%s\n" "${propfiles[@]##*/}" | fzf --prompt="Select a file: ")
+		cd "${CRAFT_SERVER_DIR}/${server_name}" || exit 1
+		selected=$(find ./*.properties | use_fzf "Select a file") || exit 1
 	fi
 
 	fwhip "Configuring ${selected}"
@@ -86,7 +94,7 @@ read_properties() {
 	else
 		selected=$(for key in "${!properties[@]}"; do
 			printf "%s=%s\n" "$key" "${properties[$key]}"
-		done | fzf --prompt="Select a property: ")
+		done | use_fzf "Select a property")
 	fi
 
 	# Extract key and value from selection
@@ -94,8 +102,8 @@ read_properties() {
 	sel_val="${selected#*=}"
 
 	# Prompt user for new value
-	read -rp "$sel_key (Current: \"$sel_val\"): " input
-	printf "\033[1A\033[2K"
+	read -rp "$(fwhip "$sel_key $(form cyan dim "(Current: \"$sel_val\")"): ")" input
+	echo
 
 	# If user entered a new value, update the file
 	if [[ -n "$input" && "$input" != "$sel_val" ]]; then

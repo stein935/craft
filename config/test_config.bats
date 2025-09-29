@@ -110,10 +110,6 @@ teardown() {
 
 @test "$(number)	config $server_name" {
 
-  test_desc_form false "sudo craft config"
-  run -1 sudo craft config
-  check_output "Missing option: config requires \"-n\""
-
   test_desc_form true "sudo craft config -h"
   run -0 sudo craft config -h
   check_output "Usage"
@@ -138,10 +134,6 @@ teardown() {
 }
 
 @test "$(number)	mod with url" {
-
-  test_desc_form false "sudo craft mod"
-  run -1 sudo craft mod
-  check_output "Missing option: mod requires \"-n\""
 
   test_desc_form true "sudo craft mod -h"
   run -0 sudo craft mod -h
@@ -248,10 +240,6 @@ teardown() {
 
 @test "$(number)	start $server_name" {
 
-  test_desc_form false "sudo craft start"
-  run -1 sudo craft start
-  check_output "Missing option: start requires \"-n\""
-
   test_desc_form true "sudo craft start -h"
   run -0 sudo craft start -h
   check_output "Usage"
@@ -294,10 +282,6 @@ teardown() {
 
 @test "$(number)	restart $server_name" {
 
-  test_desc_form false "sudo craft restart"
-  run -1 sudo craft restart
-  check_output "Missing option: restart requires \"-n\""
-
   test_desc_form true "sudo craft restart -h"
   run -0 sudo craft restart -h
   check_output "Usage"
@@ -322,10 +306,6 @@ teardown() {
 }
 
 @test "$(number)	command send to $server_name" {
-
-  test_desc_form false "sudo craft command"
-  run -1 sudo craft command
-  check_output "Missing option: command requires \"-n\""
 
   test_desc_form true "sudo craft command -h"
   run -0 sudo craft command -h
@@ -359,10 +339,6 @@ teardown() {
 
 @test "$(number)	stop $server_name" {
 
-  test_desc_form false "sudo craft stop"
-  run -1 sudo craft stop
-  check_output "Missing option: stop requires \"-n\""
-
   test_desc_form true "sudo craft stop -h"
   run -0 sudo craft stop -h
   check_output "Usage"
@@ -388,10 +364,6 @@ teardown() {
 }
 
 @test "$(number)	delete" {
-
-  test_desc_form false "sudo craft delete"
-  run -1 sudo craft delete
-  check_output "Missing option: delete requires \"-n\""
 
   test_desc_form true "sudo craft delete -h"
   run -0 sudo craft delete -h

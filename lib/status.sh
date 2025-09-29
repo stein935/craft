@@ -6,9 +6,10 @@ status_command() {
 	export server_name=false
 	test=false
 
-	while getopts ":n:ht" opt; do
+	while getopts ":n:Nht" opt; do
 		case "$opt" in
 		n) server_name=${OPTARG} ;;
+		N) server_name=true ;;
 		h) command_help "${command}" 0 ;;
 		t) test=true ;;
 		:) missing_argument "$command" "$OPTARG" ;;
@@ -37,6 +38,14 @@ status_command() {
 			server_on 0
 		done <<<"${servers[@]}"
 		status=0
+	elif [[ "${server_name}" == "true" ]]; then
+		local servers
+		servers=$(ls "${CRAFT_SERVER_DIR}")
+		server_name=$(printf "%s\n" "${servers[@]##*/}" | use_fzf "Select a server") || exit 0
+		find_server "${server_name}"
+		get_properties
+		server_on 0
+		status=$?
 	else
 		find_server "${server_name}"
 		get_properties
