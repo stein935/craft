@@ -1,21 +1,5 @@
 #!/usr/bin/env bash
 
-: <<'END_COMMENT'
-Tests:
-	Valid commands:
-		craft command -h
-		craft command --help
-		craft command -n ServerName -c "say Hello World"
-		craft command -n ServerName -c "say Hello World" -t
-	Invalid commands:
-		craft command
-		craft command -n ServerName
-		craft command -c "say Hello World"
-		craft command -n InvalidServer -c "say Hello World"
-		craft command -n ServerName -c ""
-		craft command -n ServerName -c "say Hello World" -x
-END_COMMENT
-
 command_command() {
 
 	export command="command"
@@ -56,7 +40,7 @@ command_command() {
 
 send_command() {
 
-	if ! server_status &>/dev/null; then
+	if ! server_on 0 >/dev/null; then
 		warn "$(form "bright_cyan" "italic" "\"${server_name}\"") is not running"
 		$test && echo && runtime && echo
 		exit 1

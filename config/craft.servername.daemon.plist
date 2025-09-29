@@ -26,7 +26,9 @@ _arguments_
 		<key>StandardOutPath</key>
 		<string>_log_path_</string>
 
-		<key>RunAtLoad</key><true/>
-    <key>KeepAlive</key><true/>
+		<key>RunAtLoad</key>
+    <true/>
+    <key>StartInterval</key>
+    <integer>300</integer>
 	</dict>
 </plist>

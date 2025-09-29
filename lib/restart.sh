@@ -38,7 +38,7 @@ restart_command() {
 
 restart_server() {
 
-	if server_status true 1 >/dev/null; then
+	if server_on 0 >/dev/null; then
 		echo "$(date) : Restart: \"${server_name}\" was restarted." >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
 		execute "$0" "stop" "-n" "${server_name}"
 	else

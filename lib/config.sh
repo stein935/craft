@@ -39,7 +39,11 @@ config_server() {
 	local propfiles
 	propfiles=("${CRAFT_SERVER_DIR}/${server_name}/"*.properties)
 	local selected
-	selected=$(printf "%s\n" "${propfiles[@]##*/}" | fzf)
+	if [[ -n "$CONFIG_FILE" ]]; then
+		selected=$CONFIG_FILE
+	else
+		selected=$(printf "%s\n" "${propfiles[@]##*/}" | fzf --prompt="Select a file: ")
+	fi
 
 	fwhip "Configuring ${selected}"
 	read_properties "/${CRAFT_SERVER_DIR}/${server_name}/${selected}"
@@ -49,8 +53,7 @@ config_server() {
 		echo && echo
 		if [[ $REPLY =~ ^[Yy]$ ]]; then
 			read -rp "Path to file : " ans
-			ans=$(echo "$ans" | tr -d '~')
-			cp "${HOME}${ans}" "${CRAFT_SERVER_DIR}/${server_name}/logo.txt"
+			cp "${ans}" "${CRAFT_SERVER_DIR}/${server_name}/logo.txt"
 			break
 		elif [[ $REPLY =~ ^[Nn]$ ]]; then
 			break
@@ -80,9 +83,13 @@ read_properties() {
 		fi
 	done
 
-	selected=$(for key in "${!properties[@]}"; do
-		printf "%s=%s\n" "$key" "${properties[$key]}"
-	done | fzf)
+	if [[ -n "$CONFIG_PROPERTY" ]]; then
+		selected=$CONFIG_PROPERTY
+	else
+		selected=$(for key in "${!properties[@]}"; do
+			printf "%s=%s\n" "$key" "${properties[$key]}"
+		done | fzf --prompt="Select a property: ")
+	fi
 
 	# Extract key and value from selection
 	sel_key="${selected%%=*}"
@@ -110,7 +117,6 @@ read_properties() {
 				fi
 			fi
 		done
-		fwhip "Updated $(form "bright_green" "italic" "$sel_key") to $(form "bright_green" "italic" "$input".)"
 	else
 		warn "No change made to $sel_key."
 	fi
