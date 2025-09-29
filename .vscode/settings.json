@@ -1,5 +1,7 @@
 {
   "bashIde.explainshellEndpoint": "https://explainshell.com",
   "bashIde.shellcheckPath": "/opt/homebrew/bin/shellcheck",
-  "bashIde.globPattern": "**/*.sh"
+  "bashIde.globPattern": "**/*.sh",
+  "editor.defaultFormatter": null,
+  "editor.formatOnSave": true
 }

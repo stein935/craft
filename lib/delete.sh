@@ -1,29 +1,10 @@
 #!/usr/bin/env bash
 
-: <<'END_COMMENT'
-Tests:
-	Valid commands:
-		craft delete -h
-		craft delete --help
-		craft delete -n ServerName
-		craft delete -n ServerName -t
-	Invalid commands:
-		craft delete
-		craft delete -x
-		craft delete -n
-		craft delete -t
-		craft delete -n ServerName -x
-		craft delete -n InvalidServer
-		craft delete -n InvalidServer -t
-END_COMMENT
-
 delete_command() {
 
 	export command="delete"
 	export server_name=false
 	test=false
-
-	[ -z "$1" ] && command_help "$command" 1
 
 	while getopts ":n:ht" opt; do
 		case $opt in
@@ -37,9 +18,11 @@ delete_command() {
 
 	echo
 
-	! [ -n "$server_name" ] && missing_required_option "$command" "-n"
+	[[ "$server_name" != false ]] || missing_required_option "$command" "-n"
 
 	find_server "${server_name}"
+
+	get_properties
 
 	if $test; then
 		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
@@ -52,6 +35,8 @@ delete_command() {
 }
 
 delete_server() {
+
+	server_on 0 >/dev/null && rm_line && execute "$0" "stop" "-n" "${server_name}"
 
 	if [ -d "${CRAFT_SERVER_DIR}/${server_name}" ]; then
 		read -p "$(warn "Are you sure you want to permanently delete \"${server_name}?\" (y/n) : ")" -n 1 -r

@@ -34,17 +34,18 @@ status_command() {
 		while IFS=$'\t' read -r server; do
 			server_name="${server}"
 			get_properties
-			server_status true 1
+			server_on 0
 		done <<<"${servers[@]}"
-
+		status=0
 	else
 		find_server "${server_name}"
 		get_properties
-		server_status true 1
+		server_on 0
+		status=$?
 	fi
 
 	$test && runtime && echo
 
-	exit 0
+	exit "$status"
 
 }

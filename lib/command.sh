@@ -1,29 +1,11 @@
 #!/usr/bin/env bash
 
-: <<'END_COMMENT'
-Tests:
-	Valid commands:
-		craft command -h
-		craft command --help
-		craft command -n ServerName -c "say Hello World"
-		craft command -n ServerName -c "say Hello World" -t
-	Invalid commands:
-		craft command
-		craft command -n ServerName
-		craft command -c "say Hello World"
-		craft command -n InvalidServer -c "say Hello World"
-		craft command -n ServerName -c ""
-		craft command -n ServerName -c "say Hello World" -x
-END_COMMENT
-
 command_command() {
 
 	export command="command"
 	export server_name=false
 	server_command=false
 	test=false
-
-	[ -z "$1" ] && command_help "$command" 1
 
 	while getopts ":n:c:th" opt; do
 		case $opt in
@@ -38,7 +20,8 @@ command_command() {
 
 	echo
 
-	! [ -n "$server_name" ] && missing_required_option "$command" "-n" || ! [ "$server_command" ] && missing_required_option "$command" "-c"
+	[[ "$server_name" != false ]] || missing_required_option "$command" "-n"
+	[[ "$server_command" != false ]] || missing_required_option "$command" "-c"
 
 	find_server "${server_name}"
 
@@ -56,7 +39,7 @@ command_command() {
 
 send_command() {
 
-	if ! server_status &>/dev/null; then
+	if ! server_on 0 >/dev/null; then
 		warn "$(form "bright_cyan" "italic" "\"${server_name}\"") is not running"
 		$test && echo && runtime && echo
 		exit 1

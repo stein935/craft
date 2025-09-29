@@ -10,8 +10,6 @@ mod_command() {
 	remove=false
 	test=false
 
-	[ -z "$1" ] && command_help "$command" 1
-
 	while getopts ":n:p:u:r:lth" opt; do
 		case $opt in
 		n) server_name="$OPTARG" ;;
@@ -28,7 +26,9 @@ mod_command() {
 
 	echo
 
-	! [ -n "$server_name" ] && missing_required_option "$command" "-n"
+	[[ "$server_name" != false ]] || missing_required_option "$command" "-n"
+
+	[[ "$list" != false ]] || [[ "$remove" != false ]] || [[ "$file" != false ]] || [[ "$url" != false ]] || missing_required_option "$command" "-l, -r, -p, or -u"
 
 	find_server "${server_name}"
 
@@ -51,7 +51,7 @@ mod_server() {
 		elif [ -z "$(ls -A "${mod_dir}" 2>/dev/null)" ]; then
 			warn "\"${server_name}\" has no mods installed"
 		else
-			form "cyan" "normal" "$(ls "${mod_dir}" | cat -n)" && echo && echo
+			form "cyan" "normal" "$(find "${mod_dir}" -type f -exec basename {} \; | cat -n)" && echo && echo
 		fi
 	fi
 
@@ -68,8 +68,6 @@ mod_server() {
 		fwhip "${file} installed on \"${server_name}\" Minecraft server"
 		echo "$(date) : Mod: Added ${file} to \"${server_name}\"" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
 	fi
-
-	[[ "${list}" == false ]] && [[ "${remove}" == false ]] && [[ "${file}" == false ]] && [[ "${url}" == false ]] && missing_required_option "$command" "-l, -r, -p, or -u"
 
 	if [[ "${url}" != false ]]; then
 		url_decoded=$(printf '%b' "${url//%/\\x}")

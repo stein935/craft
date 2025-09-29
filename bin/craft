@@ -10,8 +10,8 @@ quiet_cd() {
 # Env variables
 CRAFT_FILE_DIRECTORY="$(quiet_cd "${0%/*}/" && pwd -P)"
 CRAFT_FILE="${CRAFT_FILE_DIRECTORY%/}/${0##*/}"
-CRAFT_HOME_DIR="${CRAFT_FILE%/*/*}"
-CRAFT_LIB="${CRAFT_HOME_DIR}/lib"
+export CRAFT_HOME_DIR="${CRAFT_FILE%/*/*}"
+export CRAFT_LIB="${CRAFT_HOME_DIR}/lib"
 export CRAFT_SERVER_DIR="/opt/craft/servers"
 
 # Load common functions

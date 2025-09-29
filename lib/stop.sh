@@ -6,8 +6,6 @@ stop_command() {
 	export server_name=false
 	test=false
 
-	[ -z "$1" ] && command_help "$command" 1
-
 	while getopts ":n:ht" opt; do
 		case $opt in
 		n) server_name="$OPTARG" ;;
@@ -18,7 +16,7 @@ stop_command() {
 		esac
 	done
 
-	! [ -n "$server_name" ] && missing_required_option "$command" "-n"
+	[[ "$server_name" != false ]] || missing_required_option "$command" "-n"
 
 	echo
 
@@ -38,7 +36,9 @@ stop_command() {
 
 stop_server() {
 
-	if ! server_status true 1 >/dev/null; then
+	trap 'clean_up' EXIT
+
+	if ! server_on 0 >/dev/null; then
 		warn "No server running on port: ${server_port:?server_port must be set by parent script}"
 		exit 1
 	fi
@@ -50,17 +50,27 @@ stop_server() {
 	echo "save-all" | tee "$pipe" >/dev/null
 	echo "stop" | tee "$pipe" >/dev/null
 
-	if ! server_status false 10 >/dev/null; then
-		launchctl bootout system/"craft.${server_name// /}.daemon" 2>/dev/null
-		rm -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" 2>/dev/null
+	local -i status
+
+	if server_off >/dev/null; then
 		fwhip "$(form "bright_cyan" "italic" "\"${server_name}\"") Minecraft server stopped"
 		echo "$(date) : Stop: \"${server_name}\" stopped" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
+		status=0
 	else
-		warn "Unable to run save-all and stop. Some game data may have been lost"
-		kill -9 "${PID:?PID must be set by parent script}"
+		warn "Unable to stop the server running on PID: $(form bright_red normal "$PID")"
+		status=1
+		# kill -9 "${PID:?PID must be set by parent script}"
 	fi
 
 	$test && runtime && echo
-	exit 0
 
+	exit $status
+
+}
+
+clean_up() {
+	sleep 2
+	launchctl bootout system/"craft.${server_name// /}.daemon" >/dev/null 2>&1
+	rm -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" >/dev/null 2>&1
+	rm -f "$pipe" >/dev/null 2>&1
 }

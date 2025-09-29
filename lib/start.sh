@@ -9,8 +9,6 @@ start_command() {
 	daemon=false
 	test=false
 
-	[ -z "$1" ] && command_help "$command" 1
-
 	while getopts ":n:dht" opt; do
 		case $opt in
 		n) server_name="$OPTARG" ;;
@@ -22,11 +20,11 @@ start_command() {
 		esac
 	done
 
-	! [ -n "$server_name" ] && missing_required_option "$command" "-n"
+	[[ "$server_name" != false ]] || missing_required_option "$command" "-n"
 
 	echo
 
-	find_server "${server_name}"
+	find_server
 
 	get_properties
 
@@ -36,11 +34,26 @@ start_command() {
 		test_form test_info
 	fi
 
+	check_for_open_port
+
 	check_java "$(ls "${CRAFT_SERVER_DIR}/${server_name}/versions")"
 
 	$daemon && start_daemon
 
 	start_server
+
+}
+
+check_for_open_port() {
+
+	# Check if a server is already running on the port
+	if ! server_off 0 >/dev/null; then
+		if ! $daemon; then
+			warn "A server is already running on port: $(form "green" "normal" "${server_port:?sever_port  must be set by parent script}") PID: $(form "green" "normal" "${PID:?PID must be set by parent script}")"
+			$test && runtime && echo
+		fi
+		exit 1
+	fi
 
 }
 
@@ -57,16 +70,6 @@ start_daemon() {
 
 start_server() {
 
-	# Check if a server is already running on the port
-	if server_status false 1 >/dev/null; then
-		warn "A server is already running on port: $(form "green" "normal" "${server_port:?server_port must be set by parent script}") PID: $(form "green" "normal" "${PID:?PID must be set by parent script}")"
-		indent "$(form "bright_red" "underline" "Run:")"
-		indent "craft stop -n \"${server_name}\"" "6"
-		echo
-		$test && runtime && echo
-		exit 1
-	fi
-
 	# Message that the server is starting
 	fwhip "Starting $(form "bright_cyan" "italic" "\"${server_name}\"") Minecraft server"
 
@@ -74,9 +77,10 @@ start_server() {
 	log_path=$(printf '%s\n' "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log" | sed -e 's/[\/&]/\\&/g')
 
 	# Make pipe if it doesn't exist
-	if [ ! -p "${CRAFT_SERVER_DIR}/${server_name}/command-pipe" ]; then
-		execute "mkfifo" "${CRAFT_SERVER_DIR}/${server_name}/command-pipe"
-	fi
+	local pipe
+	pipe="${CRAFT_SERVER_DIR}/${server_name}/command-pipe"
+	rm -f "$pipe" >/dev/null 2>&1
+	execute "mkfifo" "$pipe"
 
 	# Command to start the server
 	daemon_command="$(which bash) $(which craft) start -n ${server_name} -d"
@@ -107,13 +111,13 @@ start_server() {
 	sed -i '' "s|_log_path_|${log_path}|g" "$daemon_path"
 
 	awk '
-	  /_arguments_/ {
-	    while ((getline line < ARGV[2]) > 0) print line
-	    ARGV[2] = ""
-	    next
-	  }
-	  { print }
-	' "$daemon_path" <(printf "%s\n" "$program_strings") >"${daemon_path}.tmp" && mv "${daemon_path}.tmp" "$daemon_path"
+		  /_arguments_/ {
+		    while ((getline line < ARGV[2]) > 0) print line
+		    ARGV[2] = ""
+		    next
+		  }
+		  { print }
+		' "$daemon_path" <(printf "%s\n" "$program_strings") >"${daemon_path}.tmp" && mv "${daemon_path}.tmp" "$daemon_path"
 
 	rm -f "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log" 2>/dev/null
 
@@ -123,7 +127,7 @@ start_server() {
 	launchctl bootstrap system "$daemon_path" 2>/dev/null
 
 	# Do this if the server is running
-	if server_status; then
+	if server_on; then
 
 		echo "$(date) : Start: \"${server_name}\" running on port: ${server_port} PID: ${PID:?PID must be set by parent script}" >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
 

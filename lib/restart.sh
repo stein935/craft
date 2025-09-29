@@ -6,8 +6,6 @@ restart_command() {
 	export server_name=false
 	test=false
 
-	[ -z "$1" ] && command_help "$command" 1
-
 	while getopts ":n:ht" opt; do
 		case $opt in
 		n) server_name="$OPTARG" ;;
@@ -20,7 +18,7 @@ restart_command() {
 
 	echo
 
-	! [ -n "$server_name" ] && missing_required_option "$command" "-n"
+	[[ "$server_name" != false ]] || missing_required_option "$command" "-n"
 
 	find_server "${server_name}"
 
@@ -38,7 +36,7 @@ restart_command() {
 
 restart_server() {
 
-	if server_status true 1 >/dev/null; then
+	if server_on 0 >/dev/null; then
 		echo "$(date) : Restart: \"${server_name}\" was restarted." >>"${CRAFT_SERVER_DIR}/${server_name}/logs/monitor/$(date '+%Y-%m').log"
 		execute "$0" "stop" "-n" "${server_name}"
 	else
