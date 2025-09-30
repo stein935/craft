@@ -29,6 +29,7 @@ create_command() {
 	done
 
 	echo
+
 	[[ "$server_name" != false ]] || missing_required_option "$command" "-n"
 
 	if $test; then

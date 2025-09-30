@@ -20,9 +20,12 @@ source "${CRAFT_LIB}/common.sh"
 
 # Check for aliases
 args=("$@")
-read -r -a args <<<"$(replace_alias_args "--help" "-h" "${args[@]}")"
-read -r -a args <<<"$(replace_alias_args "--list" "-ls" "${args[@]}")"
-read -r -a args <<<"$(replace_alias_args "--version" "-v" "${args[@]}")"
+# shellcheck disable=SC2207
+args=($(replace_alias_args "--help" "-h" "${args[@]}"))
+# shellcheck disable=SC2207
+args=($(replace_alias_args "--list" "-ls" "${args[@]}"))
+# shellcheck disable=SC2207
+args=($(replace_alias_args "--version" "-v" "${args[@]}"))
 set -- "${args[@]}"
 
 # Command variable
