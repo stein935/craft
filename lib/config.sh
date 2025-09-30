@@ -78,7 +78,9 @@ read_properties() {
 
 	local file=$1
 	local -a properties_raw
-	mapfile -t properties_raw <"$file"
+	while IFS= read -r line; do
+		properties_raw+=("$line")
+	done <"$file"
 	local -A properties
 
 	for line in "${properties_raw[@]}"; do
