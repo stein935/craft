@@ -91,21 +91,7 @@ start_server() {
 	execute "mkfifo" "$pipe"
 
 	# Command to start the server
-	daemon_command="$(which bash) $(which craft) start -n ${server_name} -d"
-	program() {
-		wrapped_command=()
-		read -r -a _cmd_parts <<<"$daemon_command"
-		for _part in "${_cmd_parts[@]}"; do
-			_esc=${_part//&/&amp;}
-			_esc=${_esc//</\&lt;}
-			_esc=${_esc//>/\&gt;}
-			_esc=${_esc//\"/\&quot;}
-			_esc=${_esc//\'/\&apos;}
-			wrapped_command+=("      <string>${_esc}</string>")
-		done
-		printf "%s\n" "${wrapped_command[@]}"
-	}
-	program_strings=$(program)
+	local -a daemon_command=("$(which bash)" "$(which craft)" "start" "-n" "${server_name}" "-d")
 
 	# Unload and remove existing daemon
 	launchctl bootout system/"craft.${server_name// /}.daemon" 2>/dev/null
@@ -113,20 +99,15 @@ start_server() {
 
 	cp "${CRAFT_HOME_DIR}/config/craft.servername.daemon.plist" "$daemon_path"
 
-	sed -i '' "s|_server_name_|${server_name// /}|g" "$daemon_path"
-	sed -i '' "s|_env_path_|${PATH}|g" "$daemon_path"
-	sed -i '' "s|_user_|${USER}|g" "$daemon_path"
-	sed -i '' "s|_working_dir_|${CRAFT_SERVER_DIR}/${server_name}|g" "$daemon_path"
-	sed -i '' "s|_log_path_|${log_path}|g" "$daemon_path"
+	plutil -replace Label -string "craft.${server_name// /}.daemon" "$daemon_path"
+	plutil -replace EnvironmentVariables.PATH -string "${PATH}" "$daemon_path"
+	plutil -replace WorkingDirectory -string "${CRAFT_SERVER_DIR}/${server_name}" "$daemon_path"
+	plutil -replace StandardErrorPath -string "${log_path}" "$daemon_path"
+	plutil -replace StandardOutPath -string "${log_path}" "$daemon_path"
 
-	awk '
-		  /_arguments_/ {
-		    while ((getline line < ARGV[2]) > 0) print line
-		    ARGV[2] = ""
-		    next
-		  }
-		  { print }
-		' "$daemon_path" <(printf "%s\n" "$program_strings") >"${daemon_path}.tmp" && mv "${daemon_path}.tmp" "$daemon_path"
+	for string in "${daemon_command[@]}"; do
+		plutil -insert ProgramArguments -string "$string" -append "$daemon_path"
+	done
 
 	rm -f "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log" 2>/dev/null
 
