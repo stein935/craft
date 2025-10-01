@@ -4,27 +4,25 @@
   <dict>
 
     <key>Label</key>
-    <string>craft._server_name_.daemon</string>
+    <string></string>
 
     <key>EnvironmentVariables</key>
     <dict>
       <key>PATH</key>
-      <string>_env_path_</string>
+      <string></string>
     </dict>
 
     <key>WorkingDirectory</key>
-    <string>_working_dir_</string>
+    <string></string>
 
     <key>ProgramArguments</key>
-    <array>
-_arguments_
-    </array>
+    <array></array>
 
     <key>StandardErrorPath</key>
-    <string>_log_path_</string>
+    <string></string>
 
     <key>StandardOutPath</key>
-    <string>_log_path_</string>
+    <string></string>
 
     <key>RunAtLoad</key>
     <true/>
