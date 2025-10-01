@@ -114,6 +114,7 @@ start_server() {
 	cp "${CRAFT_HOME_DIR}/config/craft.servername.daemon.plist" "$daemon_path"
 
 	sed -i '' "s|_server_name_|${server_name// /}|g" "$daemon_path"
+	sed -i '' "s|_env_path_|${PATH}|g" "$daemon_path"
 	sed -i '' "s|_user_|${USER}|g" "$daemon_path"
 	sed -i '' "s|_working_dir_|${CRAFT_SERVER_DIR}/${server_name}|g" "$daemon_path"
 	sed -i '' "s|_log_path_|${log_path}|g" "$daemon_path"

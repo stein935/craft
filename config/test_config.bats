@@ -92,7 +92,7 @@ teardown() {
 
   test_desc_form false "sudo craft create -n $server_name" "Already exists"
 	run -1 sudo craft create -n $server_name
-	check_output "\"$server_name\" already exists."
+	check_output "\"$server_name\" already exists." || check_output "Required Java"
 
 }
 

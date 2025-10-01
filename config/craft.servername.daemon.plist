@@ -1,34 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-	<dict>
+  <dict>
 
-		<key>Label</key>
-		<string>craft._server_name_.daemon</string>
+    <key>Label</key>
+    <string>craft._server_name_.daemon</string>
 
     <key>EnvironmentVariables</key>
-		<dict>
-			<key>PATH</key>
-			<string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
-		</dict>
+    <dict>
+      <key>PATH</key>
+      <string>_env_path_</string>
+    </dict>
 
     <key>WorkingDirectory</key>
     <string>_working_dir_</string>
 
-		<key>ProgramArguments</key>
-		<array>
+    <key>ProgramArguments</key>
+    <array>
 _arguments_
-		</array>
+    </array>
 
-		<key>StandardErrorPath</key>
-		<string>_log_path_</string>
+    <key>StandardErrorPath</key>
+    <string>_log_path_</string>
 
-		<key>StandardOutPath</key>
-		<string>_log_path_</string>
+    <key>StandardOutPath</key>
+    <string>_log_path_</string>
 
-		<key>RunAtLoad</key>
+    <key>RunAtLoad</key>
     <true/>
     <key>StartInterval</key>
     <integer>300</integer>
-	</dict>
+  </dict>
 </plist>
