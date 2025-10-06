@@ -4,7 +4,7 @@ command_command() {
 
 	export command="command"
 	export server_name=false
-	server_command=false
+	server_command=""
 	test=false
 
 	while getopts ":n:c:th" opt; do
@@ -29,7 +29,7 @@ command_command() {
 		servers=$(ls "${CRAFT_SERVER_DIR}")
 		server_name=$(printf "%s\n" "${servers[@]##*/}" | use_fzf "Select a server") || exit 0
 	fi
-	[[ "$server_command" != false ]] || missing_required_option "$command" "-c"
+	[[ -n "$server_command" ]] || missing_required_option "$command" "-c"
 
 	find_server "${server_name}"
 
@@ -56,8 +56,8 @@ send_command() {
 	cat "${CRAFT_SERVER_DIR}/${server_name}/logs/latest.log" >"${CRAFT_SERVER_DIR}/${server_name}/logs/latest.log.tmp"
 
 	pipe="${CRAFT_SERVER_DIR}/${server_name}/command-pipe"
-	send "Sending $(form "green" "italic" "\"${server_command}\"") to $(form "bright_cyan" "italic" "\"${server_name}\"") Minecraft server"
-	echo "${server_command}" | tee "${pipe}" >/dev/null
+	send "Sending $(form "green" "italic" "\"$server_command\"") to $(form "bright_cyan" "italic" "\"${server_name}\"") Minecraft server"
+	echo "$server_command" | tee "${pipe}" >/dev/null
 
 	while true; do
 		compare=$(comm -23 "${CRAFT_SERVER_DIR}/${server_name}/logs/latest.log" "${CRAFT_SERVER_DIR}/${server_name}/logs/latest.log.tmp")
@@ -65,7 +65,7 @@ send_command() {
 			pattern='*INFO]: }'
 			form "cyan" "normal" "${compare#"$pattern"}"
 			echo
-			echo "$(date) : Command: \"${server_command}\" sent to \"${server_name}\". Server log: ${compare}" >>"$CRAFT_SERVER_DIR/$server_name/logs/monitor/$(date '+%Y-%m').log"
+			echo "$(date) : Command: \"$server_command\" sent to \"${server_name}\". Server log: ${compare}" >>"$CRAFT_SERVER_DIR/$server_name/logs/monitor/$(date '+%Y-%m').log"
 			rm "${CRAFT_SERVER_DIR}/${server_name}/logs/latest.log.tmp"
 			break
 		fi

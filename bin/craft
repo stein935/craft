@@ -20,13 +20,19 @@ source "${CRAFT_LIB}/common.sh"
 
 # Check for aliases
 args=("$@")
-# shellcheck disable=SC2207
-args=($(replace_alias_args "--help" "-h" "${args[@]}"))
-# shellcheck disable=SC2207
-args=($(replace_alias_args "--list" "-ls" "${args[@]}"))
-# shellcheck disable=SC2207
-args=($(replace_alias_args "--version" "-v" "${args[@]}"))
-set -- "${args[@]}"
+
+# shellcheck disable=SC2034
+declare -A alias_map=(
+	["--help"]="-h"
+	["--list"]="-ls"
+	["--version"]="-v"
+)
+new_args=()
+while IFS= read -r line; do
+	new_args+=("$line")
+done < <(replace_alias_args alias_map "${args[@]}")
+
+set -- "${new_args[@]}"
 
 # Command variable
 command="craft"

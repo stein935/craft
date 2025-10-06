@@ -239,16 +239,21 @@ min_sec() { printf "%dm %ds" "$((10#$1 / 60))" "$((10#$1 % 60))"; }
 # Errors and help
 replace_alias_args() {
 
-	local alias="$1"
-	local replacement="$2"
-	shift 2
+	local -n arr="$1"
+	shift
 	local out=()
+
 	for arg in "$@"; do
-		if [[ "$arg" == "$alias" ]]; then
-			out+=("$replacement")
-		else
-			out+=("$arg")
-		fi
+		local found=false
+		for alias in "${!arr[@]}"; do
+			local replacement=${arr[$alias]}
+			if [[ "$arg" == "$alias" ]]; then
+				out+=("$replacement")
+				found=true
+				break
+			fi
+		done
+		! $found && out+=("$arg")
 	done
 	printf '%s\n' "${out[@]}"
 
