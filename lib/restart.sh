@@ -38,7 +38,18 @@ restart_command() {
 		test_form test_info
 	fi
 
-	restart_server
+	# OS detection for daemon/service management
+	if [[ "$OSTYPE" == "darwin"* ]]; then
+		restart_server
+	elif command -v systemctl >/dev/null 2>&1; then
+		# Linux systemd restart
+		systemctl restart "craft.${server_name}.service"
+		status=$?
+		$test && runtime && echo
+		exit $status
+	else
+		restart_server
+	fi
 
 }
 

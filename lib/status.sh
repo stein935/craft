@@ -30,12 +30,19 @@ status_command() {
 		test_form test_info
 	fi
 
+	# OS detection for daemon/service management
 	if [[ "${server_name}" == false ]]; then
 		servers=$(ls "${CRAFT_SERVER_DIR}")
 		while IFS=$'\t' read -r server; do
 			server_name="${server}"
 			get_properties
-			server_on 0
+			if [[ "$OSTYPE" == "darwin"* ]]; then
+				server_on 0
+			elif command -v systemctl >/dev/null 2>&1; then
+				systemctl is-active --quiet "craft.${server_name}.service" && echo "${server_name} is running (systemd)" || echo "${server_name} is stopped (systemd)"
+			else
+				server_on 0
+			fi
 		done <<<"${servers[@]}"
 		status=0
 	elif [[ "${server_name}" == "true" ]]; then

@@ -8,8 +8,14 @@ quiet_cd() {
 }
 
 # Env variables
-CRAFT_FILE_DIRECTORY="$(quiet_cd "${0%/*}/" && pwd -P)"
-CRAFT_FILE="${CRAFT_FILE_DIRECTORY%/}/${0##*/}"
+# Resolve symlink to get the actual script location
+if [ -L "$0" ]; then
+	# Script is a symlink, resolve it
+	CRAFT_FILE="$(readlink -f "$0")"
+else
+	# Script is not a symlink
+	CRAFT_FILE="$0"
+fi
 export CRAFT_HOME_DIR="${CRAFT_FILE%/*/*}"
 export CRAFT_LIB="${CRAFT_HOME_DIR}/lib"
 export CRAFT_SERVER_DIR="/opt/craft/servers"

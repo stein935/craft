@@ -76,24 +76,8 @@ start_daemon() {
 	exit 0
 }
 
-start_server() {
-
-	# Message that the server is starting
-	fwhip "Starting $(form "bright_cyan" "italic" "\"${server_name}\"") Minecraft server"
-
-	daemon_path="/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist"
-	log_path=$(printf '%s\n' "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log" | sed -e 's/[\/&]/\\&/g')
-
-	# Make pipe if it doesn't exist
-	local pipe
-	pipe="${CRAFT_SERVER_DIR}/${server_name}/command-pipe"
-	rm -f "$pipe" >/dev/null 2>&1
-	execute "mkfifo" "$pipe"
-
-	# Command to start the server
-	local -a daemon_command=("$(which bash)" "$(which craft)" "start" "-n" "${server_name}" "-d")
-
-	# Unload and remove existing daemon
+create_launch_daemon() {
+	# macOS launchctl daemon creation
 	launchctl bootout system/"craft.${server_name// /}.daemon" 2>/dev/null
 	rm -f /Library/LaunchDaemons/craft."${server_name// /}".daemon.plist 2>/dev/null
 
@@ -115,6 +99,58 @@ start_server() {
 
 	# Load daemon
 	launchctl bootstrap system "$daemon_path" 2>/dev/null
+}
+
+create_systemd_service() {
+	# Linux systemd service creation
+	local service_file="/etc/systemd/system/craft.${server_name}.service"
+
+	tee "$service_file" >/dev/null <<EOF
+[Unit]
+Description=Craft Minecraft Server - ${server_name}
+After=network.target
+
+[Service]
+Type=simple
+User=$(whoami)
+WorkingDirectory=${CRAFT_SERVER_DIR}/${server_name}
+ExecStart=/usr/bin/java -jar fabric-server-launch.jar --nogui <> command-pipe
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+	systemctl daemon-reload
+	systemctl enable "craft.${server_name}.service"
+	systemctl start "craft.${server_name}.service"
+}
+
+start_server() {
+
+	# Message that the server is starting
+	fwhip "Starting $(form "bright_cyan" "italic" "\"${server_name}\"") Minecraft server"
+
+	# Make pipe if it doesn't exist
+	local pipe
+	pipe="${CRAFT_SERVER_DIR}/${server_name}/command-pipe"
+	rm -f "$pipe" >/dev/null 2>&1
+	execute "mkfifo" "$pipe"
+
+	# OS detection
+	if [[ "$OSTYPE" == "darwin"* ]]; then
+		daemon_path="/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist"
+		log_path=$(printf '%s\n' "${CRAFT_SERVER_DIR}/${server_name}/logs/daemon.log" | sed -e 's/[\/&]/\\&/g')
+		# Command to start the server
+		declare -a daemon_command=("$(which bash)" "$(which craft)" "start" "-n" "${server_name}" "-d")
+		create_launch_daemon
+	elif command -v systemctl >/dev/null 2>&1; then
+		create_systemd_service
+	else
+		warn "Daemon creation not supported on this system"
+		return 1
+	fi
 
 	# Do this if the server is running
 	if server_on; then

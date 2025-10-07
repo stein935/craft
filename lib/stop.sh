@@ -38,7 +38,18 @@ stop_command() {
 		test_form test_info
 	fi
 
-	stop_server
+	# OS detection for daemon/service management
+	if [[ "$OSTYPE" == "darwin"* ]]; then
+		stop_server
+	elif command -v systemctl >/dev/null 2>&1; then
+		# Linux systemd stop
+		systemctl stop "craft.${server_name}.service"
+		status=$?
+		$test && runtime && echo
+		exit $status
+	else
+		stop_server
+	fi
 
 }
 
@@ -67,7 +78,6 @@ stop_server() {
 	else
 		warn "Unable to stop the server running on PID: $(form bright_red normal "$PID")"
 		status=1
-		# kill -9 "${PID:?PID must be set by parent script}"
 	fi
 
 	$test && runtime && echo
@@ -78,7 +88,15 @@ stop_server() {
 
 clean_up() {
 	sleep 2
-	launchctl bootout system/"craft.${server_name// /}.daemon" >/dev/null 2>&1
-	rm -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" >/dev/null 2>&1
+	if [[ "$OSTYPE" == "darwin"* ]]; then
+		# macOS - use launchctl/plutil
+		launchctl bootout system/"craft.${server_name// /}.daemon" >/dev/null 2>&1
+		rm -f "/Library/LaunchDaemons/craft.${server_name// /}.daemon.plist" >/dev/null 2>&1
+	elif command -v systemctl >/dev/null 2>&1; then
+		# Linux with systemd
+		systemctl stop "craft.${server_name}.service" >/dev/null 2>&1
+		systemctl disable "craft.${server_name}.service" >/dev/null 2>&1
+		rm -f "/etc/systemd/system/craft.${server_name}.service" >/dev/null 2>&1
+	fi
 	rm -f "$pipe" >/dev/null 2>&1
 }

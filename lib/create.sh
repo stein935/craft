@@ -155,7 +155,14 @@ sign_eula() {
 		read -p "$(fwhip "Agree to Minecraft eula for $(form "bright_cyan" "italic" "\"${server_name}\"")? (y/n) : ")" -n 1 -r
 		echo && echo
 		if [[ $REPLY =~ ^[Yy]$ ]]; then
-			sed -i '' 's/eula=false/eula=true/' "${CRAFT_SERVER_DIR}/${server_name}/eula.txt"
+			# Cross-platform sed command
+			if [[ "$OSTYPE" == "darwin"* ]]; then
+				# macOS (BSD sed)
+				sed -i '' 's/eula=false/eula=true/' "${CRAFT_SERVER_DIR}/${server_name}/eula.txt"
+			else
+				# Linux (GNU sed)
+				sed -i 's/eula=false/eula=true/' "${CRAFT_SERVER_DIR}/${server_name}/eula.txt"
+			fi
 			break
 		elif [[ $REPLY =~ ^[Nn]$ ]]; then
 			warn "You will need to accept eula by editing $(printf '%q' "${CRAFT_SERVER_DIR}/${server_name}")/eula.txt before you can start the server"
