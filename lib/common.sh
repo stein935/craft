@@ -184,25 +184,54 @@ number() {
 }
 
 use_fzf() {
-	# shellcheck disable=SC2016
-	fzf --style full \
-		--height 40% \
-		--layout=reverse \
-		--padding 1,2 \
-		--input-label ' Select ' \
-		--bind 'result:transform-list-label:
-        if [[ -z $FZF_QUERY ]]; then
-          echo " $FZF_MATCH_COUNT items "
-        else
-          echo " $FZF_MATCH_COUNT matches for [$FZF_QUERY] "
-        fi
-        ' \
-		--bind 'ctrl-r:change-list-label( Reloading the list )+reload(sleep 2; git ls-files)' \
-		--color 'list-border:green,list-label:bright-green' \
-		--color 'input-border:cyan,input-label:bright-cyan' \
-		--color 'pointer:yellow' \
-		--color 'prompt:cyan' \
-		--prompt=" $1: "
+
+	local prompt="$1"
+
+	if command -v fzf >/dev/null 2>&1; then
+		# shellcheck disable=SC2016
+		fzf --style full \
+			--height 40% \
+			--layout=reverse \
+			--padding 1,2 \
+			--input-label ' Select ' \
+			--bind 'result:transform-list-label:
+            if [[ -z $FZF_QUERY ]]; then
+              echo " $FZF_MATCH_COUNT items "
+            else
+              echo " $FZF_MATCH_COUNT matches for [$FZF_QUERY] "
+            fi
+            ' \
+			--bind 'ctrl-r:change-list-label( Reloading the list )+reload(sleep 2; git ls-files)' \
+			--color 'list-border:green,list-label:bright-green' \
+			--color 'input-border:cyan,input-label:bright-cyan' \
+			--color 'pointer:yellow' \
+			--color 'prompt:cyan' \
+			--prompt=" $prompt: "
+	else
+		# Fallback to bash built-in select
+		local items=()
+		while IFS= read -r line; do
+			items+=("$line")
+		done
+
+		if [ ${#items[@]} -eq 0 ]; then
+			warn "No items to select from"
+			return 1
+		fi
+
+		PS3="$(form "cyan" "normal" "$prompt by entering the number: ")"
+		select choice in "${items[@]}" "Cancel"; do
+			if [[ "$choice" == "Cancel" ]]; then
+				return 1
+			elif [[ -n "$choice" ]]; then
+				echo "$choice"
+				break
+			else
+				warn "Invalid selection. Please try again."
+			fi
+		done </dev/tty # <-- Add this to read from terminal
+	fi
+
 }
 
 min_sec() { printf "%dm %ds" "$((10#$1 / 60))" "$((10#$1 % 60))"; }
@@ -210,16 +239,21 @@ min_sec() { printf "%dm %ds" "$((10#$1 / 60))" "$((10#$1 % 60))"; }
 # Errors and help
 replace_alias_args() {
 
-	local alias="$1"
-	local replacement="$2"
-	shift 2
+	local -n arr="$1"
+	shift
 	local out=()
+
 	for arg in "$@"; do
-		if [[ "$arg" == "$alias" ]]; then
-			out+=("$replacement")
-		else
-			out+=("$arg")
-		fi
+		local found=false
+		for alias in "${!arr[@]}"; do
+			local replacement=${arr[$alias]}
+			if [[ "$arg" == "$alias" ]]; then
+				out+=("$replacement")
+				found=true
+				break
+			fi
+		done
+		! $found && out+=("$arg")
 	done
 	printf '%s\n' "${out[@]}"
 

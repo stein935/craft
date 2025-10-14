@@ -8,6 +8,8 @@ server_name="test-1.20.4"
 
 teardown() { 
   echo >&3
+  sync
+  sleep 0.1
 }
 
 ## Tests
