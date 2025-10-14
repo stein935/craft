@@ -301,6 +301,19 @@ runtime() {
 
 }
 
+players() {
+	local status
+	status=$(mcstatus "127.0.0.1:${server_port:?server_port must be set by parent script}" json)
+	local online
+	online=$(echo "$status" | jq -r '.status.players.online')
+	local max
+	max=$(echo "$status" | jq -r '.status.players.max')
+	readarray -t players < <(echo "$status" | jq -r '.status.players.sample // [] | .[].name' | sort -u)
+	local string
+	[[ $online -gt 0 ]] && string=": $(form green normal "${players[@]// /, }")" || string=""
+	printf 'Players [%s/%s]%s\n' "$online" "$max" "$string"
+}
+
 server_on() {
 
 	local -i time
@@ -316,7 +329,7 @@ server_on() {
 		# shellcheck disable=SC2015
 		[ -n "$PID" ] && PIPE=$(lsof -p "$PID" | grep "${SERVER_NAME}/command-pipe" | awk '{print $2}')
 		if [ -n "$PID" ] && [ -n "$PIPE" ] && [[ "$PID" == "$PIPE" ]]; then
-			fwhip "$(form "bright_cyan" "italic" "\"${SERVER_NAME}\"") Minecraft server running on port: $(form green normal "$PORT") PID: $(form green normal "$PID")"
+			fwhip "$(form "bright_cyan" "italic" "\"${SERVER_NAME}\"") Minecraft server running on port: $(form green normal "$PORT"), PID: $(form green normal "$PID"), $(players)"
 			return 0
 		else
 			[[ $i != 0 ]] && sleep 1
