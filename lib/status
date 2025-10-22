@@ -26,7 +26,7 @@ status_command() {
 	if $test; then
 		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
 		local -A test_info=([COMMAND]="$COMMAND" [SERVER_NAME]="$SERVER_NAME" [test]="$test")
-		box "$(box "$(test_form test_info)" "Test")" "Test"
+		box "$(test_form test_info)" "test" "Test"
 	fi
 
 	if [[ -z "${SERVER_NAME}" ]]; then

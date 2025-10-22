@@ -1,5 +1,3 @@
-Command: mod
-
 Usage:
   craft mod -n <server_name> [options]     Usage details: Run '$ craft mod -h'
 

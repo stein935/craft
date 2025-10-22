@@ -31,7 +31,10 @@ main() {
 	CRAFT_SERVER_DIR="/opt/craft/servers"
 
 	# Export CRAFT_LIB before loading common (needed by utility modules)
-	export CRAFT_LIB
+	export START \
+		CRAFT_HOME_DIR \
+		CRAFT_LIB \
+		CRAFT_SERVER_DIR
 
 	# Load common functions
 	# shellcheck source=lib/common
@@ -61,11 +64,6 @@ main() {
 
 	# Look for command
 	[[ -z "$fun" ]] && command_help "$COMMAND" 1
-
-	export START \
-		CRAFT_HOME_DIR \
-		CRAFT_LIB \
-		CRAFT_SERVER_DIR
 
 	# Execute command
 	shift

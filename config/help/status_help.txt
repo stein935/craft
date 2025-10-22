@@ -1,5 +1,3 @@
-Command: status
-
 Usage:
   craft status [options]            Usage details: Run '$ craft status -h'
 

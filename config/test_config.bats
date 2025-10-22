@@ -28,9 +28,7 @@ teardown() {
 
 	test_desc_form false "craft bad" 
 	run -1 craft bad
-	check_output "Invalid command: bad" "$output"
-
-}
+	check_output "Invalid }
 
 @test "$(number)	-h" {
 

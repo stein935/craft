@@ -1,5 +1,3 @@
-Command: craft
-
 Usage: 
   craft <command> [options]       Usage details: Run '$ craft <command> -h'
 

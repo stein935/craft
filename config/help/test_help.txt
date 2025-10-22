@@ -1,5 +1,3 @@
-Command: test
-
 Usage:
   craft test                Run the BATS test suite
 

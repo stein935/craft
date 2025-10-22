@@ -1,5 +1,3 @@
-Command: stop
-
 Usage:
   craft stop -n <server_name>     Usage details: Run '$ craft stop -h'
 

@@ -1,5 +1,3 @@
-Command: -h
-
 Usage:
   craft -h                  Display this help message
 

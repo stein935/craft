@@ -1,5 +1,3 @@
-Command: command
-
 Usage:
   craft command -n <server_name> -c <command [options]>   Usage details: Run '$ craft command -h'
 

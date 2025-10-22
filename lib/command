@@ -38,7 +38,7 @@ command_command() {
 	if $test; then
 		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
 		local -A test_info=([COMMAND]="$COMMAND" [server_command]="$server_command" [SERVER_NAME]="$SERVER_NAME" [test]="$test")
-		box "$(test_form test_info)" "Test"
+		box "$(test_form test_info)" "test" "Test"
 	fi
 
 	send_command

@@ -34,7 +34,7 @@ create_command() {
 	if $test; then
 		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
 		local -A test_info=([COMMAND]="$COMMAND" [SERVER_NAME]="$SERVER_NAME" [game]="$game" [loader]="$loader" [snapshot]="$snapshot" [test]="$test")
-		box "$(test_form test_info)" "Test"
+		box "$(test_form test_info)" "test" "Test"
 	fi
 
 	check_java "$game" && create_server
@@ -67,7 +67,7 @@ create_server() {
 			echo "Server dir: $(printf '%q' "${CRAFT_SERVER_DIR}/${SERVER_NAME}")"
 		}
 
-		box "$(options)" "Options"
+		box "$(options)" "info" "Options"
 
 		echo
 
@@ -172,10 +172,10 @@ sign_eula() {
 
 	next_steps() {
 		printf '%s\n' "To start the server - Run:"
-		indent "$(printf '%s:\n' "sudo craft start -n \"${SERVER_NAME}\"")"
+		indent "$(printf '%s:\n' "$ sudo craft start -n \"${SERVER_NAME}\"")"
 	}
 
-	box "$(next_steps)" "Next Steps"
+	box "$(next_steps)" "success" "Next Steps"
 
 	echo
 	echo "$(date) : Create: \"${SERVER_NAME}\" created!" >>"${CRAFT_SERVER_DIR}/${SERVER_NAME}/logs/monitor/$(date '+%Y-%m').log"

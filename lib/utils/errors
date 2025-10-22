@@ -22,8 +22,17 @@ command_help() {
 
 	local -i exit_code=$2
 	local command="$1"
+	local help_file="${CRAFT_HOME_DIR}/config/help/${command}_help.txt"
+	local colored_content=""
+	local line
 
-	printf '%s\n\n' "$(form cyan normal "$(cat "${CRAFT_HOME_DIR}/config/help/${command}_help.txt")")"
+	# Read file line by line and apply cyan color to each line
+	while IFS= read -r line || [[ -n "$line" ]]; do
+		colored_content+="$line"$'\n'
+	done <"$help_file"
+
+	# Pass colored content to box (with extra newline for spacing)
+	box "$(printf '%s\n' "$colored_content")" "info" "Help: $command"
 	exit $exit_code
 
 }

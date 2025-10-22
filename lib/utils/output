@@ -96,39 +96,54 @@ use_fzf() {
 # box() - Draw a text box with optional label and word wrapping
 #
 # Usage:
-#   box "text content" ["label"] [max_width]
+#   box "text content" "style" ["label"] [max_width]
 #
 # Parameters:
 #   $1 - body: Text content to display in the box (required)
-#   $2 - label: Label to display in top border (optional)
-#   $3 - max_width: Maximum line length for text wrapping (optional, defaults to auto-fit)
+#   $2 - style: Color style - info (cyan), test (yellow), error (red), success (green) (required)
+#   $3 - label: Label to display in top border (optional)
+#   $4 - max_width: Maximum line length for text wrapping (optional, defaults to auto-fit)
 #
 # Examples:
-#   box "Server started successfully"
-#   box "Error: Configuration file not found" "Warning"
-#   box "Long text that will be wrapped to fit within the specified width" "Info" 40
-#   box "$(box "$(test_form test_info)" "Test")" "Test"  # Multi-line input preserved
+#   box "Server started successfully" "success"
+#   box "Error: Configuration file not found" "error" "Warning"
+#   box "Long text that will be wrapped" "info" "Info" 40
+#   box "$(test_form test_info)" "test" "Test"
 #
 # Box Characters: ─ │ ┌ ┐ └ ┘
 box() {
 
 	local body="$1" \
-		label="$2" \
-		max_width="${3:-0}" \
+		style="$2" \
+		label="$3" \
+		max_width="${4:-0}" \
 		line \
 		word \
 		current_line="" \
 		border_top \
-		border_bottom
+		border_bottom \
+		border_color \
+		label_color
 
 	local -a lines=() \
-		words
+	words
 
 	local -i text_padding=2 \
 		content_width=0 \
 		box_width=0 \
 		label_len=0 \
 		i
+
+	# Map style to colors
+	case "$style" in
+	info) border_color="cyan" ;;
+	test) border_color="yellow" ;;
+	error) border_color="red" ;;
+	success) border_color="green" ;;
+	*) border_color="normal" ;;
+	esac
+
+	label_color="bright_${border_color}"
 
 	# Check if body contains newlines (multi-line input)
 	if [[ "$body" == *$'\n'* ]]; then
@@ -185,36 +200,36 @@ box() {
 	# Build top border
 	if [[ -n "$label" ]]; then
 		label_len=${#label}
-		border_top="┌──${label}"
+		border_top="$(form "$border_color" dim "┌──")$(form "$label_color" normal "$label")"
 		# Fill remaining width with horizontal lines
 		for ((i = 0; i < box_width - label_len - 4; i++)); do
-			border_top+="─"
+			border_top+="$(form "$border_color" dim "─")"
 		done
-		border_top+="┐"
+		border_top+="$(form "$border_color" dim "┐")"
 	else
-		border_top="┌"
+		border_top="$(form "$border_color" dim "┌")"
 		for ((i = 0; i < box_width - 2; i++)); do
-			border_top+="─"
+			border_top+="$(form "$border_color" dim "─")"
 		done
-		border_top+="┐"
+		border_top+="$(form "$border_color" dim "┐")"
 	fi
 
 	# Build bottom border
-	border_bottom="└"
+	border_bottom="$(form "$border_color" dim "└")"
 	for ((i = 0; i < box_width - 2; i++)); do
-		border_bottom+="─"
+		border_bottom+="$(form "$border_color" dim "─")"
 	done
-	border_bottom+="┘"
+	border_bottom+="$(form "$border_color" dim "┘")"
 
 	# Output the box
 	printf '%s\n' "$border_top"
 
 	# Empty line at top
-	printf '│'
+	printf '%s' "$(form "$border_color" dim "│")"
 	for ((i = 0; i < box_width - 2; i++)); do
 		printf ' '
 	done
-	printf '│\n'
+	printf '%s\n' "$(form "$border_color" dim "│")"
 
 	# Content lines
 	for line in "${lines[@]}"; do
@@ -222,7 +237,7 @@ box() {
 		local plain_line
 		plain_line=$(echo "$line" | strip_ansi)
 		local -i padding_right=$((content_width - ${#plain_line}))
-		printf '│'
+		printf '%s' "$(form "$border_color" dim "│")"
 		# Left padding
 		for ((i = 0; i < text_padding; i++)); do
 			printf ' '
@@ -232,15 +247,15 @@ box() {
 		for ((i = 0; i < padding_right + text_padding; i++)); do
 			printf ' '
 		done
-		printf '│\n'
+		printf '%s\n' "$(form "$border_color" dim "│")"
 	done
 
 	# Empty line at bottom
-	printf '│'
+	printf '%s' "$(form "$border_color" dim "│")"
 	for ((i = 0; i < box_width - 2; i++)); do
 		printf ' '
 	done
-	printf '│\n'
+	printf '%s\n' "$(form "$border_color" dim "│")"
 
 	printf '%s\n' "$border_bottom"
 

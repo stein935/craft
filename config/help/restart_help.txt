@@ -1,5 +1,3 @@
-Command: restart
-
 Usage:
   craft restart -n <server_name>     Usage details: Run '$ craft restart -h'
 

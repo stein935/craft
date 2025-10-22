@@ -1,5 +1,3 @@
-Command: -ls
-
 Usage:
   craft -ls                 List all existing servers
 

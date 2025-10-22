@@ -1,5 +1,3 @@
-Command: delete
-
 Usage: 
   craft delete -n <server_name>      Usage details: Run '$ craft delete -h' 
 

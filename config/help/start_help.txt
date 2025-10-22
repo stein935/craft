@@ -1,5 +1,3 @@
-Command: start
-
 Usage:
   craft start -n <server_name>     Usage details: Run '$ craft start -h'
 

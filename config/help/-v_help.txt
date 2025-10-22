@@ -1,5 +1,3 @@
-Command: -v
-
 Usage:
   craft -v                  Display version information
 
