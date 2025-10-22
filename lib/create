@@ -172,7 +172,7 @@ sign_eula() {
 
 	next_steps() {
 		printf '%s\n' "To start the server - Run:"
-		indent "$(printf '%s: %q\n' "sudo craft start -n \"${SERVER_NAME}\"" "${CRAFT_SERVER_DIR}/${SERVER_NAME}")"
+		indent "$(printf '%s:\n' "sudo craft start -n \"${SERVER_NAME}\"")"
 	}
 
 	box "$(next_steps)" "Next Steps"

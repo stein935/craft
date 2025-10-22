@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+
+# Core utilities with no dependencies
+# These are foundational functions used by other utility modules
+
+# Bits
+ring_bell() { [ -t 1 ] && printf "\a"; }
+
+# String formatters
+tty_escape() { printf "\033[%sm" "$1"; } || tty_escape() { :; }
+
+strip_ansi() {
+	# Reads from stdin and outputs to stdout
+	sed -r 's/\x1B\[[0-9;]*[mK]//g'
+}
+
+form() {
+
+	# ANSI color codes
+	local -A color=(
+		[black]=0
+		[red]=1
+		[green]=2
+		[yellow]=3
+		[blue]=4
+		[magenta]=5
+		[cyan]=6
+		[white]=7
+		[normal]=9
+	)
+
+	# ANSI text format codes
+	local -A style=(
+		[normal]=0
+		[bold]=1
+		[dim]=2
+		[italic]=3
+		[underline]=4
+		[blink]=5
+		[reverse]=7
+		[hidden]=8
+	)
+
+	local color_name \
+		start \
+		reset
+
+	local -i bright
+
+	if [[ $1 == bright_* ]]; then
+		bright=60
+		color_name=${1#bright_}
+	else
+		bright=0
+		color_name=$1
+	fi
+
+	local -i color_code="${color[$color_name]}" \
+		style_code="${style[$2]}"
+
+	start="$(tty_escape "$style_code;$((bright + 30 + color_code))")"
+	reset="$(tty_escape 0)"
+	printf "${start}%s${reset}" "$3"
+
+}
+
+shell_join() {
+
+	printf "%s" "$1"
+	shift
+	local arg
+	for arg in "$@"; do
+		printf " "
+		printf "%s" "${arg// /\ }"
+	done
+
+}
+
+version_ge() {
+
+	# Returns 0 if $1 >= $2, 1 otherwise
+	[ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" = "$2" ]
+
+}
+
+min_sec() { printf "%dm %ds" "$((10#$1 / 60))" "$((10#$1 % 60))"; }
+
+boolean() {
+
+	case $1 in
+	true) echo true ;;
+	false) echo false ;;
+	*) echo true ;;
+	esac
+
+}
+
+replace_alias_args() {
+
+	local -n arr="$1"
+	shift
+	local -a out=()
+
+	for arg in "$@"; do
+		local found=false \
+			alias
+		for alias in "${!arr[@]}"; do
+			local replacement=${arr[$alias]}
+			if [[ "$arg" == "$alias" ]]; then
+				out+=("$replacement")
+				found=true
+				break
+			fi
+		done
+		! $found && out+=("$arg")
+	done
+	printf '%s\n' "${out[@]}"
+
+}

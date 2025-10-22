@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+
+# Testing utilities
+# Depends on: core, output
+
+test_form() {
+
+	# Usage: test_form <assoc_array_name>
+	# Pass the NAME of the associative array, not its expanded contents.
+	# Requires bash >= 4 for associative arrays and >= 4.3 for nameref (declare -n).
+	local name="$1"
+	# Nameref to the associative array
+	local -n _map="$name"
+
+	# Determine maximum key width for alignment
+	local max=0 \
+		k
+	for k in "${!_map[@]}"; do
+		((${#k} > max)) && max=${#k}
+	done
+	# Sort keys for stable output
+	while IFS= read -r k; do
+		local v=${_map[$k]} \
+			plain_key=$k \
+			colored_key
+		colored_key=$(form yellow normal "$plain_key")
+
+		# Spaces needed after the colored key
+		local pad=$((max - ${#plain_key}))
+		((pad < 0)) && pad=0
+
+		# Build line: colored_key + pad spaces + " : " + value
+		printf '%s%*s : %s\n' "$colored_key" "$pad" '' "$(form normal normal "$v")"
+	done < <(printf '%s\n' "${!_map[@]}")
+
+	echo
+
+}
+
+test_desc_form() {
+
+	local type \
+		comment
+
+	$1 && type="green" || type="red"
+
+	[[ -n "$3" ]] && comment="$(form yellow dim "# $3")"
+
+	indent "$(form $type normal "") $(form cyan dim "$2") $comment" 12 >&3
+
+}
+
+check_output() {
+
+	[[ "$(echo "$2" | strip_ansi)" == *"$1"* ]]
+
+}
+
+number() {
+
+	form blue normal "$BATS_TEST_NUMBER"
+
+}
+
+runtime() {
+
+	local time
+	time=$(min_sec $(($(date +%s) - START)))
+	indent "$(form yellow normal "Runtime: $time")"
+
+}

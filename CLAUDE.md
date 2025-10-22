@@ -36,27 +36,65 @@ Each command is a separate file without `.sh` extension (recent refactor removed
 - `status` - Uses `lsof` to check port and named pipe
 - `command` - Sends Minecraft commands to running server via named pipe
 
-### Common Library (`lib/common`)
-Shared functionality used across all commands:
+### Utility Library (`lib/utils/`)
+Modular utility functions organized by functionality. All utilities are sourced via `lib/common` for backward compatibility.
 
-**Output Formatting:**
+**Structure:**
+```
+lib/utils/
+├── core       # Foundation utilities (no dependencies)
+├── output     # Display and formatting (depends on core)
+├── errors     # Error handling (depends on core, output)
+├── test       # Testing utilities (depends on core, output)
+└── server     # Server operations (depends on core, output)
+```
+
+**lib/utils/core** - Foundation functions with no dependencies:
 - `form()` - ANSI color/style formatter (colors: black, red, green, yellow, blue, magenta, cyan, white; styles: normal, bold, dim, italic, underline)
+- `tty_escape()` - Terminal escape sequence helper
+- `strip_ansi()` - Remove ANSI codes from text
+- `shell_join()` - Join shell arguments with proper escaping
+- `version_ge()` - Semantic version comparison
+- `min_sec()` - Convert seconds to "Xm Ys" format
+- `boolean()` - Boolean value normalization
+- `replace_alias_args()` - Argument alias replacement
+- `ring_bell()` - Terminal bell
+
+**lib/utils/output** - Display and UI functions:
 - `fwhip()` - Blue arrow prefix for info messages
 - `warn()` - Red X prefix for errors
 - `send()` - Yellow prefix for notifications
 - `indent()` - Indented output with configurable spacing
+- `rm_line()` - Remove previous line from terminal
+- `use_fzf()` - Interactive selection with FZF or fallback to bash `select`
+- `box()` - Draw text box with optional label and word wrapping
 
-**Server Management:**
+**lib/utils/errors** - Error handling and help:
+- `abort()` - Print error and exit
+- `execute()` - Execute command and abort on failure
+- `command_help()` - Display command help text
+- `missing_argument()` - Handle missing required arguments
+- `invalid_command()` - Handle invalid commands
+- `invalid_option()` - Handle invalid options
+- `missing_required_option()` - Handle missing required options
+
+**lib/utils/test** - Testing utilities:
+- `test_form()` - Format and display test info from associative array
+- `test_desc_form()` - Format test descriptions with color
+- `check_output()` - Check if output contains expected string
+- `number()` - Display test number
+- `runtime()` - Display command runtime
+
+**lib/utils/server** - Server-specific operations:
 - `server_on()` / `server_off()` - Check server status via `lsof` on port AND named pipe
 - `get_properties()` - Loads both `server.properties` and `fabric-server-launcher.properties` into environment
+- `list_properties()` - Parse property file into environment variables
 - `find_server()` - Validates server directory exists
 - `check_java()` - Detects and switches Java versions based on Minecraft version (8/16/17/21)
-
-**Utilities:**
-- `use_fzf()` - Interactive selection with FZF or fallback to bash `select`
 - `players()` - Uses `mcstatus` CLI to query online players via JSON
 - `discord_message()` - Sends embeds to Discord webhook for monitoring
-- `version_ge()` - Semantic version comparison
+
+**lib/common** - Compatibility wrapper that sources all utility modules in dependency order
 
 ### Process Management
 - **Named Pipes**: Created at `${CRAFT_SERVER_DIR}/${SERVER_NAME}/command-pipe` for IPC

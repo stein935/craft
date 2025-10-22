@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+# Error handling and help utilities
+# Depends on: core, output
+
+abort() {
+
+	printf "%s\n" "$(warn "$@")" >&2
+	exit 1
+
+}
+
+execute() {
+
+	if ! "$@"; then
+		abort "$(printf "Failed during: %s" "$(shell_join "$@")")"
+	fi
+
+}
+
+command_help() {
+
+	local -i exit_code=$2
+	local command="$1"
+
+	printf '%s\n\n' "$(form cyan normal "$(cat "${CRAFT_HOME_DIR}/config/help/${command}_help.txt")")"
+	exit $exit_code
+
+}
+
+missing_argument() {
+
+	warn "Missing argument: -$2 requires an argument"
+	command_help "$1" 1
+
+}
+
+invalid_command() {
+
+	warn "Invalid command: $2"
+	command_help "$1" 1
+
+}
+
+invalid_option() {
+
+	warn "Invalid option: -$2"
+	command_help "$1" 1
+
+}
+
+missing_required_option() {
+
+	warn "Missing option: $1 requires \"$2\""
+	command_help "$1" 1
+
+}

@@ -30,6 +30,9 @@ main() {
 	CRAFT_LIB="${CRAFT_HOME_DIR}/lib"
 	CRAFT_SERVER_DIR="/opt/craft/servers"
 
+	# Export CRAFT_LIB before loading common (needed by utility modules)
+	export CRAFT_LIB
+
 	# Load common functions
 	# shellcheck source=lib/common
 	source "${CRAFT_LIB}/common"
