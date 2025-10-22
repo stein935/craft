@@ -1,12 +1,12 @@
 Command: create
 
-Usage: 
+Usage:
   craft create -n <server_name> [options]       Usage details: Run '$ craft create -h'
 
 Required:
-  -n <server_name>                        Sets name of new server 
+  -n <server_name>                        Sets name of new server
 
 Options:
-  -v <minecraft_version>                  Sets Minecraft game version
-  -l <fabric_loader_version>              Sets Fabric loader version       
+  -g <minecraft_version>                  Sets Minecraft game version
+  -l <fabric_loader_version>              Sets Fabric loader version
   -s                                      Enables snapshot Minecraft versions

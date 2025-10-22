@@ -1,0 +1,8 @@
+Command: test
+
+Usage:
+  craft test                Run the BATS test suite
+
+Description:
+  Executes all automated tests for Craft CLI using the BATS testing framework.
+  Tests are located in config/test_config.bats and validate core functionality.

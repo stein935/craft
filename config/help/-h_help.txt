@@ -1,0 +1,7 @@
+Command: -h
+
+Usage:
+  craft -h                  Display this help message
+
+Description:
+  Displays usage information for Craft CLI including all available commands

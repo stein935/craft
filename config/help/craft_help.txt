@@ -1,7 +1,7 @@
 Command: craft
 
 Usage: 
-  craft <command> [ options ]     Usage details: Run '$ craft <command> -h'
+  craft <command> [options]       Usage details: Run '$ craft <command> -h'
 
 Commands
   -ls                             List all existing servers

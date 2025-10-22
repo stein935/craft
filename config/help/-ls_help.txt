@@ -1,0 +1,7 @@
+Command: -ls
+
+Usage:
+  craft -ls                 List all existing servers
+
+Description:
+  Displays a numbered list of all Minecraft servers in the servers directory

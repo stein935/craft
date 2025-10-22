@@ -1,0 +1,7 @@
+Command: -v
+
+Usage:
+  craft -v                  Display version information
+
+Description:
+  Shows the current version of Craft CLI installed on your system

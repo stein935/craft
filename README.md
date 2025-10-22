@@ -18,22 +18,25 @@ Craft CLI is a headless management tool for Fabric servers running on MacOS. Use
 
 ## Features
 
-- Create - Name you server. Choose your Minecraft and Fabric loader versions.
-- Delete - Delete a server.
-- Configure - Configure the server properties and launch parameters.
-- Mod - Add fabric mods to your server.
-- Start - Run a server.
-- Stop - Safely stop a server.
+- Create - Name your server. Choose your Minecraft and Fabric loader versions.
+- Delete - Permanently delete a server and all its files.
+- Configure - Configure the server properties and launch parameters interactively.
+- Mod - Add or remove Fabric mods from your server (supports local files and URLs).
+- Start - Run a server using macOS LaunchDaemons for automatic process management.
+- Stop - Safely stop a server with proper save and cleanup.
 - Restart - Safely stop then restart a server.
-- Monitor - Set a watchdog on you running server that restarts it if it fails. Send a message to a Discord channel.
-- Status - Check to see if a serer is running.
-- Server - View the server process shell.
+- Status - Check if a server is running and view player counts.
+- Command - Send Minecraft commands to a running server.
+- Test - Run automated test suite using BATS.
 
 ## Environment Requirements
 
-1. MacOS
-2. [Java 17+](https://www.oracle.com/java/technologies/downloads/)
-3. [Git 2.7.0+ ](https://git-scm.com/download/mac)
+1. macOS (uses macOS-specific LaunchDaemons)
+2. Java (version 8/16/17/21 depending on Minecraft version - automatically detected)
+3. Git 2.7.0+
+4. Optional: fzf (for enhanced interactive menus, falls back to bash select)
+5. Optional: mcstatus (Python CLI tool for player count display)
+6. Optional: jq (for JSON parsing in version selection)
 
 ## Usage
 
@@ -41,20 +44,22 @@ Craft CLI is a headless management tool for Fabric servers running on MacOS. Use
   Command: craft
 
   Usage:
-    craft <command> [ options ]     Usage details: Run '$ craft <command> -h'
+    craft <command> [options]     Usage details: Run '$ craft <command> -h'
 
   Commands
+    -h                              Display help message
     -ls                             List all existing servers
+    -v                              Display version information
     command                         Send a command to a running server
     config                          Configure a server
     create                          Creates a new Minecraft server
     delete                          Delete an existing server
-    mod                             Add mods to an existing server
+    mod                             Add or remove mods from an existing server
     restart                         If running, stop then restart an existing server
-    server                          Enter shell for a server that is running
     start                           Start an existing server
     status                          Get status of an existing server
     stop                            Stop an existing server
+    test                            Run BATS test suite
 ```
 
 ## Commands
@@ -67,21 +72,32 @@ Craft CLI is a headless management tool for Fabric servers running on MacOS. Use
 
 `craft -ls` _List all existing servers_
 
+### -v
+
+`craft -v` _Display version information_
+
+### Test
+
+`craft test` _Run the BATS test suite to validate Craft CLI functionality_
+
 ### Command
 
-_Send a server command to a running server_
+_Send a Minecraft command to a running server_
 
-`craft command -n <server_name> -c <minectaft_server_command`
+`craft command -n <server_name> -c <minecraft_server_command>`
 
 ```
   Command: command
 
   Usage:
-   craft command -n <server_name> -c <command [ options ]>   Usage details: Run '$ craft command -h'
+   craft command -n <server_name> -c <command [options]>   Usage details: Run '$ craft command -h'
 
   Required:
    -n <server_name>                Name of server to command
-   -c <command [ options ]>        Minecraft server command
+   -c <command [options]>        Minecraft server command
+
+  Description:
+   Sends commands through the named pipe to a running server and captures the response.
 
   Minecraft commands:
   See https://minecraft.fandom.com/wiki/Commands for more info
@@ -170,31 +186,32 @@ _Configure an existing server. This includes the server properties and launcher 
 
 ### Create
 
-_Create a new minecraft server. Specify name, versions, configure server options and accept terms_
+_Create a new Minecraft server. Specify name, versions, configure server options and accept EULA_
 
-`craft create -n <new _server_name>`
+`craft create -n <new_server_name>`
 
 ```
   Command: create
 
   Usage:
-   craft create -n <server_name> [ options ]       Usage details: Run '$ craft create -h'
+   craft create -n <server_name> [options]       Usage details: Run '$ craft create -h'
 
   Required:
    -n <server_name>                        Sets name of new server
 
-  Install options:
-   -mcversion <minecraft_version>          Sets Minecraft game version
-   -loader <fabric_loader_version>         Sets Fabric loader version
-   -snapshot                               Enables snapshot Minecraft versions
+  Options:
+   -g <minecraft_version>                  Sets Minecraft game version
+   -l <fabric_loader_version>              Sets Fabric loader version
+   -s                                      Enables snapshot Minecraft versions
 
-  Server properties:
-  See https://minecraft.fandom.com/wiki/Server.properties for more info
+  Description:
+   Downloads Fabric installer, creates server directory, initializes server files,
+   and prompts for EULA acceptance. Automatically detects required Java version.
 ```
 
 ### Delete
 
-_Perminantly delete an existing server. This removes all files_
+_Permanently delete an existing server. This removes all files and LaunchDaemons_
 
 `craft delete -n <server_name>`
 
@@ -206,28 +223,37 @@ _Perminantly delete an existing server. This removes all files_
 
   Required:
    -n <server_name>                   Name of server to delete
+
+  Description:
+   Stops the server if running, then permanently deletes the server directory
+   and associated LaunchDaemon plist. Prompts for confirmation before deletion.
 ```
 
 ### Mod
 
 _Add, remove or list mods for an existing server_
 
-`craft mod -n <server_name> -p <local_path_to_new_mod>`
+`craft mod -n <server_name> [options]`
 
 ```
   Command: mod
 
   Usage:
-   craft mod -n <server_name> [ options ]     Usage details: Run '$ craft mod -h'
+   craft mod -n <server_name> [options]     Usage details: Run '$ craft mod -h'
 
   Required:
-   -n <server_name>     Name of server to start
+   -n <server_name>     Name of server
 
-  Options*
+  Options (one required):
    -l                   List mods in mods directory
-   -p                   Local path to mod file you would like to instal
-   -r                   Name of mod file you would like to remove
+   -p <path>            Local path to mod file you would like to install
+   -u <url>             URL to download mod file from
+   -r <file_name>       Name of mod file you would like to remove
                         Use -l to find exact file name
+
+  Description:
+   Manages Fabric mods in the server's mods directory. Supports adding mods
+   from local files or direct download from URLs.
 ```
 
 ### Restart
@@ -244,27 +270,15 @@ _Safely stop (if running) then restart a server_
 
   Required:
    -n <server_name>                   Name of server to restart
-```
 
-### Server
-
-_View window where a server is running_
-
-`craft server -n <server_name>`
-
-```
-  Command: server
-
-  Usage:
-   craft server -n <server_name>       Usage details: Run '$ craft server -h'
-
-  Required:
-   -n <server_name>                    Name of server to view
+  Description:
+   Stops the server if running, then starts it again. Logs the restart event
+   to the server's monitor log.
 ```
 
 ### Start
 
-_Start an existing server. Option -m is used to periodically monitor server status and restart if down._
+_Start an existing server using macOS LaunchDaemons_
 
 `craft start -n <server_name>`
 
@@ -272,30 +286,37 @@ _Start an existing server. Option -m is used to periodically monitor server stat
   Command: start
 
   Usage:
-   craft start -n <server_name> [ options ]     Usage details: Run '$ craft start -h'
+   craft start -n <server_name>     Usage details: Run '$ craft start -h'
 
   Required:
    -n <server_name>     Name of server to start
 
-  Options*
-   -m                   Automatically restart server when it fails
-   -v                   Verbose mode (see the java server starting in current vindow)
+  Description:
+   Starts the Minecraft server using macOS LaunchDaemons for process management.
+   Creates a named pipe for command communication and monitors the startup process.
+   The LaunchDaemon provides automatic crash recovery.
 ```
 
 ### Status
 
-_Chech the status of an existing server_
+_Check the status of an existing server_
 
-`craft status -n <server_name>`
+`craft status [options]`
 
 ```
   Command: status
 
   Usage:
-   craft status             Usage details: Run '$ craft status -h'
+   craft status [options]             Usage details: Run '$ craft status -h'
 
   Options:
-   -n <server_name>         Name of server
+   -n <server_name>         Check status of specific server
+   -N                       Interactive server selection menu
+
+  Description:
+   Checks if a Minecraft server is running by verifying the port is in use and
+   the named pipe exists. If no options provided, displays status of all servers.
+   Shows server name, port, PID, and online players (if mcstatus is installed).
 ```
 
 ### Stop
@@ -312,4 +333,8 @@ _Safely stop a running server_
 
   Required:
    -n <server_name>                Name of server to stop
+
+  Description:
+   Safely stops a running Minecraft server by sending save-all and stop commands
+   through the named pipe. Cleans up the LaunchDaemon and removes the command pipe.
 ```
