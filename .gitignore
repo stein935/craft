@@ -14,6 +14,7 @@ world/
 
 # IDE files
 .vscode/
+craft.code-workspace
 .idea/
 
 # Shell history
