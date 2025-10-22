@@ -149,8 +149,6 @@ test_form() {
 	for k in "${!_map[@]}"; do
 		((${#k} > max)) && max=${#k}
 	done
-
-	indent "$(form bright_yellow underline "Test info:")"
 	# Sort keys for stable output
 	while IFS= read -r k; do
 		local v=${_map[$k]} \
@@ -163,7 +161,7 @@ test_form() {
 		((pad < 0)) && pad=0
 
 		# Build line: colored_key + pad spaces + " : " + value
-		indent "$(printf '%s%*s : %s' "$colored_key" "$pad" '' "$(form normal normal "$v")")"
+		printf '%s%*s : %s\n' "$colored_key" "$pad" '' "$(form normal normal "$v")"
 	done < <(printf '%s\n' "${!_map[@]}")
 
 	echo
@@ -493,5 +491,158 @@ boolean() {
 	false) echo false ;;
 	*) echo true ;;
 	esac
+
+}
+
+# box() - Draw a text box with optional label and word wrapping
+#
+# Usage:
+#   box "text content" ["label"] [max_width]
+#
+# Parameters:
+#   $1 - body: Text content to display in the box (required)
+#   $2 - label: Label to display in top border (optional)
+#   $3 - max_width: Maximum line length for text wrapping (optional, defaults to auto-fit)
+#
+# Examples:
+#   box "Server started successfully"
+#   box "Error: Configuration file not found" "Warning"
+#   box "Long text that will be wrapped to fit within the specified width" "Info" 40
+#   box "$(box "$(test_form test_info)" "Test")" "Test"  # Multi-line input preserved
+#
+# Box Characters: ─ │ ┌ ┐ └ ┘
+box() {
+
+	local body="$1" \
+		label="$2" \
+		max_width="${3:-0}" \
+		line \
+		word \
+		current_line="" \
+		border_top \
+		border_bottom
+
+	local -a lines=() \
+	words
+
+	local -i text_padding=2 \
+		content_width=0 \
+		box_width=0 \
+		label_len=0 \
+		i
+
+	# Check if body contains newlines (multi-line input)
+	if [[ "$body" == *$'\n'* ]]; then
+		# Multi-line input: preserve lines and strip ANSI codes for width calculation
+		while IFS= read -r line; do
+			lines+=("$line")
+			# Calculate width without ANSI codes
+			local plain_line
+			plain_line=$(echo "$line" | strip_ansi)
+			((${#plain_line} > content_width)) && content_width=${#plain_line}
+		done <<<"$body"
+	else
+		# Single-line input: apply word wrapping
+		read -ra words <<<"$body"
+
+		# Calculate content width if max_width not specified
+		if [[ $max_width -eq 0 ]]; then
+			# Find longest word to ensure box can fit it
+			local -i longest_word=0
+			for word in "${words[@]}"; do
+				((${#word} > longest_word)) && longest_word=${#word}
+			done
+
+			# Auto-fit: use length of entire text or 60, whichever is smaller
+			# But ensure it's at least as wide as the longest word
+			max_width=${#body}
+			((max_width > 60)) && max_width=60
+			((max_width < longest_word)) && max_width=$longest_word
+		fi
+
+		# Word wrap the text
+		for word in "${words[@]}"; do
+			if [[ -z "$current_line" ]]; then
+				current_line="$word"
+			elif ((${#current_line} + ${#word} + 1 <= max_width)); then
+				current_line+=" $word"
+			else
+				lines+=("$current_line")
+				((${#current_line} > content_width)) && content_width=${#current_line}
+				current_line="$word"
+			fi
+		done
+
+		# Add the last line
+		if [[ -n "$current_line" ]]; then
+			lines+=("$current_line")
+			((${#current_line} > content_width)) && content_width=${#current_line}
+		fi
+	fi
+
+	# Calculate box width (content + padding on both sides + borders)
+	box_width=$((content_width + (text_padding * 2) + 2))
+
+	# Build top border
+	if [[ -n "$label" ]]; then
+		label_len=${#label}
+		border_top="┌──${label}"
+		# Fill remaining width with horizontal lines
+		for ((i = 0; i < box_width - label_len - 4; i++)); do
+			border_top+="─"
+		done
+		border_top+="┐"
+	else
+		border_top="┌"
+		for ((i = 0; i < box_width - 2; i++)); do
+			border_top+="─"
+		done
+		border_top+="┐"
+	fi
+
+	# Build bottom border
+	border_bottom="└"
+	for ((i = 0; i < box_width - 2; i++)); do
+		border_bottom+="─"
+	done
+	border_bottom+="┘"
+
+	# Output the box
+	printf '%s\n' "$border_top"
+
+	# Empty line at top
+	printf '│'
+	for ((i = 0; i < box_width - 2; i++)); do
+		printf ' '
+	done
+	printf '│\n'
+
+	# Content lines
+	for line in "${lines[@]}"; do
+		# Calculate padding using plain text length (without ANSI codes)
+		local plain_line
+		plain_line=$(echo "$line" | strip_ansi)
+		local -i padding_right=$((content_width - ${#plain_line}))
+		printf '│'
+		# Left padding
+		for ((i = 0; i < text_padding; i++)); do
+			printf ' '
+		done
+		printf '%s' "$line"
+		# Right padding to align box edges
+		for ((i = 0; i < padding_right + text_padding; i++)); do
+			printf ' '
+		done
+		printf '│\n'
+	done
+
+	# Empty line at bottom
+	printf '│'
+	for ((i = 0; i < box_width - 2; i++)); do
+		printf ' '
+	done
+	printf '│\n'
+
+	printf '%s\n' "$border_bottom"
 
 }

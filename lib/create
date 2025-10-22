@@ -34,7 +34,7 @@ create_command() {
 	if $test; then
 		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
 		local -A test_info=([COMMAND]="$COMMAND" [SERVER_NAME]="$SERVER_NAME" [game]="$game" [loader]="$loader" [snapshot]="$snapshot" [test]="$test")
-		test_form test_info
+		box "$(test_form test_info)" "Test"
 	fi
 
 	check_java "$game" && create_server
@@ -58,12 +58,17 @@ create_server() {
 
 	if ! [[ -d "${CRAFT_SERVER_DIR}/${SERVER_NAME}" ]]; then
 		fwhip "Creating $(form bright_cyan italic "\"${SERVER_NAME}\"")"
-		indent "$(form normal underline "Options:")"
-		indent "Server name : \"${SERVER_NAME}\""
-		if [[ "$game" != "false" ]]; then indent "Minecraft version : \"${game}\""; fi
-		if [[ "$loader" != "false" ]]; then indent "Fabric loader : \"${loader}\""; fi
-		if [[ "$snapshot" != "false" ]]; then indent "Snapshot : \"${snapshot}\""; fi
-		indent "Server dir: $(printf '%q' "${CRAFT_SERVER_DIR}/${SERVER_NAME}")"
+
+		options() {
+			echo "Server name : \"${SERVER_NAME}\""
+			if [[ -n "$game" ]]; then echo "Minecraft version : \"${game}\""; fi
+			if [[ -n "$loader" ]]; then echo "Fabric loader : \"${loader}\""; fi
+			if [[ -n "$snapshot" ]]; then echo "Snapshot : \"${snapshot}\""; fi
+			echo "Server dir: $(printf '%q' "${CRAFT_SERVER_DIR}/${SERVER_NAME}")"
+		}
+
+		box "$(options)" "Options"
+
 		echo
 
 		create_server_dir
@@ -164,10 +169,14 @@ sign_eula() {
 	done
 
 	fwhip "$(form bright_cyan italic "\"${SERVER_NAME}\"") has been created!"
-	indent "$(form normal underline "Server location"): $(printf '%q\n' "${CRAFT_SERVER_DIR}/${SERVER_NAME}")"
-	indent "$(form bright_green underline "Next steps"):"
-	indent "$(form green normal "To start the server - Run:")"
-	indent "$(form green normal "sudo craft start -n \"${SERVER_NAME}\"")" "6"
+
+	next_steps() {
+		printf '%s\n' "To start the server - Run:"
+		indent "$(printf '%s: %q\n' "sudo craft start -n \"${SERVER_NAME}\"" "${CRAFT_SERVER_DIR}/${SERVER_NAME}")"
+	}
+
+	box "$(next_steps)" "Next Steps"
+
 	echo
 	echo "$(date) : Create: \"${SERVER_NAME}\" created!" >>"${CRAFT_SERVER_DIR}/${SERVER_NAME}/logs/monitor/$(date '+%Y-%m').log"
 

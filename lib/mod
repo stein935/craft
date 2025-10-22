@@ -42,7 +42,7 @@ mod_command() {
 	if $test; then
 		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
 		local -A test_info=([COMMAND]="$COMMAND" [SERVER_NAME]="$SERVER_NAME" [file]="$file" [list]="$list" [remove]="$remove" [test]="$test")
-		test_form test_info
+		box "$(test_form test_info)" "Test"
 	fi
 
 	mod_server

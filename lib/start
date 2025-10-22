@@ -38,7 +38,7 @@ start_command() {
 	if $test; then
 		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
 		local -A test_info=([COMMAND]="$COMMAND" [SERVER_NAME]="$SERVER_NAME" [SERVER_INIT_MEM]="$SERVER_INIT_MEM" [SERVER_MAX_MEM]="$SERVER_MAX_MEM" [test]="$test")
-		test_form test_info
+		box "$(box "$(test_form test_info)" "Test")" "Test"
 	fi
 
 	check_for_open_port
