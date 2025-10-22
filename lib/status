@@ -2,22 +2,21 @@
 
 status_command() {
 
-	export command="status"
-	export server_name=false
-	test=false
+	local SERVER_NAME \
+		test=false \
+		servers \
+		status
 
 	while getopts ":n:Nht" opt; do
 		case "$opt" in
-		n) server_name=${OPTARG} ;;
-		N) server_name=true ;;
-		h) command_help "${command}" 0 ;;
+		n) SERVER_NAME=${OPTARG} ;;
+		N) SERVER_NAME=true ;;
+		h) command_help "${COMMAND}" 0 ;;
 		t) test=true ;;
-		:) missing_argument "$command" "$OPTARG" ;;
-		*) invalid_option "$command" "$OPTARG" ;;
+		:) missing_argument "$COMMAND" "$OPTARG" ;;
+		*) invalid_option "$COMMAND" "$OPTARG" ;;
 		esac
 	done
-
-	echo
 
 	if [ -d "${CRAFT_SERVER_DIR}" ] && [ -z "$(ls "${CRAFT_SERVER_DIR}")" ]; then
 		warn "No servers found in ${CRAFT_SERVER_DIR}"
@@ -26,28 +25,28 @@ status_command() {
 
 	if $test; then
 		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
-		declare -A test_info=([command]="$command" [server_name]="$server_name" [test]="$test")
+		local -A test_info=([COMMAND]="$COMMAND" [SERVER_NAME]="$SERVER_NAME" [test]="$test")
 		test_form test_info
 	fi
 
-	if [[ "${server_name}" == false ]]; then
+	if [[ -z "${SERVER_NAME}" ]]; then
 		servers=$(ls "${CRAFT_SERVER_DIR}")
 		while IFS=$'\t' read -r server; do
-			server_name="${server}"
+			SERVER_NAME="${server}"
 			get_properties
 			server_on 0
 		done <<<"${servers[@]}"
 		status=0
-	elif [[ "${server_name}" == "true" ]]; then
-		local servers
+	elif [[ "${SERVER_NAME}" == "true" ]]; then
 		servers=$(ls "${CRAFT_SERVER_DIR}")
-		server_name=$(printf "%s\n" "${servers[@]##*/}" | use_fzf "Select a server") || exit 0
-		find_server "${server_name}"
+		SERVER_NAME=$(printf "%s\n" "${servers[@]##*/}" | use_fzf "Select a server") || exit 0
+		find_server "${SERVER_NAME}"
 		get_properties
 		server_on 0
 		status=$?
 	else
-		find_server "${server_name}"
+		export SERVER_NAME
+		find_server "${SERVER_NAME}"
 		get_properties
 		server_on 0
 		status=$?

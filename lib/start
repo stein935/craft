@@ -1,0 +1,138 @@
+#!/usr/bin/env bash
+
+start_command() {
+
+	local SERVER_NAME \
+		daemon=false \
+		test=false \
+		servers
+
+	while getopts ":n:dht" opt; do
+		case $opt in
+		n) SERVER_NAME="$OPTARG" ;;
+		d) daemon=true ;;
+		h) command_help "$COMMAND" 0 ;;
+		t) test=true ;;
+		:) missing_argument "$COMMAND" "$OPTARG" ;;
+		*) invalid_option "$COMMAND" "$OPTARG" ;;
+		esac
+	done
+
+	if [[ -z "$SERVER_NAME" ]]; then
+		if [ -d "${CRAFT_SERVER_DIR}" ] && [ -z "$(ls "${CRAFT_SERVER_DIR}")" ]; then
+			warn "No servers found in ${CRAFT_SERVER_DIR}"
+			exit 1
+		fi
+		servers=$(ls "${CRAFT_SERVER_DIR}")
+		SERVER_NAME=$(printf "%s\n" "${servers[@]##*/}" | use_fzf "Select a server") || exit 0
+	fi
+
+	export SERVER_NAME
+
+	echo
+
+	find_server "${SERVER_NAME}"
+
+	get_properties
+
+	if $test; then
+		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
+		local -A test_info=([COMMAND]="$COMMAND" [SERVER_NAME]="$SERVER_NAME" [SERVER_INIT_MEM]="$SERVER_INIT_MEM" [SERVER_MAX_MEM]="$SERVER_MAX_MEM" [test]="$test")
+		test_form test_info
+	fi
+
+	check_for_open_port
+
+	check_java "$(ls "${CRAFT_SERVER_DIR}/${SERVER_NAME}/versions")"
+
+	$daemon && start_daemon
+
+	start_server
+
+}
+
+check_for_open_port() {
+
+	# Check if a server is already running on the port
+	if ! server_off 0 >/dev/null; then
+		if ! $daemon; then
+			warn "A server is already running on port: $(form green normal "$SERVER_PORT") PID: $(form green normal "${PID}")"
+			$test && runtime && echo
+		fi
+		exit 1
+	fi
+
+}
+
+start_daemon() {
+
+	local mem=("-Xms${SERVER_INIT_MEM}" "-Xmx${SERVER_MAX_MEM}")
+	local args=("-XX:+UnlockExperimentalVMOptions" "-XX:+UnlockDiagnosticVMOptions" "-XX:MaxGCPauseMillis=130" "-XX:G1MixedGCLiveThresholdPercent=90" "-XX:+AlwaysPreTouch" "-XX:+DisableExplicitGC" "-XX:+UseNUMA" "-XX:NmethodSweepActivity=1" "-XX:ReservedCodeCacheSize=400M" "-XX:NonNMethodCodeHeapSize=12M" "-XX:ProfiledCodeHeapSize=194M" "-XX:NonProfiledCodeHeapSize=194M" "-XX:-DontCompileHugeMethods" "-XX:MaxNodeLimit=240000" "-XX:NodeLimitFudgeFactor=8000" "-XX:+UseVectorCmov" "-XX:+PerfDisableSharedMem" "-XX:+UseFastUnorderedTimeStamps" "-XX:+UseCriticalJavaThreadPriority" "-XX:ThreadPriorityPolicy=1" "-XX:AllocatePrefetchStyle=3" "-XX:+UseG1GC" "-XX:+PerfDisableSharedMem" "-XX:G1HeapRegionSize=16M" "-XX:G1NewSizePercent=23" "-XX:G1ReservePercent=20" "-XX:SurvivorRatio=32" "-XX:G1MixedGCCountTarget=3" "-XX:G1HeapWastePercent=20" "-XX:InitiatingHeapOccupancyPercent=10" "-XX:G1RSetUpdatingPauseTimePercent=0" "-XX:MaxTenuringThreshold=1" "-XX:G1SATBBufferEnqueueingThresholdPercent=30" "-XX:G1ConcMarkStepDurationMillis=5" "-XX:G1ConcRSHotCardLimit=16" "-XX:G1ConcRefinementServiceIntervalMillis=150" "-XX:GCTimeRatio=99" "-XX:LargePageSizeInBytes=2m")
+	# Build the Java command as an array to preserve argument boundaries
+	local java_cmd=("$(command -v java)" "${mem[@]}" "${args[@]}" -jar "${CRAFT_SERVER_DIR}/${SERVER_NAME}/fabric-server-launch.jar" --nogui)
+
+	# Redirect stdin from the named pipe instead of passing "<" as an argument
+	"${java_cmd[@]}" <>"${CRAFT_SERVER_DIR}/${SERVER_NAME}/command-pipe"
+	exit 0
+
+}
+
+start_server() {
+
+	local log_path \
+		pipe \
+		string
+
+	local daemon_path="/Library/LaunchDaemons/craft.${SERVER_NAME// /}.daemon.plist"
+	log_path=$(printf '%s\n' "${CRAFT_SERVER_DIR}/${SERVER_NAME}/logs/daemon.log" | sed -e 's/[\/&]/\\&/g')
+
+	# Message that the server is starting
+	fwhip "Starting $(form bright_cyan italic "\"${SERVER_NAME}\"") Minecraft server"
+
+	# Make pipe if it doesn't exist
+	pipe="${CRAFT_SERVER_DIR}/${SERVER_NAME}/command-pipe"
+	rm -f "$pipe" >/dev/null 2>&1
+	execute "mkfifo" "$pipe"
+
+	# Command to start the server
+	local -a daemon_command=("$(which bash)" "$(which craft)" "start" "-n" "${SERVER_NAME}" "-d")
+
+	# Unload and remove existing daemon
+	launchctl bootout system/"craft.${SERVER_NAME// /}.daemon" 2>/dev/null
+	rm -f /Library/LaunchDaemons/craft."${SERVER_NAME// /}".daemon.plist 2>/dev/null
+
+	cp "${CRAFT_HOME_DIR}/config/craft.servername.daemon.plist" "$daemon_path"
+
+	plutil -replace Label -string "craft.${SERVER_NAME// /}.daemon" "$daemon_path"
+	plutil -replace EnvironmentVariables.PATH -string "${PATH}" "$daemon_path"
+	plutil -replace WorkingDirectory -string "${CRAFT_SERVER_DIR}/${SERVER_NAME}" "$daemon_path"
+	plutil -replace StandardErrorPath -string "${log_path}" "$daemon_path"
+	plutil -replace StandardOutPath -string "${log_path}" "$daemon_path"
+
+	for string in "${daemon_command[@]}"; do
+		plutil -insert ProgramArguments -string "$string" -append "$daemon_path"
+	done
+
+	rm -f "${CRAFT_SERVER_DIR}/${SERVER_NAME}/logs/daemon.log" 2>/dev/null
+
+	touch "${CRAFT_SERVER_DIR}/${SERVER_NAME}/logs/daemon.log"
+
+	# Load daemon
+	launchctl bootstrap system "$daemon_path" 2>/dev/null
+
+	# Do this if the server is running
+	if server_on; then
+
+		echo "$(date) : Start: \"${SERVER_NAME}\" running on port: ${SERVER_PORT} PID: ${PID}" >>"${CRAFT_SERVER_DIR}/${SERVER_NAME}/logs/monitor/$(date '+%Y-%m').log"
+
+		if [[ -f "${CRAFT_SERVER_DIR}/${SERVER_NAME}/logo.txt" ]]; then
+			form cyan dim "$(execute "cat" "${CRAFT_SERVER_DIR}/${SERVER_NAME}/logo.txt")"
+			echo && echo
+		fi
+
+	fi
+
+	$test && runtime && echo
+
+	exit 0
+}

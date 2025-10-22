@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+restart_command() {
+
+	local SERVER_NAME \
+		test=false \
+		servers
+
+	while getopts ":n:ht" opt; do
+		case $opt in
+		n) SERVER_NAME="$OPTARG" ;;
+		h) command_help "$COMMAND" 0 ;;
+		t) test=true ;;
+		:) missing_argument "$COMMAND" "$OPTARG" ;;
+		*) invalid_option "$COMMAND" "$OPTARG" ;;
+		esac
+	done
+
+	if [[ -z "$SERVER_NAME" ]]; then
+		if [[ -d "${CRAFT_SERVER_DIR}" ]] && [[ -z "$(ls "${CRAFT_SERVER_DIR}")" ]]; then
+			warn "No servers found in ${CRAFT_SERVER_DIR}"
+			exit 1
+		fi
+		servers=$(ls "${CRAFT_SERVER_DIR}")
+		SERVER_NAME=$(printf "%s\n" "${servers[@]##*/}" | use_fzf "Select a server") || exit 0
+	fi
+
+	export SERVER_NAME
+
+	find_server "${SERVER_NAME}"
+
+	get_properties
+
+	if $test; then
+		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
+		local -A test_info=([COMMAND]="$COMMAND" [SERVER_NAME]="$SERVER_NAME" [test]="$test")
+		test_form test_info
+	fi
+
+	restart_server
+
+}
+
+restart_server() {
+
+	local status
+
+	if server_on 0 >/dev/null; then
+		echo "$(date) : Restart: \"${SERVER_NAME}\" was restarted." >>"${CRAFT_SERVER_DIR}/${SERVER_NAME}/logs/monitor/$(date '+%Y-%m').log"
+		execute "$0" "stop" "-n" "${SERVER_NAME}"
+	else
+		warn "No server running on port: ${SERVER_PORT}"
+	fi
+	execute "$0" "start" "-n" "${SERVER_NAME}"
+	status=$?
+	$test && runtime && echo
+	exit $status
+
+}

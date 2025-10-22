@@ -1,53 +1,82 @@
 #!/usr/bin/env bash
 
-START="$(date +%s)"
-export START
+main() {
 
-quiet_cd() {
-	cd "$@" &>/dev/null || return
+	local craft_file_directory \
+		craft_file \
+		args \
+		new_args \
+		COMMAND \
+		fun
+
+	local -A alias_map
+
+	local START \
+		CRAFT_HOME_DIR \
+		CRAFT_LIB \
+		CRAFT_SERVER_DIR
+
+	START="$(date +%s)"
+
+	quiet_cd() {
+		cd "$@" &>/dev/null || return
+	}
+
+	# Env variables
+	craft_file_directory="$(quiet_cd "${0%/*}/" && pwd -P)"
+	craft_file="${craft_file_directory%/}/${0##*/}"
+
+	CRAFT_HOME_DIR="${craft_file%/*/*}"
+	CRAFT_LIB="${CRAFT_HOME_DIR}/lib"
+	CRAFT_SERVER_DIR="/opt/craft/servers"
+
+	# Load common functions
+	# shellcheck source=lib/common
+	source "${CRAFT_LIB}/common"
+
+	# Check for aliases
+	args=("$@")
+
+	# shellcheck disable=SC2034
+	alias_map=(
+		["--help"]="-h"
+		["--list"]="-ls"
+		["--version"]="-v"
+	)
+	new_args=()
+	while IFS= read -r line; do
+		new_args+=("$line")
+	done < <(replace_alias_args alias_map "${args[@]}")
+
+	set -- "${new_args[@]}"
+
+	# Command variable
+	COMMAND=$(basename "$0")
+	fun="$1"
+
+	echo
+
+	# Look for command
+	[[ -z "$fun" ]] && command_help "$COMMAND" 1
+
+	export START \
+		CRAFT_HOME_DIR \
+		CRAFT_LIB \
+		CRAFT_SERVER_DIR
+
+	# Execute command
+	shift
+
+	# Validate command name to avoid sourcing unexpected files
+	if [[ "$fun" =~ ^[A-Za-z0-9_-]+$ ]] && [[ -f "${CRAFT_LIB}/$fun" ]]; then
+		export COMMAND="$fun"
+		# shellcheck disable=SC1090  # dynamic but validated file name
+		source "${CRAFT_LIB}/$fun"
+		"${fun}"_command "$@"
+	else
+		invalid_command "$COMMAND" "${fun}"
+	fi
+
 }
 
-# Env variables
-CRAFT_FILE_DIRECTORY="$(quiet_cd "${0%/*}/" && pwd -P)"
-CRAFT_FILE="${CRAFT_FILE_DIRECTORY%/}/${0##*/}"
-export CRAFT_HOME_DIR="${CRAFT_FILE%/*/*}"
-export CRAFT_LIB="${CRAFT_HOME_DIR}/lib"
-export CRAFT_SERVER_DIR="/opt/craft/servers"
-
-# Load common functions
-# shellcheck source=lib/common.sh
-source "${CRAFT_LIB}/common.sh"
-
-# Check for aliases
-args=("$@")
-
-# shellcheck disable=SC2034
-declare -A alias_map=(
-	["--help"]="-h"
-	["--list"]="-ls"
-	["--version"]="-v"
-)
-new_args=()
-while IFS= read -r line; do
-	new_args+=("$line")
-done < <(replace_alias_args alias_map "${args[@]}")
-
-set -- "${new_args[@]}"
-
-# Command variable
-command="craft"
-fun="${1}"
-
-# Look for command
-[ -z "$1" ] && command_help "$command" 1
-
-# Execute command
-shift
-# Validate command name to avoid sourcing unexpected files
-if [[ "$fun" =~ ^[A-Za-z0-9_-]+$ ]] && [ -f "${CRAFT_LIB}/$fun.sh" ]; then
-	# shellcheck disable=SC1090  # dynamic but validated file name
-	source "${CRAFT_LIB}/$fun.sh"
-	"${fun}"_command "$@"
-else
-	invalid_command "$command" "${fun}"
-fi
+main "$@"

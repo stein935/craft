@@ -2,36 +2,35 @@
 
 config_command() {
 
-	export command="config"
-	export server_name=false
-	test=false
+	local SERVER_NAME \
+		test=false
 
 	while getopts ":n:ht" opt; do
 		case $opt in
-		n) server_name="$OPTARG" ;;
-		h) command_help "$command" 0 ;;
+		n) SERVER_NAME="$OPTARG" ;;
+		h) command_help "$COMMAND" 0 ;;
 		t) test=true ;;
-		:) missing_argument "$command" "$OPTARG" ;;
-		*) invalid_option "$command" "$OPTARG" ;;
+		:) missing_argument "$COMMAND" "$OPTARG" ;;
+		*) invalid_option "$COMMAND" "$OPTARG" ;;
 		esac
 	done
 
-	echo
-
-	if [[ "$server_name" == false ]]; then
-		if [ -d "${CRAFT_SERVER_DIR}" ] && [ -z "$(ls "${CRAFT_SERVER_DIR}")" ]; then
+	if [[ -z "$SERVER_NAME" ]]; then
+		if [[ -d "${CRAFT_SERVER_DIR}" ]] && [[ -z "$(ls "${CRAFT_SERVER_DIR}")" ]]; then
 			warn "No servers found in ${CRAFT_SERVER_DIR}"
 			exit 1
 		fi
 		cd "${CRAFT_SERVER_DIR}" || exit 1
-		server_name=$(ls | use_fzf "Select a server") || exit 0
+		SERVER_NAME=$(ls | use_fzf "Select a server") || exit 0
 	fi
 
-	find_server "${server_name}"
+	export SERVER_NAME
+
+	find_server "${SERVER_NAME}"
 
 	if $test; then
 		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
-		declare -A test_info=([command]="$command" [server_name]="$server_name" [test]="$test")
+		local -A test_info=([COMMAND]="$COMMAND" [SERVER_NAME]="$SERVER_NAME" [test]="$test")
 		test_form test_info
 	fi
 
@@ -41,25 +40,24 @@ config_command() {
 
 config_server() {
 
-	echo "$CONFIG_FILE" >&3
-
 	local selected
+
 	if [[ -n "$CONFIG_FILE" ]]; then
 		selected=$CONFIG_FILE
 	else
-		cd "${CRAFT_SERVER_DIR}/${server_name}" || exit 1
+		cd "${CRAFT_SERVER_DIR}/${SERVER_NAME}" || exit 1
 		selected=$(find ./*.properties | use_fzf "Select a file") || exit 1
 	fi
 
 	fwhip "Configuring ${selected}"
-	read_properties "/${CRAFT_SERVER_DIR}/${server_name}/${selected}"
+	read_properties "/${CRAFT_SERVER_DIR}/${SERVER_NAME}/${selected}"
 
 	while true; do
-		read -p "$(fwhip "Do you want to add a text art logo to \"${server_name}?\"? (y/n) : ")" -n 1 -r
+		read -p "$(fwhip "Do you want to add a text art logo to \"${SERVER_NAME}?\"? (y/n) : ")" -n 1 -r
 		echo && echo
 		if [[ $REPLY =~ ^[Yy]$ ]]; then
 			read -rp "Path to file : " ans
-			cp "${ans}" "${CRAFT_SERVER_DIR}/${server_name}/logo.txt"
+			cp "${ans}" "${CRAFT_SERVER_DIR}/${SERVER_NAME}/logo.txt"
 			break
 		elif [[ $REPLY =~ ^[Nn]$ ]]; then
 			break
@@ -76,12 +74,21 @@ config_server() {
 
 read_properties() {
 
-	local file=$1
+	local file=$1 \
+		selected \
+		key \
+		val \
+		input \
+		sel_key \
+		sel_val
+
+	local -A properties
 	local -a properties_raw
+
 	while IFS= read -r line; do
+		# shellcheck disable=SC2190
 		properties_raw+=("$line")
 	done <"$file"
-	local -A properties
 
 	for line in "${properties_raw[@]}"; do
 		key=$(echo "${line%=*}" | tr -d '\n')

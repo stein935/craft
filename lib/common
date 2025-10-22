@@ -14,7 +14,6 @@ strip_ansi() {
 form() {
 
 	# ANSI color codes
-	# shellcheck disable=SC2034  # color used indirectly via nameref in form_get
 	local -A color=(
 		[black]=0
 		[red]=1
@@ -28,7 +27,6 @@ form() {
 	)
 
 	# ANSI text format codes
-	# shellcheck disable=SC2034  # style used indirectly via nameref in form_get
 	local -A style=(
 		[normal]=0
 		[bold]=1
@@ -40,20 +38,22 @@ form() {
 		[hidden]=8
 	)
 
+	local color_name \
+		start \
+		reset
+
+	local -i bright
+
 	if [[ $1 == bright_* ]]; then
-		local -i bright=60
+		bright=60
 		color_name=${1#bright_}
 	else
-		local -i bright=0
+		bright=0
 		color_name=$1
 	fi
 
-	# Retrieve numeric codes without shadowing associative arrays
-	local -i color_code
-	color_code=$(echo "${color[$color_name]}")
-
-	local -i style_code
-	style_code=$(echo "${style[$2]}")
+	local -i color_code="${color[$color_name]}" \
+		style_code="${style[$2]}"
 
 	start="$(tty_escape "$style_code;$((bright + 30 + color_code))")"
 	reset="$(tty_escape 0)"
@@ -63,9 +63,9 @@ form() {
 
 shell_join() {
 
-	local arg$()
 	printf "%s" "$1"
 	shift
+	local arg
 	for arg in "$@"; do
 		printf " "
 		printf "%s" "${arg// /\ }"
@@ -97,26 +97,28 @@ execute() {
 
 fwhip() {
 
-	printf '%s %s\n\n' "$(form "bright_blue" "normal" "▶")" "$@"
+	printf '%s %s\n\n' "$(form bright_blue normal "▶")" "$@"
 
 }
 
 warn() {
 
-	printf '%s %s\n\n' "$(form "bright_red" "normal" "✕")" "$@"
+	printf '%s %s\n\n' "$(form bright_red normal "✕")" "$@"
 
 }
 
 send() {
 
-	printf '%s %s\n\n' "$(form "bright_yellow" "normal" "")" "$@"
+	printf '%s %s\n\n' "$(form bright_yellow normal "")" "$@"
 
 }
 
 indent() {
 
-	local space_count=${2:-4}
-	local spaces=""
+	local -i space_count=${2:-4}
+
+	local spaces \
+		i
 
 	for ((i = 0; i < space_count; i++)); do
 		spaces+=" "
@@ -127,7 +129,9 @@ indent() {
 }
 
 rm_line() {
+
 	printf "\033[1A\033[2K"
+
 }
 
 test_form() {
@@ -135,57 +139,66 @@ test_form() {
 	# Usage: test_form <assoc_array_name>
 	# Pass the NAME of the associative array, not its expanded contents.
 	# Requires bash >= 4 for associative arrays and >= 4.3 for nameref (declare -n).
-	local name=$1
+	local name="$1"
 	# Nameref to the associative array
-	local -n _map=$name
+	local -n _map="$name"
 
 	# Determine maximum key width for alignment
-	local max=0 k
+	local max=0 \
+		k
 	for k in "${!_map[@]}"; do
 		((${#k} > max)) && max=${#k}
 	done
 
-	indent "$(form "bright_yellow" "underline" "Test info:")"
+	indent "$(form bright_yellow underline "Test info:")"
 	# Sort keys for stable output
 	while IFS= read -r k; do
-		local v=${_map[$k]}
-		local plain_key=$k
-		local colored_key
-		colored_key=$(form "yellow" "normal" "$plain_key")
+		local v=${_map[$k]} \
+			plain_key=$k \
+			colored_key
+		colored_key=$(form yellow normal "$plain_key")
 
 		# Spaces needed after the colored key
 		local pad=$((max - ${#plain_key}))
 		((pad < 0)) && pad=0
 
 		# Build line: colored_key + pad spaces + " : " + value
-		indent "$(printf '%s%*s : %s' "$colored_key" "$pad" '' "$(form "normal" "normal" "$v")")"
+		indent "$(printf '%s%*s : %s' "$colored_key" "$pad" '' "$(form normal normal "$v")")"
 	done < <(printf '%s\n' "${!_map[@]}")
-	# runtime
+
 	echo
 
 }
 
 test_desc_form() {
 
-	local type
+	local type \
+		comment
+
 	$1 && type="green" || type="red"
-	local comment
-	[ -n "$3" ] && comment="$(form yellow dim "# $3")"
+
+	[[ -n "$3" ]] && comment="$(form yellow dim "# $3")"
+
 	indent "$(form $type normal "") $(form cyan dim "$2") $comment" 12 >&3
 
 }
 
 check_output() {
-	[[ "$(echo "${output:?Defined by bats}" | strip_ansi)" == *"$1"* ]]
+
+	[[ "$(echo "$2" | strip_ansi)" == *"$1"* ]]
+
 }
 
 number() {
+
 	form blue normal "$BATS_TEST_NUMBER"
+
 }
 
 use_fzf() {
 
-	local prompt="$1"
+	local prompt="$1" \
+		choice
 
 	if command -v fzf >/dev/null 2>&1; then
 		# shellcheck disable=SC2016
@@ -209,17 +222,16 @@ use_fzf() {
 			--prompt=" $prompt: "
 	else
 		# Fallback to bash built-in select
-		local items=()
+		local -a items
 		while IFS= read -r line; do
 			items+=("$line")
 		done
 
-		if [ ${#items[@]} -eq 0 ]; then
+		if [[ ${#items[@]} == 0 ]]; then
 			warn "No items to select from"
 			return 1
 		fi
 
-		PS3="$(form "cyan" "normal" "$prompt by entering the number: ")"
 		select choice in "${items[@]}" "Cancel"; do
 			if [[ "$choice" == "Cancel" ]]; then
 				return 1
@@ -241,10 +253,11 @@ replace_alias_args() {
 
 	local -n arr="$1"
 	shift
-	local out=()
+	local -a out=()
 
 	for arg in "$@"; do
-		local found=false
+		local found=false \
+			alias
 		for alias in "${!arr[@]}"; do
 			local replacement=${arr[$alias]}
 			if [[ "$arg" == "$alias" ]]; then
@@ -261,8 +274,11 @@ replace_alias_args() {
 
 command_help() {
 
-	printf '\n%s\n\n' "$(form "cyan" "normal" "$(cat "${CRAFT_HOME_DIR}"/config/help/"${1}"_help.txt)")"
-	exit "$2"
+	local -i exit_code=$2
+	local command="$1"
+
+	printf '%s\n\n' "$(form cyan normal "$(cat "${CRAFT_HOME_DIR}/config/help/${command}_help.txt")")"
+	exit $exit_code
 
 }
 
@@ -296,99 +312,109 @@ missing_required_option() {
 
 runtime() {
 
-	time=$(min_sec $(($(date +%s) - "${START:?START must be set by parent script}")))
-	indent "$(form "yellow" "normal" "Runtime: $time")"
+	local time
+	time=$(min_sec $(($(date +%s) - $START)))
+	indent "$(form yellow normal "Runtime: $time")"
 
 }
 
 players() {
-	local status
-	status=$(mcstatus "127.0.0.1:${server_port:?server_port must be set by parent script}" json)
-	local online
+
+	local status \
+		online \
+		max \
+		players \
+		string
+
+	status=$(mcstatus "127.0.0.1:${SERVER_PORT}" json)
 	online=$(echo "$status" | jq -r '.status.players.online')
-	local max
 	max=$(echo "$status" | jq -r '.status.players.max')
 	readarray -t players < <(echo "$status" | jq -r '.status.players.sample // [] | .[].name' | sort -u)
-	local string
+
+	[[ "$max" == "null" ]] && return # Offline mode servers do not report max players
+
 	[[ $online -gt 0 ]] && string=": $(form green normal "${players[@]// /, }")" || string=""
-	printf 'Players [%s/%s]%s\n' "$online" "$max" "$string"
+	printf ', Players [%s/%s]%s\n' "$online" "$max" "$string"
+
 }
 
 server_on() {
 
-	local -i time
-	time=${1:-20}
+	local -i seconds
+	seconds=${1:-20}
 
-	export PID
-	local PIPE
-	local PORT="${server_port:?server_port must be set by parent script}"
-	local SERVER_NAME="${server_name:?server_port must be set by parent script}"
+	local pipe \
+		PID
 
-	for ((i = 0; i <= time; i++)); do
-		PID=$(lsof -i :"$PORT" | grep "$PORT (LISTEN)" | awk '{print $2}')
-		# shellcheck disable=SC2015
-		[ -n "$PID" ] && PIPE=$(lsof -p "$PID" | grep "${SERVER_NAME}/command-pipe" | awk '{print $2}')
-		if [ -n "$PID" ] && [ -n "$PIPE" ] && [[ "$PID" == "$PIPE" ]]; then
-			fwhip "$(form "bright_cyan" "italic" "\"${SERVER_NAME}\"") Minecraft server running on port: $(form green normal "$PORT"), PID: $(form green normal "$PID"), $(players)"
+	for ((i = 0; i <= seconds; i++)); do
+		PID=$(lsof -i :"$SERVER_PORT" | grep "$SERVER_PORT (LISTEN)" | awk '{print $2}')
+		export PID
+		[[ -n "$PID" ]] && pipe=$(lsof -p "$PID" | grep "${SERVER_NAME}/command-pipe" | awk '{print $2}')
+		if [[ -n "$PID" ]] && [[ -n "$pipe" ]] && [[ "$PID" == "$pipe" ]]; then
+			fwhip "$(form bright_cyan italic "\"${SERVER_NAME}\"") Minecraft server running on port: $(form green normal "$SERVER_PORT"), PID: $(form green normal "$PID")$(players)"
 			return 0
 		else
 			[[ $i != 0 ]] && sleep 1
 		fi
 	done
-	warn "$(form "bright_cyan" "italic" "\"${SERVER_NAME}\"") is not running"
+	warn "$(form bright_cyan italic "\"${SERVER_NAME}\"") is not running"
 	return 1
 
 }
 
 server_off() {
 
-	local -i time
-	time=${1:-20}
+	local -i seconds
+	seconds=${1:-20}
 
-	export PID
-	local PORT="${server_port:?server_port must be set by parent script}"
-	local SERVER_NAME="${server_name:?server_port must be set by parent script}"
+	local PID
 
-	for ((i = 0; i <= time; i++)); do
-		PID=$(lsof -i :"$PORT" | grep "$PORT (LISTEN)" | awk '{print $2}')
-		# shellcheck disable=SC2015
-		if ! [ -n "$PID" ]; then
-			warn "$(form "bright_cyan" "italic" "\"${SERVER_NAME}\"") is not running"
+	for ((i = 0; i <= seconds; i++)); do
+		PID=$(lsof -i :"$SERVER_PORT" | grep "$SERVER_PORT (LISTEN)" | awk '{print $2}')
+		export PID
+		if ! [[ -n "$PID" ]]; then
+			warn "$(form bright_cyan italic "\"${SERVER_NAME}\"") is not running"
 			return 0
 		else
 			! [[ $i == 0 ]] && sleep 1
 		fi
 	done
-	fwhip "$(form "bright_cyan" "italic" "\"${SERVER_NAME}\"") Minecraft server running on port: $(form green normal "$PORT") PID: $(form green normal "$PID")"
+	fwhip "$(form bright_cyan italic "\"${SERVER_NAME}\"") Minecraft server running on port: $(form green normal "$SERVER_PORT") PID: $(form green normal "$PID")"
 	return 1
 
 }
 
 list_properties() {
 
-	count=0
-	while IFS="" read -r line || [ -n "$line" ]; do
+	local prop \
+		file=$1
+	local -i count=0
+
+	while IFS="" read -r line || [[ -n "$line" ]]; do
 		if [[ $count -gt 1 ]]; then
-			prop=$(echo "${line%=*}" | tr .- _)
-			set=$(printf '%s\n' "${line##*=}")
+			prop="${line%=*}"
+			prop="${prop//-/_}"
+			prop="${prop//./_}"
+			prop="${prop^^}"
+			local set="${line##*=}"
 			export "$prop"="$set"
 		fi
 		((count++))
-	done <"${1}"
+	done <"${file}"
 
 }
 
 get_properties() {
 
-	list_properties "${CRAFT_SERVER_DIR}/${server_name:?server_name must be set by parent script}/server.properties"
-	list_properties "${CRAFT_SERVER_DIR}/${server_name:?server_name must be set by parent script}/fabric-server-launcher.properties"
+	list_properties "${CRAFT_SERVER_DIR}/${SERVER_NAME}/server.properties"
+	list_properties "${CRAFT_SERVER_DIR}/${SERVER_NAME}/fabric-server-launcher.properties"
 
 }
 
 find_server() {
 
-	if ! [[ -d "${CRAFT_SERVER_DIR}/$server_name" ]]; then
-		warn "Server not found: $server_name"
+	if ! [[ -d "${CRAFT_SERVER_DIR}/$SERVER_NAME" ]]; then
+		warn "Server not found: $SERVER_NAME"
 		exit 1
 	fi
 
@@ -396,19 +422,19 @@ find_server() {
 
 check_java() {
 
-	local game
-	game=$1
+	local game=$1 \
+		java_version \
+		required_java \
+		found_java
 
 	if ! command -v java >/dev/null 2>&1; then
 		echo "Java is not installed."
 		exit 1
 	fi
 
-	local java_version
 	java_version=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | cut -d. -f1)
 
 	# Determine required Java version
-	local required_java
 	if version_ge "$game" "1.20.5"; then
 		required_java=21
 	elif version_ge "$game" "1.18.2"; then
@@ -419,12 +445,11 @@ check_java() {
 		required_java=8
 	fi
 
-	if [ "$java_version" -eq "$required_java" ]; then
+	if [[ "$java_version" -eq "$required_java" ]]; then
 		return 0
 	else
-		local found_java
 		found_java=$(/usr/libexec/java_home -V 2>&1 | grep -E " $required_java(\.|$)")
-		if [ -z "$found_java" ]; then
+		if [[ -z "$found_java" ]]; then
 			warn "Required Java $required_java not found via /usr/libexec/java_home."
 			return 1
 		fi
@@ -457,7 +482,7 @@ discord_message() {
 	}
 
 	# POST request to Discord Webhook
-	curl -H "Content-Type: application/json" -X POST -d "$(message "$1" "$2" "$3" "$4")" "${discord_webhook:?discord_webhook must be set by parent script}" &>/dev/null
+	curl -H "Content-Type: application/json" -X POST -d "$(message "$1" "$2" "$3" "$4")" "${DISCORD_WEBHOOK}" &>/dev/null
 
 }
 

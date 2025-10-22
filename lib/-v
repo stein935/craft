@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+-v_command() {
+
+	local version_file="${CRAFT_HOME_DIR}/version.txt"
+
+	if [[ -f "$version_file" ]]; then
+		printf '%s\n\n' "$(form cyan normal "$(cat "$version_file")")"
+	else
+		warn "version.txt not found."
+		exit 1
+	fi
+
+}
