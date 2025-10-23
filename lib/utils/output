@@ -17,7 +17,7 @@ warn() {
 
 send() {
 
-	printf '%s %s\n\n' "$(form bright_yellow normal "")" "$@"
+	printf '%s %s\n\n' "$(form bright_yellow normal "")" "$@"
 
 }
 
@@ -112,6 +112,12 @@ use_fzf() {
 #
 # Box Characters: ─ │ ┌ ┐ └ ┘
 box() {
+
+	# Validate required parameters
+	if [[ $# -lt 2 ]]; then
+		warn "box() requires at least 2 arguments: body and style"
+		return 1
+	fi
 
 	local body="$1" \
 		style="$2" \

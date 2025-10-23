@@ -22,6 +22,18 @@ main() {
 		cd "$@" &>/dev/null || return
 	}
 
+	# Check bash version (requires 4.3+ for nameref support)
+	if [[ "${BASH_VERSINFO[0]}" -lt 4 ]] || [[ "${BASH_VERSINFO[0]}" -eq 4 && "${BASH_VERSINFO[1]}" -lt 3 ]]; then
+		help() {
+			echo "Current version: ${BASH_VERSION}" >&2
+			echo "On macOS, you can install a newer version of bash using Homebrew:" >&2
+			indent "brew install bash" >&2
+		}
+		warn "Craft CLI requires bash 4.3 or higher" >&2
+		box "$(help)" "error" "Bash Version Error" >&2
+		exit 1
+	fi
+
 	# Env variables
 	craft_file_directory="$(quiet_cd "${0%/*}/" && pwd -P)"
 	craft_file="${craft_file_directory%/}/${0##*/}"

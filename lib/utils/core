@@ -11,7 +11,7 @@ tty_escape() { printf "\033[%sm" "$1"; } || tty_escape() { :; }
 
 strip_ansi() {
 	# Reads from stdin and outputs to stdout
-	sed -r 's/\x1B\[[0-9;]*[mK]//g'
+	sed -Er 's/\x1B\[[0-9;]*[mK]//g'
 }
 
 form() {

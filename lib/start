@@ -38,7 +38,7 @@ start_command() {
 	if $test; then
 		# shellcheck disable=SC2034  # test_info used indirectly via nameref in test_form
 		local -A test_info=([COMMAND]="$COMMAND" [SERVER_NAME]="$SERVER_NAME" [SERVER_INIT_MEM]="$SERVER_INIT_MEM" [SERVER_MAX_MEM]="$SERVER_MAX_MEM" [test]="$test")
-		box "$(box "$(test_form test_info)" "test" "Test")" "Test"
+		box "$(test_form test_info)" "test" "Test"
 	fi
 
 	check_for_open_port
@@ -126,8 +126,8 @@ start_server() {
 		echo "$(date) : Start: \"${SERVER_NAME}\" running on port: ${SERVER_PORT} PID: ${PID}" >>"${CRAFT_SERVER_DIR}/${SERVER_NAME}/logs/monitor/$(date '+%Y-%m').log"
 
 		if [[ -f "${CRAFT_SERVER_DIR}/${SERVER_NAME}/logo.txt" ]]; then
-			form cyan dim "$(execute "cat" "${CRAFT_SERVER_DIR}/${SERVER_NAME}/logo.txt")"
-			echo && echo
+			box "$(execute "cat" "${CRAFT_SERVER_DIR}/${SERVER_NAME}/logo.txt")" "success" "WooHoo!"
+			echo
 		fi
 
 	fi
